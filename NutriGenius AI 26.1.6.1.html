@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.6.1 - Global</title>
+    <style>
+        :root { --bg: #f0f4f8; --card: white; --text: #2c3e50; --primary: #009245; --accent: #e67e22; }
+        .dark-mode { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f4f8; --primary: #27ae60; --accent: #d35400; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); text-align: center; padding: 20px; transition: 0.3s; margin: 0; }
+        .container { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 900px; text-align: left; }
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        .spinner { width: 60px; height: 60px; border: 6px solid rgba(255,255,255,0.2); border-top: 6px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .header-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .controls-top { display: flex; gap: 10px; }
+        .dark-toggle, .lang-select { cursor: pointer; background: var(--primary); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8em; font-weight: bold; border: none; }
+        .input-group { margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-field, .select-box { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; background: var(--card); color: var(--text); }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-weight: bold; color: var(--primary); cursor: pointer; margin: 15px 0; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: var(--primary); font-size: 1.1em; transition: 0.2s; }
+        .btn-sm { padding: 8px 12px; font-size: 0.75em; margin: 4px 2px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-replace { background: var(--accent); }
+        .btn-recipe { background: #3498db; }
+        .btn-variant { background: #8e44ad; }
+        .day-box { background: var(--card); padding: 20px; margin-bottom: 25px; border-radius: 15px; border-left: 12px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .macro-box { background: var(--primary); color: white; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 0.9em; }
+        .details-content { display: none; font-size: 0.95em; margin-top: 12px; background: rgba(0,0,0,0.04); padding: 20px; border-radius: 10px; border-left: 4px solid #3498db; }
+        .shopping-list { background: #e8f5e9; border: 2px dashed var(--primary); padding: 20px; border-radius: 15px; margin: 25px 0; color: #1b5e20; }
+        .shopping-item { display: inline-block; background: white; padding: 6px 14px; margin: 5px; border-radius: 20px; font-size: 0.85em; font-weight: bold; border: 1px solid #c3e6cb; }
+        @media print { .no-print, .btn-sm { display: none !important; } .details-content { display: block !important; border: none; background: none; } }
+    </style>
+</head>
+<body onload="chargerProfil()">
+<div id="loader-overlay"><div class="spinner"></div><div id="loader-text">...</div></div>
+<div class="container">
+    <div class="header-ui">
+        <h1 id="main-title">NutriGenius AI</h1>
+        <div class="controls-top">
+            <select id="lang-picker" class="lang-select" onchange="changerLangue()">
+                <option value="fr">Français</option><option value="en">English</option><option value="zh">中文</option>
+                <option value="hi">हिन्दी</option><option value="es">Español</option><option value="ar">العربية</option>
+                <option value="bn">বাংলা</option><option value="pt">Português</option><option value="ru">Русский</option>
+                <option value="ur">اردو</option>
+            </select>
+            <div class="dark-toggle no-print" onclick="toggleDark()">🌓</div>
+        </div>
+    </div>
+    <div class="no-print">
+        <div class="input-group">
+            <div class="row">
+                <input type="number" id="age" class="input-field">
+                <select id="sexe" class="input-field">
+                    <option value="H" id="opt-h">Homme</option><option value="F" id="opt-f">Femme</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="number" id="poids" class="input-field">
+                <input type="number" id="taille" class="input-field">
+            </div>
+        </div>
+        <select id="select-duree" class="select-box">
+            <option value="1" id="dur-1">Menu du Jour</option><option value="7" id="dur-7">Menu de la Semaine</option>
+        </select>
+        <label class="checkbox-group"><input type="checkbox" id="check-veg"> <span id="lbl-veg">Mode Végétarien</span></label>
+        <button class="btn" onclick="lancer()" id="btn-gen">GÉNÉRER MON PLAN</button>
+    </div>
+    <div id="resultat"><div id="content-area"></div></div>
+</div>
+<script>
+    let currentLang = 'fr';
+    let planningGlobal = [];
+    const translations = {
+        fr: { age: "Age", poids: "Poids (kg)", taille: "Taille (cm)", gen: "GÉNÉRER MON PLAN", veg: "Mode Végétarien", loader: "Cuisine en cours...", prot: "Protéines", gluc: "Glucides", lipi: "Lipides", steps: "ÉTAPES :", shopping: "LISTE DE COURSES", change: "Changer", variant: "Variante", recipe: "Recette", tip: "Astuce", male: "Homme", female: "Femme", day: "JOUR", menu1: "Menu du Jour", menu7: "Menu de la Semaine" },
+        en: { age: "Age", poids: "Weight (kg)", taille: "Height (cm)", gen: "GENERATE MY PLAN", veg: "Vegetarian Mode", loader: "Cooking in progress...", prot: "Proteins", gluc: "Carbs", lipi: "Lipids", steps: "STEPS:", shopping: "SHOPPING LIST", change: "Change", variant: "Variant", recipe: "Recipe", tip: "Tip", male: "Male", female: "Female", day: "DAY", menu1: "Daily Menu", menu7: "Weekly Menu" },
+        zh: { age: "年龄", poids: "体重 (kg)", taille: "身高 (cm)", gen: "生成我的计划", veg: "素食模式", loader: "烹饪中...", prot: "蛋白质", gluc: "碳水化合物", lipi: "脂肪", steps: "步骤：", shopping: "购物清单", change: "更换", variant: "变体", recipe: "食谱", tip: "提示", male: "男", female: "女", day: "第...天", menu1: "今日菜单", menu7: "本周菜单" },
+        hi: { age: "आयु", poids: "वजन (kg)", taille: "ऊंचाई (cm)", gen: "मेरी योजना बनाएं", veg: "शाकाहारी मोड", loader: "खाना बनाना जारी है...", prot: "प्रोटीन", gluc: "कार्ब्स", lipi: "वसा", steps: "कदम:", shopping: "खरीदारी की सूची", change: "बदलें", variant: "संस्करण", recipe: "रेसिपी", tip: "सुझाव", male: "पुरुष", female: "महिला", day: "दिन", menu1: "दैनिक मेनू", menu7: "साप्ताहिक मेनू" },
+        es: { age: "Edad", poids: "Peso (kg)", taille: "Altura (cm)", gen: "GENERAR MI PLAN", veg: "Modo Vegetariano", loader: "Cocinando...", prot: "Proteínas", gluc: "Carbohidratos", lipi: "Lípidos", steps: "PASOS:", shopping: "LISTA DE COMPRAS", change: "Cambiar", variant: "Variante", recipe: "Receta", tip: "Consejo", male: "Hombre", female: "Mujer", day: "DÍA", menu1: "Menú Diario", menu7: "Menú Semanal" },
+        ar: { age: "العمر", poids: "الوزن (كجم)", taille: "الطول (سم)", gen: "إنشاء خطتي", veg: "نظام نباتي", loader: "جاري الطبخ...", prot: "بروتين", gluc: "كربوهيدرات", lipi: "دهون", steps: "الخطوات:", shopping: "قائمة التسوق", change: "تغيير", variant: "خيار", recipe: "وصفة", tip: "نصيحة", male: "ذكر", female: "أنثى", day: "يوم", menu1: "القائمة اليومية", menu7: "القائمة الأسبوعية" },
+        bn: { age: "বয়স", poids: "ওজন (kg)", taille: "উচ্চতা (cm)", gen: "আমার পরিকল্পনা তৈরি করুন", veg: "নিরামিষ মোড", loader: "রান্না হচ্ছে...", prot: "প্রোটিন", gluc: "কার্বস", lipi: "লিপিড", steps: "ধাপ:", shopping: "বাজারের তালিকা", change: "পরিবর্তন", variant: "ভেরিয়েন্ট", recipe: "রেসিপি", tip: "টিপস", male: "পুরুষ", female: "মহিলা", day: "দিন", menu1: "দৈনিক মেনু", menu7: "সাপ্তাহিক মেনু" },
+        pt: { age: "Idade", poids: "Peso (kg)", taille: "Altura (cm)", gen: "GERAR MEU PLANO", veg: "Modo Vegetariano", loader: "Cozinhando...", prot: "Proteínas", gluc: "Carboidratos", lipi: "Gorduras", steps: "PASSOS:", shopping: "LISTA DE COMPRAS", change: "Mudar", variant: "Variante", recipe: "Receita", tip: "Dica", male: "Homem", female: "Mulher", day: "DIA", menu1: "Menu Diário", menu7: "Menu Semanal" },
+        ru: { age: "Возраст", poids: "Вес (кг)", taille: "Рост (см)", gen: "СОЗДАТЬ ПЛАН", veg: "Вегетарианство", loader: "Готовим...", prot: "Белки", gluc: "Углеводы", lipi: "Жиры", steps: "ШАГИ:", shopping: "СПИСОК ПОКУПОК", change: "Заменить", variant: "Вариант", recipe: "Рецепт", tip: "Совет", male: "Мужчина", female: "Женщина", day: "ДЕНЬ", menu1: "Меню на день", menu7: "Меню на неделю" },
+        ur: { age: "عمر", poids: "وزن (کلو)", taille: "قد (سم)", gen: "میرا پلان بنائیں", veg: "سبزی خور", loader: "تیار ہو رہا ہے...", prot: "پروٹین", gluc: "کاربوہائیڈریٹ", lipi: "چربی", steps: "مراحل:", shopping: "خریداری کی فہرست", change: "تبدیل کریں", variant: "آپشن", recipe: "ترکیب", tip: "ٹپ", male: "مرد", female: "عورت", day: "دن", menu1: "روزانہ مینو", menu7: "ہفتہ وار مینو" }
+    };
+const db = {
+        petitDej: [
+            { 
+                n: { fr: "Omelette Soufflée Master 🍳", en: "Master Soufflé Omelette 🍳", zh: "大师级舒芙蕾欧姆蛋 🍳", hi: "मास्टर सफ़ल ऑमलेट 🍳", es: "Tortilla Soufflé Maestra 🍳", ar: "أومليت سوفليه ماستر 🍳", bn: "মাস্টার সোফেল অমলেট 🍳", pt: "Omelete Soufflé Master 🍳", ru: "Мастер-омлет суфле 🍳", ur: "ماسٹر سوفلے آملیٹ 🍳" },
+                c: 380, v: true,
+                i: { 
+                    fr: ["4 Oeufs", "Oignons verts", "Curcuma", "Beurre"], 
+                    en: ["4 Eggs", "Green onions", "Turmeric", "Butter"],
+                    es: ["4 Huevos", "Cebollas verdes", "Cúrcuma", "Mantequilla"],
+                    zh: ["4个鸡蛋", "青葱", "姜黄", "黄油"],
+                    hi: ["4 अंडे", "हरी प्याज", "हल्दी", "मक्खन"],
+                    ar: ["4 بيضات", "بصل أخضر", "كركم", "زبدة"],
+                    bn: ["৪টি ডিম", "পেঁয়াজ কলি", "হলুদ", "মাখন"],
+                    pt: ["4 Ovos", "Cebolinha", "Cúrcuma", "Manteiga"],
+                    ru: ["4 яйца", "Зеленый лук", "Куркума", "Сливочное масло"],
+                    ur: ["4 انڈے", "ہری پیاز", "ہلدی", "مکھن"]
+                },
+                variantes: [
+                    { 
+                        t: { fr: "Classique Aérienne", en: "Classic Airy", zh: "经典蓬松型", hi: "क्लासिक एयरी", es: "Clásica Aireada", ar: "كلاسيك خفيفة", bn: "ক্লাসিক বায়বীয়", pt: "Clássica Aerada", ru: "Классическая воздушная", ur: "کلاسک ہلکا" },
+                        r: { 
+                            fr: ["1. Blancs en neige.", "2. Mélanger aux jaunes.", "3. Cuire 8min."],
+                            en: ["1. Whisk whites to peaks.", "2. Fold into yolks.", "3. Cook 8min."],
+                            es: ["1. Batir claras a punto de nieve.", "2. Mezclar con yemas.", "3. Cocinar 8min."],
+                            zh: ["1. 打发蛋白", "2. 拌入蛋黄", "3. 煎8分钟"],
+                            hi: ["1. अंडे की सफेदी फेंटें", "2. जर्दी में मिलाएं", "3. 8 मिनट पकाएं"],
+                            ar: ["1. خفق البياض", "2. خلطه مع الصفار", "3. الطبخ 8 دقائق"],
+                            bn: ["১. সাদা অংশ ফেটান", "২. কুসুমের সাথে মেশান", "৩. ৮ মিনিট রান্না করুন"],
+                            pt: ["1. Claras em neve", "2. Misturar às gemas", "3. Cozinhar 8min"],
+                            ru: ["1. Взбить белки", "2. Смешать с желтками", "3. Готовить 8 мин"],
+                            ur: ["1. سفیدی پھینٹیں", "2. زردی میں ملائیں", "3. 8 منٹ پکائیں"]
+                        },
+                        ntr: { 
+                            fr: "Protéines: 22g | Glucides: 4g | Lipides: 24g", 
+                            en: "Proteins: 22g | Carbs: 4g | Lipids: 24g",
+                            zh: "蛋白质: 22g | 碳水: 4g | 脂肪: 24g",
+                            es: "Proteínas: 22g | Carbohidratos: 4g | Lípidos: 24g",
+                            ru: "Белки: 22г | Углеводы: 4г | Жиры: 24г",
+                            hi: "प्रोटीन: 22g | कार्ब्स: 4g | वसा: 24g",
+                            ar: "بروتين: 22جم | كربوهيدرات: 4جم | دهون: 24جم",
+                            bn: "প্রোটিন: ২২ গ্রাম | কার্বস: ৪ গ্রাম | লিপিড: ২৪ গ্রাম",
+                            pt: "Proteínas: 22g | Carboidratos: 4g | Gorduras: 24g",
+                            ur: "پروٹین: 22 گرام | کاربوہائیڈریٹ: 4 گرام | چربی: 24 گرام"
+                        },
+                        tip: { fr: "Ne pas retourner.", en: "Do not flip.", es: "No dar la vuelta.", zh: "不要翻面", hi: "पलटें नहीं", ar: "لا تقلبها", bn: "উল্টাবেন না", pt: "Não vire", ru: "Не переворачивать", ur: "پلٹیں نہیں" }
+                    }
+                ]
+            },
+            { 
+                n: { fr: "Bowl Skyr & Fruits 🥭", en: "Skyr & Fruit Bowl 🥭", zh: "冰岛酸奶水果碗 🥭", es: "Bol de Skyr y Frutas 🥭", ru: "Скир-боул с фруктами 🥭", pt: "Bowl de Skyr e Frutas 🥭", hi: "स्काईर और फ्रूट बाउल 🥭", ar: "وعاء سكير والفواكه 🥭", bn: "স্কাইর এবং ফ্রুট বোল 🥭", ur: "اسکائر اور فروٹ باؤل 🥭" },
+                c: 310, v: true,
+                i: { 
+                    fr: ["200g Skyr", "Mangue", "Graines de lin"], 
+                    en: ["200g Skyr", "Mango", "Flax seeds"],
+                    es: ["200g Skyr", "Mango", "Semillas de lino"],
+                    zh: ["200克Skyr酸奶", "芒果", "亚麻籽"]
+                },
+                variantes: [
+                    { 
+                        t: { fr: "Énergie Matinale", en: "Morning Energy", es: "Energía Matinal", zh: "早晨能量型" },
+                        r: { 
+                            fr: ["1. Couper les fruits.", "2. Mélanger au Skyr."],
+                            en: ["1. Cut fruits.", "2. Mix with Skyr."],
+                            es: ["1. Cortar frutas.", "2. Mezclar con Skyr."]
+                        },
+                        ntr: { fr: "Protéines: 25g | Glucides: 35g | Lipides: 5g", en: "Proteins: 25g | Carbs: 35g | Lipids: 5g", es: "Proteínas: 25g | Carbohidratos: 35g | Lípidos: 5g" },
+                        tip: { fr: "Servir frais.", en: "Serve cold.", es: "Servir frío." }
+                    }
+                ]
+            }
+        ],
+dejeuner: [
+            { 
+                n: { fr: "Carry Poulet Grand-Mère 🍗", en: "Grandma's Chicken Curry 🍗", zh: "祖母家常咖喱鸡 🍗", hi: "दादी का चिकन करी 🍗", es: "Curry de Pollo de la Abuela 🍗", ar: "كاري دجاج الجدة 🍗", bn: "ঠাকুমার চিকেন কারি 🍗", pt: "Caril de Frango da Vovó 🍗", ru: "Бабушкин карри с курицей 🍗", ur: "دادی کی چکن کڑی 🍗" },
+                c: 620, v: false,
+                i: { 
+                    fr: ["Poulet", "Tomates", "Oignons", "Gingembre", "Curcuma"],
+                    en: ["Chicken", "Tomatoes", "Onions", "Ginger", "Turmeric"],
+                    es: ["Pollo", "Tomates", "Cebollas", "Jengibre", "Cúrcuma"],
+                    zh: ["鸡肉", "番茄", "洋葱", "生姜", "姜黄"],
+                    hi: ["चिकन", "टमाटर", "प्याज", "अदरक", "हल्दी"],
+                    ar: ["دجاج", "طماطم", "بصل", "زنجبيل", "كركم"],
+                    bn: ["চিকেন", "টমেটো", "পেঁয়াজ", "আদা", "হলুদ"],
+                    pt: ["Frango", "Tomates", "Cebolas", "Gengibre", "Cúrcuma"],
+                    ru: ["Курица", "Помидоры", "Лук", "Имбирь", "Куркума"],
+                    ur: ["چکن", "ٹماٹر", "پیاز", "ادرک", "ہلدی"]
+                },
+                variantes: [
+                    { 
+                        t: { fr: "Traditionnel", en: "Traditional", es: "Tradicional", zh: "传统风味", hi: "पारंपरिक", ar: "تقليدي", bn: "ঐতিহ্যবাহী", pt: "Tradicional", ru: "Традиционный", ur: "روایتی" },
+                        r: { 
+                            fr: ["1. Roussir la viande.", "2. Ajouter épices et tomates.", "3. Mijoter 30min."],
+                            en: ["1. Brown the meat.", "2. Add spices and tomatoes.", "3. Simmer 30min."],
+                            es: ["1. Dorar la carne.", "2. Añadir especias y tomates.", "3. Cocinar a fuego lento 30min."],
+                            zh: ["1. 煎肉至金黄", "2. 加入香料和番茄", "3. 炖煮30分钟"],
+                            hi: ["1. मांस को भूनें", "2. मसाले और टमाटर डालें", "3. 30 मिनट तक धीमी आंच पर पकाएं"],
+                            ar: ["1. تحمير اللحم", "2. إضافة التوابل والطماطم", "3. الطبخ على نار هادئة 30 دقيقة"],
+                            bn: ["১. মাংস ভাজুন", "২. মশলা এবং টমেটো দিন", "৩. ৩০ মিনিট রান্না করুন"],
+                            pt: ["1. Dourar a carne", "2. Adicionar especias e tomates", "3. Cozinhar por 30min"],
+                            ru: ["1. Обжарить мясо", "2. Добавить специи и помидоры", "3. Тушить 30 мин"],
+                            ur: ["1. گوشت بھونیں", "2. مصالحے اور ٹماٹر ڈالیں", "3. 30 منٹ ہلکی آنچ پر پکائیں"]
+                        },
+                        ntr: { 
+                            fr: "Protéines: 52g | Glucides: 12g | Lipides: 22g", 
+                            en: "Proteins: 52g | Carbs: 12g | Lipids: 22g",
+                            es: "Proteínas: 52g | Carbohidratos: 12g | Lípidos: 22g",
+                            zh: "蛋白质: 52g | 碳水: 12g | 脂肪: 22g"
+                        },
+                        tip: { fr: "Servir avec du riz.", en: "Serve with rice.", es: "Servir con arroz.", zh: "配米饭食用" }
+                    }
+                ]
+            },
+            { 
+                n: { fr: "Wok de Tofu Impérial 🥦", en: "Imperial Tofu Wok 🥦", zh: "宫廷豆腐炒菜 🥦", hi: "शाही टोफू वॉक 🥦", es: "Wok de Tofu Imperial 🥦", ar: "ووك التوفو الإمبراطوري 🥦", bn: "ইম্পেরিয়াল টফু ওয়াক 🥦", pt: "Wok de Tofu Imperial 🥦", ru: "Императорский вок с тофу 🥦", ur: "شاہی ٹوفو ووک 🥦" },
+                c: 450, v: true,
+                i: { fr: ["Tofu", "Brocolis", "Soja", "Ail"], en: ["Tofu", "Broccoli", "Soy sauce", "Garlic"], es: ["Tofu", "Brócoli", "Salsa de soja", "Ajo"] },
+                variantes: [
+                    { 
+                        t: { fr: "Style Szechuan", en: "Szechuan Style", zh: "四川风味" },
+                        r: { fr: ["1. Sauter le tofu.", "2. Ajouter légumes.", "3. Sauce soja."], en: ["1. Fry tofu.", "2. Add veggies.", "3. Soy sauce."], zh: ["1. 煎豆腐", "2. 加入蔬菜", "3. 加入酱油"] },
+                        ntr: { fr: "Protéines: 28g | Glucides: 20g | Lipides: 15g", en: "Proteins: 28g | Carbs: 20g | Lipids: 15g" },
+                        tip: { fr: "Pimentez selon goût.", en: "Spice to taste.", zh: "根据口味加辣" }
+                    }
+                ]
+            }
+        ],
+        diner: [
+            { 
+                n: { fr: "Soupe Miso Détox 🥣", en: "Detox Miso Soup 🥣", zh: "排毒味噌汤 🥣", hi: "डिटॉक्स मिसो सूप 🥣", es: "Sopa Miso Detox 🥣", ar: "شوربة ميسو للتخلص من السموم 🥣", bn: "ডিটক্স মিসো স্যুপ 🥣", pt: "Sopa de Missô Detox 🥣", ru: "Детокс-суп мисо 🥣", ur: "ڈیٹوکس مسو سوپ 🥣" },
+                c: 280, v: true,
+                i: { fr: ["Pâte Miso", "Tofu", "Algues", "Oignons"], en: ["Miso paste", "Tofu", "Seaweed", "Onions"], zh: ["味噌酱", "豆腐", "海藻", "洋葱"] },
+                variantes: [
+                    { 
+                        t: { fr: "Légère", en: "Light", zh: "清淡型" },
+                        r: { fr: ["1. Chauffer l'eau.", "2. Dissoudre miso.", "3. Garnir."], en: ["1. Heat water.", "2. Dissolve miso.", "3. Garnish."], zh: ["1. 烧水", "2. 化开味噌", "3. 装饰"] },
+                        ntr: { fr: "Protéines: 15g | Glucides: 10g | Lipides: 5g", en: "Proteins: 15g | Carbs: 10g | Lipids: 5g" },
+                        tip: { fr: "Ne pas faire bouillir le miso.", en: "Do not boil miso.", zh: "味噌不要煮沸" }
+                    }
+                ]
+            }
+        ]
+    };
+function toggleDark() { document.body.classList.toggle('dark-mode'); }
+
+    function changerLangue() {
+        currentLang = document.getElementById('lang-picker').value;
+        const t = translations[currentLang] || translations['en'];
+        
+        // Mise à jour de l'interface utilisateur
+        document.getElementById('age').placeholder = t.age;
+        document.getElementById('poids').placeholder = t.poids;
+        document.getElementById('taille').placeholder = t.taille;
+        document.getElementById('btn-gen').innerText = t.gen;
+        document.getElementById('lbl-veg').innerText = t.veg;
+        document.getElementById('loader-text').innerText = t.loader;
+        document.getElementById('opt-h').innerText = t.male;
+        document.getElementById('opt-f').innerText = t.female;
+        document.getElementById('dur-1').innerText = t.menu1;
+        document.getElementById('dur-7').innerText = t.menu7;
+
+        // Si un planning existe déjà, on le rafraîchit pour changer sa langue
+        if (planningGlobal.length > 0) afficherMenu();
+    }
+
+    function lancer() {
+        if (!document.getElementById('age').value) {
+            const msg = currentLang === 'fr' ? "Veuillez entrer votre Age !" : "Please enter your Age!";
+            return alert(msg);
+        }
+        document.getElementById('loader-overlay').style.display = "flex";
+        setTimeout(() => { 
+            genererPlanning(); 
+            document.getElementById('loader-overlay').style.display = "none";
+        }, 1200);
+    }
+
+    function genererPlanning() {
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+        const poolP = isVeg ? db.petitDej.filter(x => x.v) : db.petitDej;
+        const poolM = isVeg ? db.dejeuner.filter(x => x.v) : db.dejeuner;
+        const poolD = isVeg ? db.diner.filter(x => x.v) : db.diner;
+
+        planningGlobal = [];
+        for (let i = 0; i < jours; i++) {
+            planningGlobal.push({
+                p: JSON.parse(JSON.stringify(poolP[Math.floor(Math.random() * poolP.length)])),
+                m: JSON.parse(JSON.stringify(poolM[Math.floor(Math.random() * poolM.length)])),
+                d: JSON.parse(JSON.stringify(poolD[Math.floor(Math.random() * poolD.length)])),
+                vP: 0, vM: 0, vD: 0
+            });
+        }
+        afficherMenu();
+    }
+
+    function remplacerRepas(jIdx, type) {
+        const isVeg = document.getElementById('check-veg').checked;
+        const categorie = type === 'p' ? db.petitDej : (type === 'm' ? db.dejeuner : db.diner);
+        const pool = isVeg ? categorie.filter(x => x.v) : categorie;
+        if (pool.length <= 1) return;
+        let nouveauPlat;
+        do { nouveauPlat = pool[Math.floor(Math.random() * pool.length)]; } 
+        while (nouveauPlat.n.fr === planningGlobal[jIdx][type].n.fr);
+        
+        planningGlobal[jIdx][type] = JSON.parse(JSON.stringify(nouveauPlat));
+        planningGlobal[jIdx]['v' + type.toUpperCase()] = 0; 
+        afficherMenu();
+    }
+
+    function changerVariante(jIdx, type) {
+        let key = 'v' + type.toUpperCase();
+        let plat = planningGlobal[jIdx][type];
+        planningGlobal[jIdx][key] = (planningGlobal[jIdx][key] + 1) % plat.variantes.length;
+        afficherMenu();
+    }
+
+    function toggleDetails(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function afficherMenu() {
+        const t = translations[currentLang] || translations['en'];
+        let html = "";
+        planningGlobal.forEach((jour, idx) => {
+            if (idx % 7 === 0) {
+                let listIng = new Set();
+                let fin = Math.min(idx + 7, planningGlobal.length);
+                for(let k=idx; k<fin; k++) {
+                    [planningGlobal[k].p, planningGlobal[k].m, planningGlobal[k].d].forEach(r => {
+                        (r.i[currentLang] || r.i['fr']).forEach(ing => listIng.add(ing));
+                    });
+                }
+                html += `<div class="shopping-list"><b>🛒 ${t.shopping} (${t.menu7} ${Math.floor(idx/7)+1})</b><br>${Array.from(listIng).map(n => `<span class="shopping-item">${n}</span>`).join('')}</div>`;
+            }
+            html += `
+            <div class="day-box">
+                <span class="cal-float">${jour.p.c + jour.m.c + jour.d.c} kcal</span>
+                <h3>${t.day} ${idx + 1}</h3>
+                ${renderMeal(idx, 'p', '☀️', jour.p, jour.vP)}
+                ${renderMeal(idx, 'm', '🥗', jour.m, jour.vM)}
+                ${renderMeal(idx, 'd', '🌙', jour.d, jour.vD)}
+            </div>`;
+        });
+        document.getElementById('content-area').innerHTML = html;
+    }
+
+    function renderMeal(jIdx, type, label, meal, vIdx) {
+        const t = translations[currentLang] || translations['en'];
+        const id = `det-${jIdx}-${type}`;
+        const v = meal.variantes[vIdx];
+        const lang = currentLang;
+
+        return `
+        <div class="meal-section">
+            <b>${label} :</b> ${meal.n[lang] || meal.n['fr']} <small>(${v.t[lang] || v.t['fr']})</small><br>
+            <span class="ing-label">🛒 : ${(meal.i[lang] || meal.i['fr']).join(', ')}</span>
+            <div class="no-print">
+                <button class="btn-sm btn-replace" onclick="remplacerRepas(${jIdx}, '${type}')">🔄 ${t.change}</button>
+                <button class="btn-sm btn-variant" onclick="changerVariante(${jIdx}, '${type}')">✨ ${t.variant}</button>
+                <button class="btn-sm btn-recipe" onclick="toggleDetails('${id}')">📖 ${t.recipe}</button>
+            </div>
+            <div id="${id}" class="details-content">
+                <b>${t.steps}</b><br>
+                ${(v.r[lang] || v.r['fr']).map((step, i) => `<b>${i+1}.</b> ${step}`).join('<br>')}
+                <div class="macro-box">
+                    📊 <b>${v.ntr[lang] || v.ntr['fr']}</b>
+                </div>
+                <br>
+                <small>💡 <b>${t.tip} :</b> ${v.tip[lang] || v.tip['fr']}</small>
+            </div>
+        </div>`;
+    }
+
+    function sauvegarderProfil() {
+        const p = { age: document.getElementById('age').value, poids: document.getElementById('poids').value, taille: document.getElementById('taille').value, sexe: document.getElementById('sexe').value, veg: document.getElementById('check-veg').checked };
+        localStorage.setItem('NutriGenius_V10_GLOBAL', JSON.stringify(p));
+    }
+
+    function chargerProfil() {
+        const s = localStorage.getItem('NutriGenius_V10_GLOBAL');
+        if (s) {
+            const d = JSON.parse(s);
+            document.getElementById('age').value = d.age || "";
+            document.getElementById('poids').value = d.poids || "";
+            document.getElementById('taille').value = d.taille || "";
+            document.getElementById('sexe').value = d.sexe || "H";
+            document.getElementById('check-veg').checked = d.veg || false;
+        }
+        changerLangue(); // Initialise la langue par défaut au chargement
+    }
+</script>
+</body>
+</html>

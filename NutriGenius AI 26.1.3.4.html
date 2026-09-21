@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI - Version Corrigée</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 500px; }
+        h1 { color: #2c3e50; }
+        .select-box { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; border: 2px solid #27ae60; font-weight: bold; font-size: 1em; background: white; }
+        
+        /* STYLE DES BOUTONS */
+        .btn { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: white; 
+            font-size: 1.1em; 
+            display: block; /* Force l'affichage */
+            transition: transform 0.1s, background 0.2s;
+        }
+        .btn:active { transform: scale(0.98); }
+        #btn-gps { background: #2ecc71; }
+        #btn-gps:hover { background: #27ae60; }
+        #btn-ville { background: #3498db; }
+        #btn-ville:hover { background: #2980b9; }
+
+        #loader { display: none; margin: 20px 0; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 18px; overflow: hidden; margin: 10px 0; }
+        #progress-bar { width: 0%; height: 100%; background: #27ae60; transition: width 0.1s linear; }
+        
+        #resultat { display: none; margin-top: 20px; max-height: 400px; overflow-y: auto; text-align: left; padding: 15px; border: 1px solid #ddd; border-radius: 10px; background: #fff; }
+        .day-box { background: #f9f9f9; padding: 12px; margin-bottom: 10px; border-radius: 8px; border-left: 5px solid #27ae60; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .meal-item { margin: 5px 0; display: block; font-size: 0.95em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    
+    <label for="select-duree">Choisissez la durée :</label>
+    <select id="select-duree" class="select-box">
+        <option value="1">🥗 Menu du Jour</option>
+        <option value="7">📅 Plan de la Semaine</option>
+        <option value="30">📊 Plan du Mois</option>
+    </select>
+
+    <button type="button" id="btn-gps" class="btn" onclick="lancer('gps')">📍 Autour de moi</button>
+    <button type="button" id="btn-ville" class="btn" onclick="lancer('ville')">🌍 Chercher une ville</button>
+
+    <div id="loader">
+        <div style="font-size: 2.5em; font-weight: bold; color: #27ae60;"><span id="chiffre">0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+        <p id="status-msg">Génération de votre plan nutritionnel...</p>
+    </div>
+
+    <div id="resultat">
+        <div id="menu-content"></div>
+    </div>
+</div>
+
+<script>
+    let n = 0;
+    let timer;
+
+    // BASE DE DONNÉES GÉANTE
+    const petitDej = ["Porridge aux baies", "Muesly à la banane", "Avocat Toast & œuf poché", "Skyr aux noix", "Omelette fines herbes", "Pancakes banane", "Smoothie bowl açai", "Pancakes coco", "Pancakes amande", "Crêpe", "Gauffre", "Jus de fruit frais", "Cookies", "Pain complet grillé et avocat", "salade de fruits frais au basilic", "bol de fromage blanc aux flocons d'avoine et baies", "omelette aux épinards et champignons", "porridge au lait d'amande et cannelle", "smoothie bowl banane-épinards et graines de chia", "pancakes à l'avoine et au yaourt", "tartine de pain de seigle au saumon fumé", "oeufs brouillés et tomates cerises", "muesli maison aux noix et graines de courge", "yaourt grec avec miel et éclats d'amandes", "pouding de chia au lait de coco et mangue", "tartine de beurre de cacahuète et tranches de banane", "galettes de riz au fromage frais et concombre", "shakshuka légère aux poivrons", "muffin anglais complet et œuf poché", "bol de quinoa sucré aux myrtilles", "pomme coupée avec purée d'amande", "wrap complet à la dinde et crudités", "fromage de chèvre frais sur pain aux céréales", "smoothie protéiné à la vanille et fruits rouges", "compote de pommes sans sucre et noisettes concassées", "pain perdu léger à la cannelle", "riz au lait de soja et zestes d'orange", "Pain complet & beurre cacahuète", "saumon cofit", "salade de fruits", "gratin de choux", "Salade de pois chiches", "Salade d'été", "Salade d'autonme", "Muesli maison", "Œufs brouillés au saumon", "Roulée de primtemp", "Fondue de bressane", "Beignets de fromage", "Granola & fromage blanc", "Chia pudding coco", "Toast ricotta & figues", "Frittata épinards", "Muffin œuf-fromage", "Gaufres patate douce", "Smoothie protéiné", "Pain trempé au lait"];
+    const dejeuner = ["Saumon & Riz complet", "Salade de quinoa aux pois chiches et feta", "pavé de saumon grillé et riz sauvage", "poulet aux herbes avec patates douces rôties", "bowl de lentilles corail au lait de coco", "dos de cabillaud à la vapeur et poêlée de courgettes", "wrap au thon avec crudités et fromage frais", "salade de pâtes complètes au pesto et tomates cerises", "steak de dinde et purée de brocolis", "riz sauté aux petits légumes et tofu fumé", "salade grecque au concombre et olives", "papillote de poulet au citron et haricots verts", "omelette aux fines herbes et salade verte", "taboulé de boulgour au persil et crevettes", "gratin de chou-fleur léger au jambon", "bowl d'orge perlé aux champignons", "curry de pois chiches aux épinards", "brochettes de poulet et semoule aux épices", "salade de riz au maïs et thon", "quiche sans pâte aux poireaux", "falafels au four et sauce yaourt", "émincé de bœuf au gingembre et poivrons", "salade de fèves à la menthe et œuf dur", "courge spaghetti à la bolognaise légère", "filet de flétan et fondue de poireaux", "salade de betteraves aux noix et chèvre chaud", "Tartiflette", "Raclette", "Tarte de fromage flambée", "Cakes aux fruits rouges", "Bagel", "Tortillas au poulet", "Shop suey poulet", "Suchi", "Poulet & Quinoa", "Salade lentilles", "Pâtes pesto basilic", "Wok crevettes", "Croque-monsieur poulet", "Bowl thon & edamames", "Tomates farcis", "poulet pané à la cacahuète", "cuisse de poulet méditerranéenne", "magret de canard", "Filet de marlin", "Riz cantonais poulet", "Steak pois chiches", "Salade Gourmande", "Curry dinde coco", "Omelette roulée aux légumes", "Croquettes de mer", "Salade César légère", "Burrito bowl", "Cabillaud & purée", "Risotto asperges", "Pâte au fromage et salade verte", "Tacos poisson", "Poulet basquaise", "Lasagnes légumes", "Dahl de lentilles", "Poke bowl saumon", "Chili léger"];
+    const diner = ["Soupe de courge", "Salade d'été", "Salade d'autonme", "Gratin courgettes", "Shop suey poulet", "Suchi", "Cabillaud vapeur", "Quiche forestière", "Soupe de potiron aux éclats de châtaignes", "pavé de cabillaud en papillote et fondue de poireaux", "salade de lentilles tièdes et œuf poché", "gratin de courgettes au parmesan et jambon cru", "quiche sans pâte aux épinards et ricotta", "brochettes de crevettes à la citronnelle et riz basmati", "velouté de carottes au cumin et graines de courge", "filet de poulet au citron et asperges vertes", "bowl de quinoa, avocat et pois chiches", "omelette aux champignons de Paris et salade de mâche", "ratatouille maison et steak de soja", "poivrons farcis au quinoa et petits légumes", "salade de haricots verts, noisettes et filets de maquereau", "dos de lieu noir et purée de patate douce", "bouillon de légumes asiatique aux nouilles de riz et tofu", "shakshuka aux tomates fraîches et œufs", "salade de chou-fleur rôti, grenade et sauce tahini", "galette de sarrasin complète (œuf, jambon, fromage)", "wok de dinde aux brocolis et noix de cajou", "soupe de tomates au basilic et tartine de chèvre frais", "cabillaud à la tomate et olives noires", "salade de pois du Cap à l'oignon rouge et persil", "papillote de saumon au gingembre et julienne de légumes", "taboulé de chou-fleur aux herbes fraîches", "Velouté de fruits rouges", "salade concombre-pomme", "Soupe de potirond", "Soupe de tomates", "Salade Féta & Olives", "Omelette champignons", "Blanquette de la mer", "sandwich au fromage de provance", "Bouillon gingembre", "Ratatouille maison", "Tofu sauté brocoli", "Salade chèvre chaud", "Velouté poireaux", "Aubergines parmigiana", "Papillote de dinde", "Soupe maison", "Salade tomates mozza", "Epinards crème", "Chou-fleur rôti"];
+
+    function lancer(type) {
+        if(type === 'ville') {
+            let ville = prompt("Quelle ville ?");
+            if(ville === null || ville === "") return; 
+        }
+
+        // Reset
+        n = 0;
+        clearInterval(timer);
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+        document.getElementById('chiffre').innerText = "0";
+        document.getElementById('progress-bar').style.width = "0%";
+
+        let duree = parseInt(document.getElementById('select-duree').value);
+        let vitesse = (duree === 1) ? 5 : (duree === 7 ? 2.5 : 1.2);
+
+        timer = setInterval(function() {
+            if (n < 100) {
+                n += vitesse;
+                if (n > 100) n = 100;
+                document.getElementById('chiffre').innerText = Math.floor(n);
+                document.getElementById('progress-bar').style.width = n + "%";
+            } else {
+                finaliser(duree);
+            }
+        }, 40);
+    }
+
+    function finaliser(jours) {
+        clearInterval(timer);
+        setTimeout(function() {
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('resultat').style.display = "block";
+            
+            let html = "";
+            for(let i=1; i<=jours; i++) {
+                let p = petitDej[Math.floor(Math.random() * petitDej.length)];
+                let m = dejeuner[Math.floor(Math.random() * dejeuner.length)];
+                let s = diner[Math.floor(Math.random() * diner.length)];
+
+                html += `
+                <div class="day-box">
+                    <b style="color:#27ae60">JOUR ${i}</b><br>
+                    <span class="meal-item">☀️ ${p}</span>
+                    <span class="meal-item">🥗 ${m}</span>
+                    <span class="meal-item">🌙 ${s}</span>
+                </div>`;
+            }
+            document.getElementById('menu-content').innerHTML = html;
+        }, 400);
+    }
+</script>
+
+</body>
+</html>

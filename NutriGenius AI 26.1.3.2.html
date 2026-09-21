@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI - Version Corrigée</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 500px; }
+        h1 { color: #2c3e50; }
+        .select-box { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; border: 2px solid #27ae60; font-weight: bold; font-size: 1em; background: white; }
+        
+        /* STYLE DES BOUTONS */
+        .btn { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: white; 
+            font-size: 1.1em; 
+            display: block; /* Force l'affichage */
+            transition: transform 0.1s, background 0.2s;
+        }
+        .btn:active { transform: scale(0.98); }
+        #btn-gps { background: #2ecc71; }
+        #btn-gps:hover { background: #27ae60; }
+        #btn-ville { background: #3498db; }
+        #btn-ville:hover { background: #2980b9; }
+
+        #loader { display: none; margin: 20px 0; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 18px; overflow: hidden; margin: 10px 0; }
+        #progress-bar { width: 0%; height: 100%; background: #27ae60; transition: width 0.1s linear; }
+        
+        #resultat { display: none; margin-top: 20px; max-height: 400px; overflow-y: auto; text-align: left; padding: 15px; border: 1px solid #ddd; border-radius: 10px; background: #fff; }
+        .day-box { background: #f9f9f9; padding: 12px; margin-bottom: 10px; border-radius: 8px; border-left: 5px solid #27ae60; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .meal-item { margin: 5px 0; display: block; font-size: 0.95em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    
+    <label for="select-duree">Choisissez la durée :</label>
+    <select id="select-duree" class="select-box">
+        <option value="1">🥗 Menu du Jour</option>
+        <option value="7">📅 Plan de la Semaine</option>
+        <option value="30">📊 Plan du Mois</option>
+    </select>
+
+    <button type="button" id="btn-gps" class="btn" onclick="lancer('gps')">📍 Autour de moi</button>
+    <button type="button" id="btn-ville" class="btn" onclick="lancer('ville')">🌍 Chercher une ville</button>
+
+    <div id="loader">
+        <div style="font-size: 2.5em; font-weight: bold; color: #27ae60;"><span id="chiffre">0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+        <p id="status-msg">Génération de votre plan nutritionnel...</p>
+    </div>
+
+    <div id="resultat">
+        <div id="menu-content"></div>
+    </div>
+</div>
+
+<script>
+    let n = 0;
+    let timer;
+
+    // BASE DE DONNÉES GÉANTE
+    const petitDej = ["Porridge aux baies", "muesly à la banane", "Avocat Toast & œuf poché", "Skyr aux noix", "Omelette fines herbes", "Pancakes banane", "Smoothie bowl açai", "Pain complet & beurre cacahuète", "Muesli maison", "Œufs brouillés au saumon", "Granola & fromage blanc", "Chia pudding coco", "Toast ricotta & figues", "Frittata épinards", "Muffin œuf-fromage", "Gaufres patate douce", "Smoothie protéiné", "pain trempé au lait"];
+    const dejeuner = ["Saumon & Riz complet", "shop suey poulet", "suchi", "Poulet & Quinoa", "Salade lentilles", "Pâtes pesto basilic", "Wok crevettes", "Bowl thon & edamames", "riz cantonais poulet", "Steak pois chiches", "Curry dinde coco", "Salade César légère", "Burrito bowl", "Cabillaud & purée", "Risotto asperges", "Tacos poisson", "Poulet basquaise", "Lasagnes légumes", "Dahl de lentilles", "Poke bowl saumon", "Chili léger"];
+    const diner = ["Soupe de courge", "Gratin courgettes", "shop suey poulet", "suchi", "Cabillaud vapeur", "Salade Féta & Olives", "Omelette champignons", "Bouillon gingembre", "Ratatouille maison", "Tofu sauté brocoli", "Salade chèvre chaud", "Velouté poireaux", "Aubergines parmigiana", "Papillote de dinde", "Soupe maison", "Salade tomates mozza", "Epinards crème", "Chou-fleur rôti"];
+
+    function lancer(type) {
+        if(type === 'ville') {
+            let ville = prompt("Quelle ville ?");
+            if(ville === null || ville === "") return; 
+        }
+
+        // Reset
+        n = 0;
+        clearInterval(timer);
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+        document.getElementById('chiffre').innerText = "0";
+        document.getElementById('progress-bar').style.width = "0%";
+
+        let duree = parseInt(document.getElementById('select-duree').value);
+        let vitesse = (duree === 1) ? 5 : (duree === 7 ? 2.5 : 1.2);
+
+        timer = setInterval(function() {
+            if (n < 100) {
+                n += vitesse;
+                if (n > 100) n = 100;
+                document.getElementById('chiffre').innerText = Math.floor(n);
+                document.getElementById('progress-bar').style.width = n + "%";
+            } else {
+                finaliser(duree);
+            }
+        }, 40);
+    }
+
+    function finaliser(jours) {
+        clearInterval(timer);
+        setTimeout(function() {
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('resultat').style.display = "block";
+            
+            let html = "";
+            for(let i=1; i<=jours; i++) {
+                let p = petitDej[Math.floor(Math.random() * petitDej.length)];
+                let m = dejeuner[Math.floor(Math.random() * dejeuner.length)];
+                let s = diner[Math.floor(Math.random() * diner.length)];
+
+                html += `
+                <div class="day-box">
+                    <b style="color:#27ae60">JOUR ${i}</b><br>
+                    <span class="meal-item">☀️ ${p}</span>
+                    <span class="meal-item">🥗 ${m}</span>
+                    <span class="meal-item">🌙 ${s}</span>
+                </div>`;
+            }
+            document.getElementById('menu-content').innerHTML = html;
+        }, 400);
+    }
+</script>
+
+</body>
+</html>

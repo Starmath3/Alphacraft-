@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Minicraft</title>
+<style>
+body {
+  margin: 0;
+  background: #6db3f2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+canvas {
+  border: 3px solid black;
+  image-rendering: pixelated;
+  background: #87CEEB;
+}
+</style>
+</head>
+<body>
+
+<canvas id="game" width="640" height="480"></canvas>
+
+<script>
+// ================= CONFIG =================
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const TILE = 32;
+const WORLD_W = 120;
+const WORLD_H = 30;
+
+const GRAVITY = 0.12;
+const JUMP = -0.75; // ≈ 1.4 bloc
+const MOVE_ACC = 0.12;
+const MAX_SPEED = 0.25;
+const FRICTION = 0.8;
+
+// ================= BLOCS =================
+const BLOCKS = {
+  air: { solid: false, color: null },
+  grass: { solid: true, color: "#3cb043" },
+  dirt: { solid: true, color: "#8B4513" },
+  stone: { solid: true, color: "#777" },
+  wood: { solid: true, color: "#a0522d" },
+  leaf: { solid: true, color: "#2ecc71" }
+};
+
+// ================= MONDE =================
+let world = [];
+
+function generateWorld() {
+  for (let y = 0; y < WORLD_H; y++) {
+    world[y] = [];
+    for (let x = 0; x < WORLD_W; x++) {
+      if (y === 15) world[y][x] = "grass";
+      else if (y > 15 && y < 19) world[y][x] = "dirt";
+      else if (y >= 19) world[y][x] = "stone";
+      else world[y][x] = "air";
+    }
+  }
+
+  // arbres
+  for (let x = 5; x < WORLD_W; x += 20) {
+    world[14][x] = "wood";
+    world[13][x] = "wood";
+    world[12][x] = "wood";
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dy = -2; dy <= 0; dy++) {
+        world[11 + dy][x + dx] = "leaf";
+      }
+    }
+  }
+}
+
+// ================= JOUEUR =================
+let player = {
+  x: 10,
+  y: 0,
+  vx: 0,
+  vy: 0,
+  w: 0.8,
+  h: 1.8,
+  onGround: false
+};
+
+// spawn safe
+function placePlayerOnGround() {
+  for (let y = 0; y < WORLD_H; y++) {
+    if (world[y][Math.floor(player.x)] !== "air") {
+      player.y = y - player.h;
+      return;
+    }
+  }
+}
+
+// ================= CAMERA =================
+let camera = { x: 0, y: 0 };
+
+// ================= INVENTAIRE =================
+let hotbar = ["dirt", "stone", "wood"];
+let selected = 0;
+
+// ================= UTILS =================
+function inWorld(x, y) {
+  return x >= 0 && x < WORLD_W && y >= 0 && y < WORLD_H;
+}
+function isSolid(x, y) {
+  if (!inWorld(x, y)) return true;
+  return BLOCKS[world[y][x]].solid;
+}
+function playerIntersectsBlock(x, y) {
+  return (
+    x < player.x + player.w &&
+    x + 1 > player.x &&
+    y < player.y + player.h &&
+    y + 1 > player.y
+  );
+}
+
+// ================= PHYSIQUE =================
+function physics() {
+  player.vy += GRAVITY;
+
+  // horizontal
+  let nx = player.x + player.vx;
+  if (
+    !isSolid(Math.floor(nx), Math.floor(player.y)) &&
+    !isSolid(Math.floor(nx), Math.floor(player.y + player.h - 0.1))
+  ) player.x = nx;
+  else player.vx = 0;
+
+  // vertical
+  let ny = player.y + player.vy;
+  if (player.vy > 0) {
+    if (
+      !isSolid(Math.floor(player.x), Math.floor(ny + player.h)) &&
+      !isSolid(Math.floor(player.x + player.w), Math.floor(ny + player.h))
+    ) {
+      player.y = ny;
+      player.onGround = false;
+    } else {
+      player.y = Math.floor(ny + player.h) - player.h;
+      player.vy = 0;
+      player.onGround = true;
+    }
+  } else {
+    if (
+      !isSolid(Math.floor(player.x), Math.floor(ny)) &&
+      !isSolid(Math.floor(player.x + player.w), Math.floor(ny))
+    ) player.y = ny;
+    else player.vy = 0;
+  }
+
+  if (player.onGround) {
+    player.vx *= FRICTION;
+    if (Math.abs(player.vx) < 0.01) player.vx = 0;
+  }
+}
+
+// ================= CAMERA =================
+function updateCamera() {
+  camera.x = player.x * TILE - canvas.width / 2;
+  camera.y = player.y * TILE - canvas.height / 2;
+}
+
+// ================= RENDU =================
+function drawWorld() {
+  const startX = Math.floor(camera.x / TILE);
+  const endX = startX + Math.ceil(canvas.width / TILE) + 1;
+
+  for (let y = 0; y < WORLD_H; y++) {
+    for (let x = startX; x < endX; x++) {
+      if (!inWorld(x, y)) continue;
+      let b = world[y][x];
+      if (b !== "air") {
+        ctx.fillStyle = BLOCKS[b].color;
+        ctx.fillRect(x * TILE - camera.x, y * TILE - camera.y, TILE, TILE);
+      }
+    }
+  }
+}
+
+function drawPlayer() {
+  const px = player.x * TILE - camera.x;
+  const py = player.y * TILE - camera.y;
+
+  ctx.fillStyle = "#1f4fd8";
+  ctx.fillRect(px, py + TILE, TILE * player.w, TILE * 0.8);
+  ctx.fillStyle = "#4fa3ff";
+  ctx.fillRect(px, py + TILE * 0.5, TILE * player.w, TILE * 0.6);
+  ctx.fillStyle = "#f1c27d";
+  ctx.fillRect(px, py, TILE * player.w, TILE * 0.5);
+}
+
+function drawHUD() {
+  hotbar.forEach((b, i) => {
+    ctx.fillStyle = i === selected ? "#fff" : "#aaa";
+    ctx.fillRect(10 + i * 40, canvas.height - 50, 36, 36);
+    ctx.fillStyle = BLOCKS[b].color;
+    ctx.fillRect(14 + i * 40, canvas.height - 46, 28, 28);
+  });
+}
+
+// ================= CONTROLES =================
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft") player.vx = Math.max(player.vx - MOVE_ACC, -MAX_SPEED);
+  if (e.key === "ArrowRight") player.vx = Math.min(player.vx + MOVE_ACC, MAX_SPEED);
+  if (e.key === "ArrowUp" && player.onGround) {
+    player.vy = JUMP;
+    player.onGround = false;
+  }
+  if (e.key >= "1" && e.key <= "3") selected = Number(e.key) - 1;
+});
+
+canvas.addEventListener("contextmenu", e => e.preventDefault());
+canvas.addEventListener("mousedown", e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left + camera.x) / TILE);
+  const y = Math.floor((e.clientY - rect.top + camera.y) / TILE);
+  if (!inWorld(x, y)) return;
+
+  if (e.button === 0) world[y][x] = "air";
+  if (e.button === 2 && !playerIntersectsBlock(x, y)) {
+    world[y][x] = hotbar[selected];
+  }
+});
+
+// ================= LOOP =================
+function loop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  physics();
+  updateCamera();
+  drawWorld();
+  drawPlayer();
+  drawHUD();
+  requestAnimationFrame(loop);
+}
+
+// ================= START =================
+generateWorld();
+placePlayerOnGround();
+loop();
+</script>
+
+</body>
+</html>

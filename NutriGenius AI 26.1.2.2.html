@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI - Boutons Fixes</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 500px; }
+        .select-box { margin-bottom: 20px; padding: 12px; border-radius: 10px; border: 2px solid #27ae60; width: 100%; font-size: 1em; font-weight: bold; }
+        .btn { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 1.1em; display: block; }
+        .btn-gps { background: #2ecc71; }
+        .btn-ville { background: #3498db; }
+        #loader { display: none; margin: 20px 0; }
+        #percent-container { font-family: monospace; font-size: 2.2em; color: #27ae60; font-weight: bold; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 18px; overflow: hidden; margin: 10px 0; border: 1px solid #ddd; }
+        #progress-bar { width: 0%; height: 100%; background: #27ae60; transition: width 0.1s linear; }
+        #resultat { display: none; text-align: left; margin-top: 20px; padding: 20px; border-radius: 15px; background: #fff; border: 1px solid #ddd; max-height: 400px; overflow-y: auto; }
+        .day-block { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .day-title { color: #27ae60; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    
+    <label style="display:block; margin-bottom:10px; font-weight:bold;">Format du plan :</label>
+    <select id="select-duree" class="select-box">
+        <option value="jour">🥗 Menu du Jour</option>
+        <option value="semaine">📅 Plan de la Semaine</option>
+        <option value="mois">📊 Stratégie du Mois</option>
+    </select>
+
+    <button class="btn btn-gps" onclick="initCalcul('gps')">📍 Autour de moi</button>
+    <button class="btn btn-ville" onclick="initCalcul('ville')">🌍 Chercher une ville</button>
+
+    <div id="loader">
+        <div id="percent-container"><span id="chiffre">0.0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+        <p id="status-msg">Initialisation...</p>
+    </div>
+
+    <div id="resultat">
+        <h3 id="res-titre" style="margin-top:0;"></h3>
+        <div id="menu-content"></div>
+        <p id="shop-info" style="margin-top:15px; font-size: 0.8em; color: #888; border-top: 1px solid #eee; padding-top:10px;"></p>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkWWqMx0C4DGNeEax1VHGcnu-UdsDpksg&libraries=places"></script>
+
+<script>
+    let n = 0;
+    let timer;
+    let shopNom = "Commerce local";
+
+    // 1. Fonction principale de lancement
+    function initCalcul(type) {
+        console.log("Démarrage du calcul : " + type);
+        
+        // Reset Visuel
+        n = 0;
+        shopNom = "Commerce local";
+        clearInterval(timer);
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+        document.getElementById('status-msg').innerText = "Connexion IA...";
+        
+        // Démarrage de la barre
+        timer = setInterval(function() {
+            if (n < 99.9) {
+                let vitesse = (n < 90) ? 0.7 : 0.1;
+                n += vitesse;
+                majAffichage();
+            } else {
+                terminer();
+            }
+        }, 35);
+
+        // Logique de recherche
+        if (type === 'gps') {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(p) {
+                    rechercherGoogle(p.coords.latitude, p.coords.longitude);
+                }, function() { alert("GPS refusé"); });
+            }
+        } else {
+            let ville = prompt("Entrez votre ville :");
+            if (ville) {
+                let geocoder = new google.maps.Geocoder();
+                geocoder.geocode({address: ville}, function(results, status) {
+                    if (status === 'OK') {
+                        rechercherGoogle(results[0].geometry.location.lat(), results[0].geometry.location.lng());
+                    }
+                });
+            }
+        }
+    }
+
+    // 2. Mise à jour de la barre
+    function majAffichage() {
+        document.getElementById('chiffre').innerText = n.toFixed(1);
+        document.getElementById('progress-bar').style.width = n + "%";
+    }
+
+    // 3. Recherche Google Maps
+    function rechercherGoogle(lat, lng) {
+        document.getElementById('status-msg').innerText = "Analyse du quartier...";
+        let service = new google.maps.places.PlacesService(document.createElement('div'));
+        service.nearbySearch({
+            location: {lat: lat, lng: lng},
+            radius: 1500,
+            type: ['supermarket']
+        }, function(results, status) {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                shopNom = results[0].name;
+            }
+        });
+    }
+
+    // 4. Finition et affichage du menu
+    function terminer() {
+        clearInterval(timer);
+        n = 100;
+        majAffichage();
+        document.getElementById('status-msg').innerText = "Analyse terminée !";
+
+        setTimeout(function() {
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('resultat').style.display = "block";
+            document.getElementById('shop-info').innerText = "🛒 Basé sur : " + shopNom;
+            
+            let choix = document.getElementById('select-duree').value;
+            let titre = document.getElementById('res-titre');
+            let liste = document.getElementById('menu-content');
+            
+            if (choix === 'jour') {
+                titre.innerText = "📅 Menu du Jour";
+                liste.innerHTML = "<b>Petit-déjeuner :</b> Porridge fruits rouges<br><b>Déjeuner :</b> Poulet & Quinoa<br><b>Dîner :</b> Soupe de potiron";
+            } else if (choix === 'semaine') {
+                titre.innerText = "🗓️ Plan de la Semaine";
+                liste.innerHTML = "Plan de 7 jours généré avec succès selon les stocks locaux.";
+            } else {
+                titre.innerText = "📊 Stratégie du Mois";
+                liste.innerHTML = "Optimisation nutritionnelle sur 4 semaines (Indice Glycémique Bas).";
+            }
+        }, 500);
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI - Calendrier Pro</title>
+    <script>
+        // ON PLACE LE MOTEUR ICI POUR QU'IL SOIT ACTIF TOUT DE SUITE
+        var n = 0;
+        var intervalle;
+
+        function lancerIA(mode) {
+            // Reset visuel immédiat
+            n = 0;
+            if(intervalle) clearInterval(intervalle);
+            document.getElementById('resultat').style.display = "none";
+            document.getElementById('loader').style.display = "block";
+            
+            var duree = parseInt(document.getElementById('select-duree').value);
+            var vitesse = (duree === 1) ? 1.5 : (duree === 7 ? 0.4 : 0.1);
+            
+            document.getElementById('status-msg').innerText = "Génération de " + (duree * 3) + " repas...";
+
+            intervalle = setInterval(function() {
+                if (n < 99.9) {
+                    n += vitesse;
+                    document.getElementById('chiffre').innerText = Math.min(n, 99.9).toFixed(1);
+                    document.getElementById('progress-bar').style.width = n + "%";
+                } else {
+                    terminer(duree);
+                }
+            }, 30);
+
+            if(mode === 'ville') { var v = prompt("Quelle ville ?"); if(!v) n=100; }
+        }
+
+        function tirer(l) { return l[Math.floor(Math.random() * l.length)]; }
+
+        function terminer(jours) {
+            clearInterval(intervalle);
+            document.getElementById('chiffre').innerText = "100.0";
+            document.getElementById('progress-bar').style.width = "100%";
+            
+            var m = ["Avocat Toast", "Porridge", "Skyr Fruits", "Omelette", "Pancakes"];
+            var d = ["Saumon Riz", "Poulet Brocolis", "Salade Quinoa", "Pâtes Pesto", "Wok Crevettes"];
+            var s = ["Soupe Courge", "Gratin Léger", "Cabillaud", "Tofu Sauté", "Salade Lentilles"];
+
+            setTimeout(function() {
+                document.getElementById('loader').style.display = "none";
+                document.getElementById('resultat').style.display = "block";
+                var html = "";
+                for (var i = 1; i <= jours; i++) {
+                    if (jours > 1 && (i === 1 || (i - 1) % 7 === 0)) {
+                        html += "<div style='background:#27ae60;color:white;padding:5px;margin:10px 0;border-radius:5px;'>SEMAINE " + Math.ceil(i/7) + "</div>";
+                    }
+                    html += "<div style='background:#f4f4f4;padding:10px;margin-bottom:10px;border-radius:8px;text-align:left;border-left:4px solid #27ae60;'>";
+                    html += "<b>JOUR " + i + "</b><br>";
+                    html += "☀️ " + tirer(m) + " | 🥗 " + tirer(d) + " | 🌙 " + tirer(s);
+                    html += "</div>";
+                }
+                document.getElementById('menu-content').innerHTML = html;
+            }, 500);
+        }
+    </script>
+    <style>
+        body { font-family: sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 500px; }
+        .btn { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 1.1em; }
+        .btn-gps { background: #2ecc71; }
+        .btn-ville { background: #3498db; }
+        #loader { display: none; margin: 20px 0; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 15px; overflow: hidden; margin: 10px 0; }
+        #progress-bar { width: 0%; height: 100%; background: #27ae60; }
+        #resultat { display: none; margin-top: 20px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    
+    <select id="select-duree" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; font-weight:bold;">
+        <option value="1">🥗 Menu du Jour</option>
+        <option value="7">📅 Plan de la Semaine</option>
+        <option value="30">📊 Plan du Mois</option>
+    </select>
+
+    <button class="btn btn-gps" onclick="lancerIA('gps')">📍 Autour de moi</button>
+    <button class="btn btn-ville" onclick="lancerIA('ville')">🌍 Choisir une ville</button>
+
+    <div id="loader">
+        <div id="percent-container" style="font-size:2em; font-weight:bold; color:#27ae60;"><span id="chiffre">0.0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+        <p id="status-msg">Préparation...</p>
+    </div>
+
+    <div id="resultat">
+        <h3>📋 Votre Plan Nutritionnel</h3>
+        <div id="menu-content"></div>
+    </div>
+</div>

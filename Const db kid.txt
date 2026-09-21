@@ -1,0 +1,116 @@
+
+
+    // --- 1 AN (Textures lisses, sans morceaux, sans sel ajouté, sans miel) ---
+    {
+        n: "Compote Pomme & Semoule", cat: "matin", ageMin: 1,
+        ing: [{nom:"Pomme",q:60,u:"g"},{nom:"Semoule fine",q:15,u:"g"},{nom:"Lait infantile",q:100,u:"ml"}],
+        r: ["1. Cuire la pomme épluchée jusqu'à ce qu'elle soit fondante.", "2. Mixer finement sans morceaux résiduels.", "3. Chauffer le lait infantile à bonne température.", "4. Incorporer la semoule fine en pluie.", "5. Mélanger la compote de pomme à la semoule.", "6. Vérifier la texture bien lisse avant de servir."],
+        ntr: "Protéines: 5g | Glucides: 25g | Lipides: 3g",
+        tip: "Aucun sucre ajouté n'est nécessaire, la pomme suffit à sucrer."
+    },
+    {
+        n: "Purée Carotte & Poulet", cat: "midi", ageMin: 1,
+        ing: [{nom:"Carotte",q:80,u:"g"},{nom:"Blanc de poulet",q:30,u:"g"},{nom:"Huile de colza",q:3,u:"ml"}],
+        r: ["1. Cuire la carotte à la vapeur jusqu'à tendreté totale.", "2. Cuire le blanc de poulet sans aucune matière grasse.", "3. Mixer ensemble la carotte et le poulet cuits.", "4. Ajouter l'huile de colza pour l'onctuosité.", "5. Vérifier l'absence de tout petit morceau dur.", "6. Servir tiède dans un petit bol adapté."],
+        ntr: "Protéines: 10g | Glucides: 8g | Lipides: 4g",
+        tip: "Ne jamais ajouter de sel avant l'âge d'un an."
+    },
+    {
+        n: "Velouté Courgette & Riz", cat: "soir", ageMin: 1,
+        ing: [{nom:"Courgette",q:70,u:"g"},{nom:"Riz",q:15,u:"g"},{nom:"Lait infantile",q:50,u:"ml"}],
+        r: ["1. Cuire la courgette épluchée à la vapeur douce.", "2. Cuire le riz jusqu'à ce qu'il soit très fondant.", "3. Mixer la courgette et le riz ensemble.", "4. Détendre avec le lait infantile tiède.", "5. Vérifier une texture bien homogène et lisse.", "6. Servir à température tiède, jamais chaude."],
+        ntr: "Protéines: 3g | Glucides: 17g | Lipides: 2g",
+        tip: "Un repas du soir léger favorise un sommeil paisible."
+    },
+
+    // --- 2 ANS (Textures moulinées, petits morceaux fondants) ---
+    {
+        n: "Porridge Banane & Avoine", cat: "matin", ageMin: 2,
+        ing: [{nom:"Flocons d'avoine",q:20,u:"g"},{nom:"Banane",q:40,u:"g"},{nom:"Lait",q:120,u:"ml"}],
+        r: ["1. Chauffer le lait doucement dans une casserole.", "2. Ajouter les flocons d'avoine en pluie légère.", "3. Laisser cuire à feu doux quelques minutes.", "4. Écraser la banane à la fourchette.", "5. Incorporer la banane écrasée au porridge.", "6. Servir tiède dans un bol adapté à l'enfant."],
+        ntr: "Protéines: 7g | Glucides: 28g | Lipides: 4g",
+        tip: "L'avoine apporte des fibres douces pour la digestion."
+    },
+    {
+        n: "Petits Dés de Poisson & Pomme de Terre", cat: "midi", ageMin: 2,
+        ing: [{nom:"Filet de poisson blanc",q:40,u:"g"},{nom:"Pomme de terre",q:70,u:"g"},{nom:"Beurre",q:5,u:"g"}],
+        r: ["1. Cuire la pomme de terre à la vapeur douce.", "2. Cuire le filet de poisson sans aucune arête.", "3. Écraser la pomme de terre en petits morceaux fondants.", "4. Émietter le poisson très finement à la fourchette.", "5. Mélanger le tout avec le beurre fondu.", "6. Vérifier l'absence totale d'arêtes avant de servir."],
+        ntr: "Protéines: 11g | Glucides: 14g | Lipides: 5g",
+        tip: "Vérifiez toujours deux fois l'absence d'arêtes à cet âge."
+    },
+    {
+        n: "Soupe Douce Potiron & Vermicelles", cat: "soir", ageMin: 2,
+        ing: [{nom:"Potiron",q:80,u:"g"},{nom:"Vermicelles",q:20,u:"g"},{nom:"Crème",q:10,u:"g"}],
+        r: ["1. Cuire le potiron à la vapeur jusqu'à tendreté.", "2. Cuire les vermicelles dans une eau frémissante.", "3. Mixer grossièrement le potiron cuit.", "4. Ajouter les vermicelles égouttés à la soupe.", "5. Incorporer la crème pour l'onctuosité finale.", "6. Servir tiède en petite portion adaptée."],
+        ntr: "Protéines: 3g | Glucides: 19g | Lipides: 4g",
+        tip: "Les petits morceaux de vermicelles aident à apprendre à mâcher."
+    },
+
+    // --- 3 ANS (Textures très tendres + Lait) ---
+    { 
+        n: "Bol Éveil & Lait", cat: "matin", ageMin: 3,
+        ing: [{nom:"Lait de croissance",q:150,u:"ml"},{nom:"Banane",q:30,u:"g"},{nom:"Céréales infantiles",q:20,u:"g"},{nom:"Poire",q:20,u:"g"}],
+        r: ["1. Chauffer 150ml de lait de croissance.", "2. Écraser une demi-banane bien mûre.", "3. Mélanger avec des céréales infantiles.", "4. Vérifier la température sur le poignet.", "5. Servir dans un bol coloré adapté.", "6. Proposer quelques morceaux de poire douce."],
+        ntr: "Protéines: 8g | Glucides: 28g | Lipides: 5g",
+        tip: "Le lait de croissance apporte le fer nécessaire à 3 ans."
+    },
+    { 
+        n: "Purée Douce de Patate Douce", cat: "midi", ageMin: 3,
+        ing: [{nom:"Patate douce",q:100,u:"g"},{nom:"Beurre",q:5,u:"g"},{nom:"Jambon blanc",q:10,u:"g"},{nom:"Fromage frais",q:15,u:"g"}],
+        r: ["1. Cuire la patate douce à la vapeur douce.", "2. Mixer avec une noisette de beurre frais.", "3. Ajouter 10g de jambon blanc mixé très fin.", "4. Incorporer une cuillère de fromage frais.", "5. Présenter en forme de petit dôme rigolo.", "6. Servir tiède pour ne pas brûler l'enfant."],
+        ntr: "Protéines: 6g | Glucides: 21g | Lipides: 7g",
+        tip: "La patate douce est riche en vitamine A pour la vue."
+    },
+    { 
+        n: "Velouté de Potiron dodo", cat: "soir", ageMin: 3,
+        ing: [{nom:"Potiron",q:100,u:"g"},{nom:"Pomme de terre",q:40,u:"g"},{nom:"Lait",q:50,u:"ml"},{nom:"Pain de mie",q:15,u:"g"},{nom:"Yaourt nature",q:1,u:" u"}],
+        r: ["1. Cuire le potiron et une petite pomme de terre.", "2. Mixer avec un peu de lait pour l'onctuosité.", "3. Servir en petite tasse facile à tenir.", "4. Accompagner d'un petit morceau de pain mie.", "5. Donner un yaourt nature en dessert.", "6. Finir par un petit verre d'eau plate."],
+        ntr: "Protéines: 7g | Glucides: 23g | Lipides: 4g",
+        tip: "Un repas léger pour favoriser un sommeil paisible."
+    },
+
+    // --- 4 ANS (Apprentissage des morceaux) ---
+    { 
+        n: "Tartine d'Ourson", cat: "matin", ageMin: 4,
+        ing: [{nom:"Pain de mie",q:1,u:" tranche"},{nom:"Fromage frais",q:20,u:"g"},{nom:"Banane",q:20,u:"g"},{nom:"Myrtille",q:2,u:" u"},{nom:"Lait",q:100,u:"ml"},{nom:"Jus d'orange",q:80,u:"ml"}],
+        r: ["1. Griller légèrement une tranche de pain de mie.", "2. Étaler du fromage frais sur toute la surface.", "3. Faire des yeux avec deux rondelles de banane.", "4. Faire le nez avec une petite myrtille.", "5. Accompagner d'un petit bol de lait chaud.", "6. Proposer un jus d'orange pressé maison."],
+        ntr: "Protéines: 8g | Glucides: 35g | Lipides: 6g",
+        tip: "Rendre le plat visuel aide l'enfant à goûter de tout."
+    },
+    { 
+        n: "Petites Pâtes 'Étoiles' au Poulet", cat: "midi", ageMin: 4,
+        ing: [{nom:"Pâtes étoiles",q:60,u:"g"},{nom:"Blanc de poulet",q:40,u:"g"},{nom:"Carottes",q:50,u:"g"},{nom:"Huile de colza",q:5,u:"ml"},{nom:"Parmesan",q:5,u:"g"}],
+        r: ["1. Cuire les petites pâtes étoiles al dente.", "2. Hacher très finement un blanc de poulet cuit.", "3. Mélanger avec une purée de carottes fondante.", "4. Ajouter un filet d'huile de colza bio.", "5. Saupoudrer d'un tout petit peu de parmesan.", "6. Vérifier qu'il n'y a pas de gros morceaux."],
+        ntr: "Protéines: 17g | Glucides: 48g | Lipides: 8g",
+        tip: "L'huile de colza est essentielle pour le cerveau des petits."
+    },
+    {
+        n: "Soupe de Petits Pois Rigolote", cat: "soir", ageMin: 4,
+        ing: [{nom:"Petits pois",q:80,u:"g"},{nom:"Pomme de terre",q:40,u:"g"},{nom:"Crème",q:10,u:"g"},{nom:"Pain",q:1,u:" tranche"}],
+        r: ["1. Cuire les petits pois et la pomme de terre à la vapeur.", "2. Mixer grossièrement pour garder un peu de texture.", "3. Ajouter la crème pour une touche onctueuse.", "4. Couper la tranche de pain en petits bâtonnets.", "5. Disposer les bâtonnets autour du bol de soupe.", "6. Servir tiède pour un dîner léger et coloré."],
+        ntr: "Protéines: 6g | Glucides: 22g | Lipides: 3g",
+        tip: "Les petits pois apportent des fibres douces le soir."
+    },
+
+    // --- 5-6 ANS (Comme les grands, mais coupé petit) ---
+    { 
+        n: "Omelette 'Soleil' & Mouillettes", cat: "matin", ageMin: 5,
+        ing: [{nom:"Oeufs",q:1,u:" u"},{nom:"Lait",q:5,u:"ml"},{nom:"Pain",q:1,u:" tranche"},{nom:"Beurre",q:5,u:"g"},{nom:"Fruit de saison",q:1,u:" u"}],
+        r: ["1. Battre un œuf avec une goutte de lait.", "2. Cuire doucement pour garder du moelleux.", "3. Couper des bâtonnets de pain beurré.", "4. Disposer l'omelette ronde comme un soleil.", "5. Faire des rayons avec les bâtonnets de pain.", "6. Servir avec un fruit frais de saison."],
+        ntr: "Protéines: 11g | Glucides: 23g | Lipides: 11g",
+        tip: "L'œuf est une excellente protéine pour la concentration."
+    },
+    { 
+        n: "Poisson Blanc & Riz Fondant", cat: "midi", ageMin: 5,
+        ing: [{nom:"Filet de poisson blanc",q:60,u:"g"},{nom:"Riz",q:50,u:"g"},{nom:"Petits pois",q:30,u:"g"},{nom:"Lait",q:30,u:"ml"},{nom:"Clémentine",q:1,u:" u"}],
+        r: ["1. Cuire le filet de poisson sans aucune arête.", "2. Préparer un riz bien cuit et moelleux.", "3. Ajouter des petits pois extra-fins vapeur.", "4. Faire une sauce blanche très légère au lait.", "5. Mélanger les couleurs dans l'assiette.", "6. Servir avec un quartier de clémentine."],
+        ntr: "Protéines: 18g | Glucides: 44g | Lipides: 2g",
+        tip: "Attention : vérifiez toujours deux fois l'absence d'arêtes."
+    },
+    {
+        n: "Petit Gratin de Courgette au Fromage", cat: "soir", ageMin: 5,
+        ing: [{nom:"Courgette",q:90,u:"g"},{nom:"Jambon blanc",q:20,u:"g"},{nom:"Fromage râpé",q:15,u:"g"},{nom:"Crème",q:10,u:"g"}],
+        r: ["1. Couper la courgette en petites rondelles fines.", "2. Cuire les rondelles à la vapeur quelques minutes.", "3. Disposer la courgette et le jambon coupé petit.", "4. Napper l'ensemble d'un peu de crème légère.", "5. Parsemer de fromage râpé sur le dessus.", "6. Passer sous le grill jusqu'à léger gratiné."],
+        ntr: "Protéines: 11g | Glucides: 7g | Lipides: 10g",
+        tip: "Un plat coloré aide l'enfant à accepter les légumes verts."
+    }

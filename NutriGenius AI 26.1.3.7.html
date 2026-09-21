@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI - Intelligent Edition</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 550px; }
+        h1 { color: #2c3e50; margin-bottom: 20px; }
+        .section-title { font-size: 0.9em; color: #7f8c8d; text-align: left; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        .input-group { margin-bottom: 15px; text-align: left; background: #f9f9f9; padding: 15px; border-radius: 12px; }
+        .select-box, .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; border: 2px solid #e0e0e0; font-size: 1em; box-sizing: border-box; }
+        .input-field:focus { border-color: #27ae60; outline: none; }
+        
+        .row { display: flex; gap: 10px; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin: 10px 0; font-weight: bold; color: #27ae60; cursor: pointer; }
+
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; font-size: 1.1em; transition: 0.2s; background: #27ae60; }
+        .btn:hover { background: #219150; transform: translateY(-2px); }
+
+        #loader { display: none; margin: 20px 0; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 12px; overflow: hidden; margin: 10px 0; }
+        #progress-bar { width: 0%; height: 100%; background: #27ae60; transition: width 0.1s linear; }
+        
+        #resultat { display: none; margin-top: 20px; text-align: left; }
+        .summary-card { background: #27ae60; color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .day-box { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; border-left: 5px solid #27ae60; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .meal-item { display: block; margin: 4px 0; font-size: 0.95em; }
+        .cal-tag { font-size: 0.8em; color: #7f8c8d; float: right; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+
+    <div class="input-group">
+        <div class="section-title">Votre Profil</div>
+        <div class="row">
+            <input type="number" id="age" class="input-field" placeholder="Âge">
+            <select id="sexe" class="input-field">
+                <option value="H">Homme</option>
+                <option value="F">Femme</option>
+            </select>
+        </div>
+        <div class="row">
+            <input type="number" id="poids" class="input-field" placeholder="Poids (kg)">
+            <input type="number" id="taille" class="input-field" placeholder="Taille (cm)">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <div class="section-title">Paramètres du menu</div>
+        <select id="select-duree" class="select-box">
+            <option value="1">🥗 Menu du Jour</option>
+            <option value="7">📅 Menu de la Semaine</option>
+            <option value="30">📊 Menu du Mois</option>
+        </select>
+        <label class="checkbox-group">
+            <input type="checkbox" id="check-veg"> 🥗 Mode Végétarien
+        </label>
+    </div>
+
+    <button type="button" class="btn" onclick="lancer()">Générer mon programme IA</button>
+
+    <div id="loader">
+        <div style="font-size: 1.5em; font-weight: bold; color: #27ae60;"><span id="chiffre">0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+        <p>Analyse nutritionnelle en cours...</p>
+    </div>
+
+    <div id="resultat">
+        <div id="summary" class="summary-card"></div>
+        <div id="menu-content"></div>
+    </div>
+</div>
+
+<script>
+    // BASE DE DONNÉES ENRICHIE (Extraits convertis)
+    const db = {
+        petitDej: [
+            { n: "Porridge aux baies", c: 350, v: true },
+            { n: "Avocat Toast & œuf poché", c: 420, v: true },
+            { n: "Skyr aux noix et miel", c: 300, v: true },
+            { n: "Omelette fines herbes", c: 350, v: true },
+            { n: "Tartine saumon fumé", c: 380, v: false },
+            { n: "Pancakes banane", c: 400, v: true }
+        ],
+        dejeuner: [
+            { n: "Saumon & Riz complet", c: 600, v: false },
+            { n: "Salade de quinoa et feta", c: 450, v: true },
+            { n: "Poulet & Patates douces", c: 550, v: false },
+            { n: "Dahl de lentilles corail", c: 480, v: true },
+            { n: "Wok de crevettes", c: 420, v: false },
+            { n: "Gratin chou-fleur léger", c: 400, v: true }
+        ],
+        diner: [
+            { n: "Soupe de courge & graines", c: 300, v: true },
+            { n: "Cabillaud vapeur & poireaux", c: 350, v: false },
+            { n: "Omelette champignons", c: 320, v: true },
+            { n: "Salade de lentilles tièdes", c: 380, v: true },
+            { n: "Papillote de dinde", c: 340, v: false }
+        ]
+    };
+
+    let n = 0;
+    let timer;
+
+    function calculerBesoins() {
+        const p = parseFloat(document.getElementById('poids').value) || 70;
+        const t = parseFloat(document.getElementById('taille').value) || 170;
+        const a = parseInt(document.getElementById('age').value) || 30;
+        const s = document.getElementById('sexe').value;
+
+        // Formule de Mifflin-St Jeor
+        let bmr = (10 * p) + (6.25 * t) - (5 * a);
+        bmr = (s === 'H') ? bmr + 5 : bmr - 161;
+        return Math.round(bmr * 1.3); // x1.3 pour activité légère
+    }
+
+    function lancer() {
+        n = 0;
+        clearInterval(timer);
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+
+        timer = setInterval(() => {
+            if (n < 100) {
+                n += 5;
+                document.getElementById('chiffre').innerText = n;
+                document.getElementById('progress-bar').style.width = n + "%";
+            } else {
+                finaliser();
+            }
+        }, 30);
+    }
+
+    function finaliser() {
+        clearInterval(timer);
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+        const cible = calculerBesoins();
+
+        document.getElementById('loader').style.display = "none";
+        document.getElementById('resultat').style.display = "block";
+
+        document.getElementById('summary').innerHTML = `
+            <b>Votre objectif IA :</b> ${cible} kcal / jour<br>
+            <small>Basé sur votre profil ${isVeg ? '(Végétarien)' : ''}</small>
+        `;
+
+        // Filtrage
+        const fP = isVeg ? db.petitDej.filter(x => x.v) : db.petitDej;
+        const fM = isVeg ? db.dejeuner.filter(x => x.v) : db.dejeuner;
+        const fD = isVeg ? db.diner.filter(x => x.v) : db.diner;
+
+        let html = "";
+        for(let i=1; i<=jours; i++) {
+            let p = fP[Math.floor(Math.random() * fP.length)];
+            let m = fM[Math.floor(Math.random() * fM.length)];
+            let d = fD[Math.floor(Math.random() * fD.length)];
+            let totalDay = p.c + m.c + d.c;
+
+            html += `
+            <div class="day-box">
+                <b style="color:#27ae60">JOUR ${i}</b> 
+                <span class="cal-tag">Total: ${totalDay} kcal</span><br>
+                <span class="meal-item">☀️ ${p.n} <small>(${p.c} cal)</small></span>
+                <span class="meal-item">🥗 ${m.n} <small>(${m.c} cal)</small></span>
+                <span class="meal-item">🌙 ${d.n} <small>(${d.c} cal)</small></span>
+            </div>`;
+        }
+        document.getElementById('menu-content').innerHTML = html;
+    }
+</script>
+
+</body>
+</html>

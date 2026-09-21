@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI - Calendrier Intelligent</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 600px; }
+        
+        /* Sélecteur de durée */
+        .mode-selector { display: flex; justify-content: space-around; margin-bottom: 20px; background: #eee; padding: 10px; border-radius: 12px; }
+        .mode-option { cursor: pointer; padding: 10px 15px; border-radius: 8px; transition: 0.3s; font-weight: bold; flex: 1; }
+        .mode-option.active { background: #27ae60; color: white; }
+
+        button { width: 100%; padding: 15px; margin: 5px 0; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 1.1em; }
+        .btn-gps { background: #2ecc71; }
+        .btn-ville { background: #3498db; }
+        
+        #loader { display: none; margin: 20px 0; }
+        #percent-container { font-family: monospace; font-size: 2.2em; color: #27ae60; font-weight: bold; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 15px; overflow: hidden; margin: 10px 0; }
+        .progress-bar { width: 0%; height: 100%; background: #27ae60; transition: width 0.1s linear; }
+        
+        #resultat { display: none; text-align: left; margin-top: 20px; padding: 15px; border-radius: 12px; background: #fff; border: 1px solid #ddd; max-height: 400px; overflow-y: auto; }
+        .day-block { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .day-title { color: #27ae60; font-weight: bold; text-transform: uppercase; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    
+    <p>1. Choisissez la durée :</p>
+    <div class="mode-selector">
+        <div class="mode-option active" onclick="setMode(this, 'jour')">JOUR</div>
+        <div class="mode-option" onclick="setMode(this, 'semaine')">SEMAINE</div>
+        <div class="mode-option" onclick="setMode(this, 'mois')">MOIS</div>
+    </div>
+
+    <button class="btn-gps" onclick="lancer('gps')">📍 Scanner mon quartier</button>
+    <button class="btn-ville" onclick="lancer('ville')">🌍 Chercher une ville</button>
+
+    <div id="loader">
+        <div id="percent-container"><span id="chiffre">0.0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+        <p id="status">G

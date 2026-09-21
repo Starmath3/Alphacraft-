@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.11.6b</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            text-align: center; 
+            padding: 20px; 
+            transition: 0.3s; 
+            margin: 0; 
+            max-width: 100%;
+            overflow-x: hidden; 
+        }
+        
+        .container { 
+            background: var(--card); 
+            padding: 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            display: block; 
+            width: 100%; 
+            max-width: 900px; 
+            text-align: left; 
+            margin: 0 auto; 
+        }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        input, select, button { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
+        
+        .modes-title { font-weight: bold; margin-top: 20px; color: var(--primary); }
+        .modes-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 10px 0; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 10px; }
+        .mode-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .mode-item input { width: 18px; height: 18px; cursor: pointer; }
+
+        :root { 
+            --bg: #f0f4f8; 
+            --card: white; 
+            --text: #2c3e50; 
+            --text-secondary: #444444; 
+            --primary: #009245; 
+            --accent: #e67e22; 
+            --bg-ing: #f9f9f9; 
+            --txt-ing: #333;    
+        }
+
+        .dark-mode { 
+            --bg: #1a1a1a; 
+            --card: #2d2d2d; 
+            --text: #f0f4f8; 
+            --text-secondary: #cccccc; 
+            --primary: #27ae60; 
+            --accent: #d35400; 
+            --bg-ing: #3d3d3d; 
+            --txt-ing: #ffffff; 
+        }
+
+        button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; margin-top: 10px; }
+        button:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        
+        .recipe-card { background: var(--card); padding: 25px; border-radius: 15px; margin-top: 20px; border-left: 8px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.08); text-align: left; }
+        .ntr-box { background: var(--bg); padding: 15px; border-radius: 10px; margin: 15px 0; font-weight: bold; color: var(--primary); border: 1px solid rgba(0,0,0,0.1); }
+        .tip-box { font-style: italic; background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; border-left: 5px solid #ffeeba; margin-top: 10px; }
+        .error-msg { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 15px; font-weight: bold; margin-top: 20px; }
+        
+        .semaine-container { margin-top: 30px; border-top: 3px double var(--primary); padding-top: 20px; }
+        .semaine-header { color: var(--primary); text-align: center; font-size: 1.8em; margin-bottom: 15px; }
+        .courses-bloc { border: 2px solid var(--accent); background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: left; }
+        .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 15px; }
+
+        .cartouche-menu {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--primary), #1e7e34);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            margin-top: 20px;
+            transition: 0.3s;
+            border: none;
+        }
+        .cartouche-menu:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+
+        #vue-personne, #vue-banque, #vue-menu { display: none; }
+        .top-bar-menu { display: flex; gap: 15px; margin-bottom: 25px; }
+        .top-bar-menu button { margin-top: 0; }
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.btn-action-carte {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 2px solid var(--primary);
+    background: transparent;
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 0;
+}
+.btn-action-carte:hover:not(:disabled) { background: var(--primary); color: white; }
+.btn-action-carte:disabled { opacity: 0.4; cursor: not-allowed; border-color: #999; color: #999; background: transparent; }
+
+        .analyse-bloc { background: var(--card); border: 2px solid var(--primary); border-radius: 15px; padding: 20px; margin-bottom: 25px; }
+        .analyse-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 10px; }
+        .analyse-item { background: var(--bg); border-radius: 10px; padding: 10px 14px; }
+        .analyse-label { display: block; font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 4px; }
+        .analyse-valeur { display: block; font-weight: bold; color: var(--text); font-size: 1em; }
+        .analyse-note { font-size: 0.8em; color: var(--text-secondary); margin-bottom: 0; margin-top: 10px; }
+
+        .portions-control { display: flex; align-items: center; gap: 10px; background: var(--card); border-radius: 10px; padding: 8px 14px; margin-bottom: 15px; border: 1px solid var(--primary); width: fit-content; }
+        .portions-control label { font-weight: bold; color: var(--primary); font-size: 0.9em; white-space: nowrap; }
+        .portions-control input { width: 70px; padding: 6px; margin: 0; }
+
+        .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .form-actions button { margin-top: 0; }
+        .btn-secondaire { background: transparent !important; color: var(--primary) !important; border: 2px solid var(--primary) !important; }
+        .btn-secondaire:hover { background: var(--primary) !important; color: white !important; }
+
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; filter: none !important; }
+
+        .aide-champ { font-size: 0.75em; color: var(--text-secondary); margin: -14px 0 14px 4px; }
+
+        .welcome-actions { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+        .welcome-actions button { font-size: 18px; padding: 20px; }
+        .welcome-intro { color: var(--text-secondary); margin-top: -10px; }
+
+        .liste-banque { display: flex; flex-direction: column; gap: 10px; margin: 15px 0; max-height: 380px; overflow-y: auto; padding-right: 4px; }
+        .bank-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg); border-radius: 10px; padding: 12px 15px; border: 1px solid rgba(0,0,0,0.08); gap: 10px; }
+        .bank-item-select { display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; min-width: 0; }
+        .bank-item-select input[type="checkbox"] { width: 20px; height: 20px; flex: none; margin: 0; }
+        .bank-item-info { display: flex; flex-direction: column; min-width: 0; }
+        .bank-item-nom { font-weight: bold; color: var(--text); }
+        .bank-item-stats { font-size: 0.78em; color: var(--text-secondary); }
+        .bank-actions { display: flex; gap: 6px; flex: none; }
+        .btn-icone { width: auto; padding: 6px 10px; background: transparent; border: 1px solid rgba(0,0,0,0.15); color: var(--text); font-size: 14px; margin-top: 0; }
+        .btn-icone:hover { background: rgba(0,0,0,0.06); filter: none; transform: none; }
+
+        .bandeau-profil { background: var(--bg); border-left: 5px solid var(--primary); padding: 12px 16px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; color: var(--primary); }
+
+        @media print {
+            .top-bar-menu, .card-actions, .cartouche-menu, #zone-cartouche, .portions-control, .no-print-btn { display: none !important; }
+            body { background: white; color: black; padding: 0; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="vue-accueil" class="container">
+    <button onclick="basculerModeSombre()" style="width:auto; padding: 10px 20px; margin-bottom:20px;">🌓 MODE SOMBRE</button>
+    <h1>NutriGenius AI 🥗</h1>
+    <p class="welcome-intro">Générez un plan nutritionnel pour une personne, ou pour tout un groupe grâce à la banque de personnes.</p>
+    
+    <div class="welcome-actions">
+        <button onclick="ajouterNouvellePersonne()">➕ Ajouter une personne</button>
+        <button onclick="basculerVue('banque')" class="btn-secondaire">📁 Sélectionner manuellement dans la banque</button>
+    </div>
+
+    <div class="chat-zone" style="margin-top: 35px; border-top: 2px dashed var(--primary); padding-top: 25px;">
+        <h3 style="color: var(--primary); margin-top: 0;">💬 Assistant intelligent</h3>
+        <p style="font-size: 0.85em; color: var(--text-secondary); margin-top: -10px;">NutriGenius est une IA qui à un niveau de language pas très élevé, mais spécialisé dans la génération de menu, et la macronutrition, elle vous donera un meilleur menu que des modèles de language, mais peut faire beucoup de compréhention, qui seront parfois répétitif, vous pouvez lui demandez de Générer uniquement des menus.<br><br>Pour vous faciliter la tache vous pouvez suivre ces instructions si vous le souhaitez :<br><br>Dite lui qui vous etes, vos régimes (Végétarien, sportif, luxueux, etc...), le nombre de personnes que vous etes, vos alergènes, et un menu sur quelle durée.<br><br>si vous etes plusieurs et que le souhaitez vous pouvez enregistréles informations phisiques de chaques personnes, et siter chaque prénoms pour avoir des menu équilibré et adapté à chaque personnes.</p>
+<div style="position: relative; width: 100%;">
+    <textarea
+        id="chat-input"
+        placeholder="Décrivez votre besoin ici..."
+        rows="1"
+        onkeydown="gererEntree(event)"
+        style="
+            width: 100%;
+            min-height: 46px;
+            max-height: 240px; /* ≈ 10 lignes */
+            padding: 12px 50px 12px 12px;
+            box-sizing: border-box;
+            resize: none;
+            overflow-y: hidden;
+            line-height: 24px;
+            font-family: inherit;
+            font-size: inherit;
+            border-radius: 15px
+        "
+        oninput="autoResize(this)"
+    ></textarea>
+
+    <button
+        onclick="envoyerMessageChat()"
+        style="
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            border: none;
+            background: #007bff;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        "
+    >
+        ➔
+    </button>
+</div>
+
+<script>
+function autoResize(textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+
+    // À partir de 10 lignes, afficher la barre de défilement
+    if (textarea.scrollHeight > 240) {
+        textarea.style.height = "240px";
+        textarea.style.overflowY = "auto";
+    } else {
+        textarea.style.overflowY = "hidden";
+    }
+}
+
+// Entrée = envoyer, Shift+Entrée = nouvelle ligne
+function gererEntree(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        envoyerMessageChat();
+    }
+}
+</script>
+    </div>
+
+    <div id="chat-dialogue" style="display: none; margin-top: 20px; background: var(--bg); padding: 20px; border-radius: 15px; text-align: left; border-left: 5px solid var(--primary);">
+        <p id="chat-response-text" style="margin-bottom: 15px; font-size: 1.05em; color: var(--text);"></p>
+        
+        <div id="chat-confirmation-buttons" style="display: none; gap: 10px;">
+            <button onclick="confirmerChat(true)" style="flex: 1; background: var(--primary);">Oui, c'est bien ça 👍</button>
+            <button onclick="confirmerChat(false)" class="btn-secondaire" style="flex: 1;">Non, tu n'as pas compris 👎</button>
+        </div>
+
+        <div id="chat-final-zone" style="display: none; margin-top: 15px; text-align: center;">
+            <p id="chat-final-text" style="font-style: italic; font-weight: bold; color: var(--primary); margin-bottom: 15px;"></p>
+            <div id="zone-cartouche-chat"></div>
+        </div>
+    </div>
+</div>
+
+<div id="vue-personne" class="container">
+    <button onclick="basculerModeSombre()" style="width:auto; padding: 10px 20px; margin-bottom:20px;">🌓 MODE SOMBRE</button>
+    <h1 id="titre-personne">Nouvelle personne 🧑</h1>
+
+    <div class="grid">
+        <input type="text" id="nom-personne" placeholder="Nom de la personne (Obligatoire)">
+        <input type="number" id="age" placeholder="Âge (Optionnel)">
+        <input type="number" id="poids" placeholder="Poids en kg (Optionnel)">
+        <input type="number" id="taille" placeholder="Taille en cm (Optionnel)">
+        <select id="sexe">
+            <option value="">Sexe (Optionnel)</option>
+            <option value="H">Homme</option>
+            <option value="F">Femme</option>
+        </select>
+    </div>
+    <p class="aide-champ"><br>💡 Les champs laissés vides utiliseront les valeurs moyennes par défaut lors de la génération.</p>
+
+    <div class="form-actions">
+        <button onclick="sauvegarderPersonneDepuisFormulaire()" style="font-size: 18px; padding: 15px; flex: 2;">💾 Enregistrer</button>
+        <button onclick="viderFormulairePersonne()" class="btn-secondaire" style="font-size: 14px; padding: 15px; flex: 1;">🧹 Vider</button>
+    </div>
+    <button onclick="basculerVue('accueil')" class="btn-secondaire" style="margin-top: 10px;">← Retour</button>
+</div>
+
+<div id="vue-banque" class="container">
+    <button onclick="basculerModeSombre()" style="width:auto; padding: 10px 20px; margin-bottom:20px;">🌓 MODE SOMBRE</button>
+    <h1>Saisie manuelle ✍️</h1>
+    <p class="welcome-intro">Cochez une ou plusieurs personnes. Si vous demandez plus de portions que de personnes cochées, NutriGenius générera automatiquement les invités manquants avec des valeurs par défaut.</p>
+
+    <div id="liste-banque" class="liste-banque"></div>
+    <button onclick="ajouterNouvellePersonne()" class="btn-secondaire" style="margin: 5px 0 20px 0;">➕ Ajouter une nouvelle personne</button>
+
+    <div class="modes-title" style="margin-top: -5px;">
+    ⚙️ RÉGLAGES DU PLAN :
+    </div>
+
+    <div class="grid" style="margin-top:
+    10px;">
+        <select id="duree-programme" onchange="sauvegarderReglages()">
+            <option value="1">1 Jour (Standard)</option>
+            <option value="7">1 Semaine</option>
+            <option value="30">1 Mois</option>
+            <option value="365">1 An</option>
+        </select>
+        <input type="number" id="portions" placeholder="Portions (personnes)" min="1" max="20" value="1" onchange="sauvegarderReglages()">
+    </div>
+    <p class="aide-champ">💡 Le nombre de portions peut être supérieur aux personnes sélectionnées.</p>
+
+    <div class="modes-title">🎯 PERSONNALISATION DU PLAN :</div>
+    <div class="modes-container">
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="veg" onchange="sauvegarderReglages()"> Végétarien 🌿</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="sport" onchange="sauvegarderReglages()"> Sport 💪</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="luxe" onchange="sauvegarderReglages()"> Luxe ✨</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="sucre" onchange="sauvegarderReglages()"> Sucré 🍎</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="sale" onchange="sauvegarderReglages()"> Salé 🧂</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="eco" onchange="sauvegarderReglages()"> Écologique 🌍</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="prix" onchange="sauvegarderReglages()"> Économique 💰</label>
+    </div>
+
+    <div class="form-actions">
+        <button id="btn-generer-banque" onclick="genererMenuDepuisBanque()" style="font-size: 18px; padding: 15px; flex: 2;">GÉNÉRER MON NUTRIPLAN</button>
+        <button onclick="basculerVue('accueil')" class="btn-secondaire" style="font-size: 14px; padding: 15px; flex: 1;">← Retour</button>
+    </div>
+
+    <div id="zone-cartouche" style="text-align: center;"></div>
+</div>
+
+<div id="vue-menu" class="container">
+    <div class="top-bar-menu">
+        <button onclick="basculerVue('accueil')" style="background: var(--accent); flex: 1;">Accueil</button>
+        <button onclick="enregistrerEnHTML()" style="background: var(--primary); flex: 1;">Télécharger</button>
+        <button onclick="imprimerMenu()" style="background: var(--primary); flex: 1;">🖨️ Imprimer</button>
+    </div>
+
+    <div class="portions-control">
+        <label for="portions-live">🍽️ Portions :</label>
+        <input type="number" id="portions-live" min="1" max="20" value="1" onchange="ajusterPortionsEnDirect(this.value)">
+    </div>
+
+    <button onclick="basculerModeSombre()" style="width:auto; padding: 10px 20px; margin-bottom:20px;">🌓 MODE SOMBRE</button>
+
+    <div id="resultat"></div>
+</div>
+
+<script>
+    const db_kids = [];
+    const db = [];
+
+    const DEFAUT_AGE = 35;
+    const DEFAUT_POIDS = 70;
+    const DEFAUT_TAILLE = 170;
+
+    let facteurPortions = 1;
+    let optionsCache = { adultes: { matin: [], midi: [], soir: [] }, enfants: { matin: [], midi: [], soir: [] } };
+    let etatPlan = { semaines: {}, cartes: {} };
+    let editingPersonId = null;
+
+    function basculerVue(vue) {
+        const vues = { accueil: 'vue-accueil', personne: 'vue-personne', banque: 'vue-banque', menu: 'vue-menu' };
+        Object.values(vues).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        const cible = vues[vue] || vues.accueil;
+        document.getElementById(cible).style.display = 'block';
+        if (vue === 'banque') rafraichirListeBanque();
+    }
+
+    function basculerModeSombre() {
+        document.body.classList.toggle('dark-mode');
+        sauvegarderReglages();
+    }
+
+    function imprimerMenu() { window.print(); }
+
+    function genererIdPersonne() {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        return 'p-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    }
+
+    function chargerBanque() {
+        try { return JSON.parse(localStorage.getItem('NutriGenius_Banque')) || []; } catch (e) { return []; }
+    }
+
+    function sauvegarderBanque(liste) {
+        try { localStorage.setItem('NutriGenius_Banque', JSON.stringify(liste)); } catch (e) {}
+    }
+
+    function obtenirPersonneParId(id) {
+        return chargerBanque().find(p => p.id === id) || null;
+    }
+
+    function ajouterOuMettreAJourPersonne(personne) {
+        const liste = chargerBanque();
+        const idx = liste.findIndex(p => p.id === personne.id);
+        if (idx >= 0) liste[idx] = personne; else liste.push(personne);
+        sauvegarderBanque(liste);
+    }
+
+    function supprimerPersonne(id) {
+        const personne = obtenirPersonneParId(id);
+        if (!personne) return;
+        if (!confirm(`Supprimer ${personne.nom} ?`)) return;
+        sauvegarderBanque(chargerBanque().filter(p => p.id !== id));
+        rafraichirListeBanque();
+    }
+
+    function rafraichirListeBanque() {
+        const conteneur = document.getElementById('liste-banque');
+        if (!conteneur) return;
+        const liste = chargerBanque();
+        if (liste.length === 0) {
+            conteneur.innerHTML = `
+    <div style="
+        background: #f5f7fa;
+        border: 1px solid #dce3ea;
+        border-radius: 12px;
+        padding: 14px 18px;
+        text-align: center;
+        margin: 10px 0;
+    ">
+        <p style="
+            margin: 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        ">
+            Aucune personne enregistrée<br>pour le moment.
+        </p>
+    </div>
+`;
+            return;
+        }
+        conteneur.innerHTML = liste.map(p => {
+            const affAge = p.age ? p.age + ' ans' : '? ans';
+            const affPoids = p.poids ? p.poids + ' kg' : '? kg';
+            const affTaille = p.taille ? p.taille + ' cm' : '? cm';
+            const affSexe = p.sexe === 'H' ? 'Homme' : (p.sexe === 'F' ? 'Femme' : '?');
+            return `
+            <div class="bank-item">
+                <label class="bank-item-select">
+                    <input type="checkbox" class="checkbox-personne" value="${p.id}">
+                    <span class="bank-item-info">
+                        <span class="bank-item-nom">${p.nom}</span>
+                        <span class="bank-item-stats">${affAge} · ${affPoids} · ${affTaille} · ${affSexe}</span>
+                    </span>
+                </label>
+                <div class="bank-actions">
+                    <button type="button" class="btn-icone" onclick="chargerPersonnePourEdition('${p.id}')">✏️</button>
+                    <button type="button" class="btn-icone" onclick="supprimerPersonne('${p.id}')">🗑️</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function ajouterNouvellePersonne() {
+        viderFormulairePersonne();
+        basculerVue('personne');
+    }
+
+    function chargerPersonnePourEdition(id) {
+        const p = obtenirPersonneParId(id);
+        if (!p) return;
+        editingPersonId = p.id;
+        document.getElementById('nom-personne').value = p.nom;
+        document.getElementById('age').value = p.age || '';
+        document.getElementById('poids').value = p.poids || '';
+        document.getElementById('taille').value = p.taille || '';
+        document.getElementById('sexe').value = p.sexe || '';
+        document.getElementById('titre-personne').textContent = `Modifier ${p.nom} ✏️`;
+        basculerVue('personne');
+    }
+
+    function viderFormulairePersonne() {
+        editingPersonId = null;
+        document.getElementById('nom-personne').value = '';
+        document.getElementById('age').value = '';
+        document.getElementById('poids').value = '';
+        document.getElementById('taille').value = '';
+        document.getElementById('sexe').value = '';
+        document.getElementById('titre-personne').textContent = 'Nouvelle personne 🧑';
+    }
+
+    function sauvegarderPersonneDepuisFormulaire() {
+        const nomInput = document.getElementById('nom-personne');
+        if (!nomInput.value.trim()) { alert("Veuillez donner un nom à cette personne !"); return; }
+        
+        const age = document.getElementById('age').value ? parseInt(document.getElementById('age').value) : null;
+        const poids = document.getElementById('poids').value ? parseFloat(document.getElementById('poids').value) : null;
+        const taille = document.getElementById('taille').value ? parseFloat(document.getElementById('taille').value) : null;
+        const sexe = document.getElementById('sexe').value || null;
+
+        const erreur = validerEntrees(age, poids, taille);
+        if (erreur) { alert(erreur); return; }
+
+        const personne = { id: editingPersonId || genererIdPersonne(), nom: nomInput.value.trim(), age, poids, taille, sexe };
+        ajouterOuMettreAJourPersonne(personne);
+        alert(`✅ ${personne.nom} a été enregistré(e).`);
+        viderFormulairePersonne();
+    }
+
+    function sauvegarderReglages() {
+        try {
+            const dureeEl = document.getElementById('duree-programme');
+            const portionsEl = document.getElementById('portions');
+            const reglages = {
+                duree: dureeEl ? dureeEl.value : '1',
+                portions: portionsEl ? portionsEl.value : '1',
+                modes: Array.from(document.querySelectorAll('.filter-mode:checked')).map(cb => cb.value),
+                modeSombre: document.body.classList.contains('dark-mode')
+            };
+            localStorage.setItem('NutriGenius_Reglages', JSON.stringify(reglages));
+        } catch (e) {}
+    }
+
+    function chargerReglages() {
+        try {
+            const brut = localStorage.getItem('NutriGenius_Reglages');
+            if (!brut) return;
+            const reglages = JSON.parse(brut);
+            if (reglages.duree) document.getElementById('duree-programme').value = reglages.duree;
+            if (reglages.portions) document.getElementById('portions').value = reglages.portions;
+            if (Array.isArray(reglages.modes)) {
+                document.querySelectorAll('.filter-mode').forEach(cb => { cb.checked = reglages.modes.includes(cb.value); });
+            }
+            if (reglages.modeSombre) document.body.classList.add('dark-mode');
+        } catch (e) {}
+    }
+
+    function calculerIMC(poids, tailleCm) { return poids / Math.pow(tailleCm / 100, 2); }
+    function interpreterIMC(imc) {
+        if (imc < 18.5) return { texte: "Insuffisance pondérale", couleur: "var(--accent)" };
+        if (imc < 25)   return { texte: "Corpulence normale", couleur: "var(--primary)" };
+        if (imc < 30)   return { texte: "Surpoids", couleur: "var(--accent)" };
+        return { texte: "Obésité", couleur: "#c0392b" };
+    }
+    function calculerBMR(sexe, poids, taille, age) {
+        const base = (10 * poids) + (6.25 * taille) - (5 * age);
+        return sexe === 'H' ? base + 5 : base - 161;
+    }
+    function calculerMacros(tdee) {
+        return { proteines: Math.round((tdee * 0.25) / 4), glucides: Math.round((tdee * 0.45) / 4), lipides: Math.round((tdee * 0.30) / 9) };
+    }
+
+    function analyserProfil(sexe, poids, taille, age, selectedModes, bmrManuel) {
+        const imc = calculerIMC(poids, taille);
+        const imcInfo = interpreterIMC(imc);
+        const bmr = (typeof bmrManuel === 'number') ? bmrManuel : calculerBMR(sexe, poids, taille, age);
+        const tdee = Math.round(bmr * (selectedModes.includes('sport') ? 1.55 : 1.2));
+        const macros = calculerMacros(tdee);
+
+        const html = `
+            <div class="analyse-bloc">
+                <h3 style="color:var(--primary); margin-top:0;">🔎 Analyse nutritionnelle</h3>
+                <div class="analyse-grid">
+                    <div class="analyse-item"><span class="analyse-label">IMC</span><span class="analyse-valeur" style="color:${imcInfo.couleur};">${imc.toFixed(1)} — ${imcInfo.texte}</span></div>
+                    <div class="analyse-item"><span class="analyse-label">Métabolisme de base</span><span class="analyse-valeur">${Math.round(bmr)} kcal / jour</span></div>
+                    <div class="analyse-item"><span class="analyse-label">Besoins caloriques</span><span class="analyse-valeur">${tdee} kcal / jour</span></div>
+                    <div class="analyse-item"><span class="analyse-label">Répartition</span><span class="analyse-valeur">${macros.proteines}g P · ${macros.glucides}g G · ${macros.lipides}g L</span></div>
+                </div>
+            </div>`;
+        return { html, imc, bmr, tdee, macros };
+    }
+
+    function moyenne(liste) { return liste.length ? liste.reduce((a, b) => a + b, 0) / liste.length : 0; }
+    function calculerProfilMoyen(personnes) {
+        return {
+            age: moyenne(personnes.map(p => p.age)),
+            poids: moyenne(personnes.map(p => p.poids)),
+            taille: moyenne(personnes.map(p => p.taille)),
+            bmr: moyenne(personnes.map(p => calculerBMR(p.sexe, p.poids, p.taille, p.age)))
+        };
+    }
+
+    function genererBandeauProfil(personnes, estCasMoyen) {
+        if (estCasMoyen) return `<div class="bandeau-profil">👥 Plan calculé pour un groupe de ${personnes.length} personnes.</div>`;
+        return `<div class="bandeau-profil">👤 Plan personnalisé pour ${personnes[0].nom}</div>`;
+    }
+
+    function validerEntrees(age, poids, taille) {
+        if (poids !== null && (poids < 2 || poids > 600)) return "⚠️ Poids invalide.";
+        if (taille !== null && (taille < 25 || taille > 280)) return "⚠️ Taille invalide.";
+        if (age !== null && age < 1) return "👶 Suivi pédiatrique requis pour moins d'1 an.";
+        return null;
+    }
+
+    function afficherErreur(message, zoneCartouche, res) {
+        zoneCartouche.innerHTML = "";
+        res.innerHTML = `<div class="error-msg">${message}</div>`;
+        basculerVue('menu');
+    }
+
+    function construireOptionsCache(age, selectedModes) {
+        const cache = { adultes: {}, enfants: {} };
+        ['matin', 'midi', 'soir'].forEach(m => {
+            cache.adultes[m] = (typeof db !== 'undefined') ? db.filter(r => r.cat === m).map(r => {
+                const varValides = (r.variantes || []).filter(v => selectedModes.every(mode => v.m.includes(mode)));
+                return varValides.length ? { n: r.n, variantes: varValides } : null;
+            }).filter(Boolean) : [];
+            cache.enfants[m] = (typeof db_kids !== 'undefined') ? db_kids.filter(r => r.cat === m && age >= r.ageMin) : [];
+        });
+        return cache;
+    }
+
+    function cumulerIngredients(dictionnaire, listeIngredients) {
+        if (!listeIngredients) return;
+        listeIngredients.forEach(item => {
+            const nom = item.nom.toLowerCase();
+            if (!dictionnaire[nom]) dictionnaire[nom] = { n: item.nom, unites: {} };
+            if (dictionnaire[nom].unites[item.u || ""]) dictionnaire[nom].unites[item.u || ""] += item.q;
+            else dictionnaire[nom].unites[item.u || ""] = item.q;
+        });
+    }
+
+    function genererHtmlIngredients(ingredientsObj, facteur) {
+        const liste = Object.values(ingredientsObj);
+        if (liste.length === 0) return "<p style='color:var(--text-secondary); margin:0;'>Aucun ingrédient.</p>";
+        return liste.map(i => {
+            const texteUnites = Object.entries(i.unites).map(([u, q]) => `${Math.round(q * (facteur || 1) * 100) / 100}${u}`).join(' + ');
+            return `<div style="background: var(--bg-ing); padding: 10px; border-radius: 10px; border-left: 4px solid var(--accent); font-size: 0.9em;"><strong style="text-transform: capitalize;">${i.n}</strong> : ${texteUnites}</div>`;
+        }).join('');
+    }
+
+    function formaterListeIngredientsCarte(ingBase, facteur) {
+        if (!ingBase || ingBase.length === 0) return 'Dosage selon portion';
+        return ingBase.map(i => `• ${i.nom} : <b>${Math.round((i.q * (facteur || 1)) * 100) / 100}${i.u}</b>`).join('<br>');
+    }
+
+    function ajusterPortionsEnDirect(valeur) {
+        facteurPortions = Math.max(1, parseFloat(valeur) || 1);
+        Object.keys(etatPlan.cartes).forEach(cardId => {
+            const conteneur = document.querySelector(`#carte-${cardId} .ing-text`);
+            if (conteneur) conteneur.innerHTML = formaterListeIngredientsCarte(etatPlan.cartes[cardId].ingBase, facteurPortions);
+        });
+        Object.keys(etatPlan.semaines).forEach(numSemaine => {
+            const grille = document.getElementById(`courses-grid-S${numSemaine}`);
+            if (grille) grille.innerHTML = genererHtmlIngredients(etatPlan.semaines[numSemaine].ingredientsCumules, facteurPortions);
+        });
+        const champPrincipal = document.getElementById('portions');
+        if (champPrincipal) champPrincipal.value = facteurPortions;
+        sauvegarderReglages();
+    }
+
+function buildCardHTML(cardId, moment, choice, isKid, numSemaine) {
+    const border = isKid ? 'style="border-left: 8px solid #ffcb05;"' : '';
+    const badgeColor = isKid ? '#ffcb05' : 'var(--primary)';
+    return `
+    <div class="recipe-card" id="carte-${cardId}" ${border} data-semaine="${numSemaine}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <div style="background:${badgeColor}; color:white; padding:4px 10px; border-radius:4px; font-size:12px; font-weight:bold;">${moment.toUpperCase()}</div>
+        </div>
+        <div class="card-actions">
+            <button class="btn-action-carte" onclick="changerRepas('${cardId}')">🔁 Changer repas</button>
+            <button class="btn-action-carte" onclick="changerVariante('${cardId}')" ${isKid ? 'disabled' : ''}>🔀 Changer variante</button>
+        </div>
+        <h3 style="color:var(--primary); margin:10px 0;">${choice.nomRecette || choice.n}</h3>
+        ${choice.t ? `<p><strong>Variante :</strong> <span>${choice.t}</span></p>` : ''}
+        <div style="background: rgba(0, 146, 69, 0.05); border-radius: 8px; padding: 10px; margin-bottom: 12px; border: 1px dashed var(--primary);">
+            <div class="ing-text" style="font-size: 0.85em; color: var(--text-secondary); line-height: 1.4;">${formaterListeIngredientsCarte(choice.ing || [], facteurPortions)}</div>
+        </div>
+        <div class="card-steps" style="font-size:0.9em; border-top:1px solid #eee; padding-top:10px;">
+            ${(choice.r || []).map(s => `<p style="margin:4px 0;">• ${s}</p>`).join('')}
+        </div>
+    </div>`;
+}
+
+function recalculerIngredientsSemaine(numSemaine) {
+    const cumul = {};
+    Object.keys(etatPlan.cartes).forEach(id => {
+        const carte = etatPlan.cartes[id];
+        if (String(carte.semaine) === String(numSemaine)) {
+            cumulerIngredients(cumul, carte.ingBase);
+        }
+    });
+    etatPlan.semaines[numSemaine].ingredientsCumules = cumul;
+    const grille = document.getElementById(`courses-grid-S${numSemaine}`);
+    if (grille) grille.innerHTML = genererHtmlIngredients(cumul, facteurPortions);
+}
+
+function remplacerCarteDOM(cardId, nouvelleChoice, isKid, groupeSource) {
+    const carte = etatPlan.cartes[cardId];
+    const elCarte = document.getElementById(`carte-${cardId}`);
+    if (!elCarte || !carte) return;
+
+    // Extrait le moment (matin/midi/soir) depuis le cardId ex: "s1-j3-midi"
+    const moment = cardId.split('-').pop();
+    carte.moment = moment;
+    carte.isKid = isKid;
+
+    elCarte.querySelector('h3').textContent = nouvelleChoice.nomRecette || nouvelleChoice.n;
+
+    const elVariante = elCarte.querySelector('p strong')?.parentElement;
+    if (elVariante && elVariante.querySelector('span')) {
+        elVariante.querySelector('span').textContent = nouvelleChoice.t || '';
+        elVariante.style.display = nouvelleChoice.t ? '' : 'none';
+    }
+
+    elCarte.querySelector('.ing-text').innerHTML = formaterListeIngredientsCarte(nouvelleChoice.ing || [], facteurPortions);
+    elCarte.querySelector('.card-steps').innerHTML = (nouvelleChoice.r || []).map(s => `<p style="margin:4px 0;">• ${s}</p>`).join('');
+
+    carte.ingBase = nouvelleChoice.ing || [];
+
+    if (isKid) {
+        carte.itemActuel = nouvelleChoice;
+    } else {
+        carte.choiceActuelle = nouvelleChoice;
+        if (groupeSource) carte.groupeActuel = groupeSource;
+    }
+
+    recalculerIngredientsSemaine(carte.semaine);
+}
+
+function changerVariante(cardId) {
+    const carte = etatPlan.cartes[cardId];
+    if (!carte || carte.isKid) return;
+    const variantes = carte.groupeActuel.variantes;
+    if (variantes.length <= 1) { alert("Aucune autre variante disponible pour cette recette."); return; }
+
+    let nouvelleVariante;
+    do {
+        nouvelleVariante = variantes[Math.floor(Math.random() * variantes.length)];
+    } while (nouvelleVariante === carte.choiceActuelle && variantes.length > 1);
+
+    const nouvelleChoice = { nomRecette: carte.groupeActuel.n, ...nouvelleVariante };
+    remplacerCarteDOM(cardId, nouvelleChoice, false, carte.groupeActuel);
+}
+
+function changerRepas(cardId) {
+    const carte = etatPlan.cartes[cardId];
+    if (!carte) return;
+
+    if (carte.isKid) {
+        const liste = optionsCache.enfants[carte.moment];
+        if (liste.length <= 1) { alert("Aucun autre repas disponible."); return; }
+        let nouvelItem;
+        do {
+            nouvelItem = liste[Math.floor(Math.random() * liste.length)];
+        } while (nouvelItem === carte.itemActuel && liste.length > 1);
+        remplacerCarteDOM(cardId, nouvelItem, true);
+    } else {
+        const groupes = optionsCache.adultes[carte.moment];
+        if (groupes.length <= 1) { alert("Aucun autre repas disponible."); return; }
+        let nouveauGroupe;
+        do {
+            nouveauGroupe = groupes[Math.floor(Math.random() * groupes.length)];
+        } while (nouveauGroupe === carte.groupeActuel && groupes.length > 1);
+        const nouvelleVariante = nouveauGroupe.variantes[Math.floor(Math.random() * nouveauGroupe.variantes.length)];
+        const nouvelleChoice = { nomRecette: nouveauGroupe.n, ...nouvelleVariante };
+        remplacerCarteDOM(cardId, nouvelleChoice, false, nouveauGroupe);
+    }
+}
+
+function changerRepas(cardId) {
+    const carte = etatPlan.cartes[cardId];
+    if (!carte) return;
+
+    if (carte.isKid) {
+        const liste = optionsCache.enfants[carte.moment];
+        if (liste.length <= 1) { alert("Aucun autre repas disponible."); return; }
+        let nouvelItem;
+        do {
+            nouvelItem = liste[Math.floor(Math.random() * liste.length)];
+        } while (nouvelItem === carte.itemActuel && liste.length > 1);
+        carte.itemActuel = nouvelItem;
+        remplacerCarteDOM(cardId, nouvelItem, true);
+    } else {
+        const groupes = optionsCache.adultes[carte.moment];
+        if (groupes.length <= 1) { alert("Aucun autre repas disponible."); return; }
+        let nouveauGroupe;
+        do {
+            nouveauGroupe = groupes[Math.floor(Math.random() * groupes.length)];
+        } while (nouveauGroupe === carte.groupeActuel && groupes.length > 1);
+        const nouvelleVariante = nouveauGroupe.variantes[Math.floor(Math.random() * nouveauGroupe.variantes.length)];
+        const nouvelleChoice = { nomRecette: nouveauGroupe.n, ...nouvelleVariante };
+        carte.groupeActuel = nouveauGroupe;
+        carte.choiceActuelle = nouvelleChoice;
+        remplacerCarteDOM(cardId, nouvelleChoice, false);
+    }
+}
+
+function genererStructureSemaines(duree, estEnfant, moments) {
+    const structuresSemaines = {};
+    for (let jour = 1; jour <= duree; jour++) {
+        const numSemaine = Math.ceil(jour / 7);
+        if (!structuresSemaines[numSemaine]) structuresSemaines[numSemaine] = { repasHTML: "", ingredientsCumules: {} };
+        let htmlJour = duree > 1 ? `<h2 style="width:100%; text-align:center; color:var(--primary); margin-top:30px; border-top: 1px dashed #ccc; padding-top:15px;">JOUR ${jour}</h2>` : "";
+        
+        moments.forEach(moment => {
+            const cardId = `s${numSemaine}-j${jour}-${moment}`;
+            if (estEnfant) {
+                const liste = optionsCache.enfants[moment];
+                const item = liste[Math.floor(Math.random() * liste.length)];
+                etatPlan.cartes[cardId] = { semaine: numSemaine, moment, isKid: true, ingBase: item.ing || [], itemActuel: item };
+                cumulerIngredients(structuresSemaines[numSemaine].ingredientsCumules, item.ing);
+                htmlJour += buildCardHTML(cardId, moment, item, true, numSemaine);
+            } else {
+                const groupes = optionsCache.adultes[moment];
+                const groupe = groupes[Math.floor(Math.random() * groupes.length)];
+                const choice = { nomRecette: groupe.n, ...groupe.variantes[Math.floor(Math.random() * groupe.variantes.length)] };
+                etatPlan.cartes[cardId] = { semaine: numSemaine, moment, isKid: false, ingBase: choice.ing || [], groupeActuel: groupe, choiceActuelle: choice };
+                cumulerIngredients(structuresSemaines[numSemaine].ingredientsCumules, choice.ing);
+                htmlJour += buildCardHTML(cardId, moment, choice, false, numSemaine);
+            }
+        });
+        structuresSemaines[numSemaine].repasHTML += htmlJour;
+    }
+    return structuresSemaines;
+}
+
+    function genererMenuDepuisBanque() {
+        const cases = Array.from(document.querySelectorAll('.checkbox-personne:checked')).map(cb => cb.value);
+        const personnes = cases.map(obtenirPersonneParId).filter(Boolean);
+        const portionsInput = document.getElementById('portions');
+        const portionsDemandees = portionsInput ? parseInt(portionsInput.value) : 1;
+
+        let personnesEtendues = [];
+        personnes.forEach(p => {
+            personnesEtendues.push({ nom: p.nom, age: p.age || DEFAUT_AGE, poids: p.poids || DEFAUT_POIDS, taille: p.taille || DEFAUT_TAILLE, sexe: p.sexe || 'H' });
+        });
+
+        const manquants = portionsDemandees - personnesEtendues.length;
+        for (let i = 0; i < manquants; i++) {
+            personnesEtendues.push({ nom: "Invité " + (i + 1), age: DEFAUT_AGE, poids: DEFAUT_POIDS, taille: DEFAUT_TAILLE, sexe: i % 2 === 0 ? 'H' : 'F' });
+        }
+
+        facteurPortions = Math.max(portionsDemandees, personnesEtendues.length);
+        if (portionsInput) portionsInput.value = facteurPortions;
+
+        const duree = parseInt(document.getElementById('duree-programme').value) || 1;
+        const selectedModes = Array.from(document.querySelectorAll('.filter-mode:checked')).map(cb => cb.value);
+
+        let profil;
+        if (personnesEtendues.length === 1) {
+            const p = personnesEtendues[0];
+            profil = { age: p.age, poids: p.poids, taille: p.taille, sexe: p.sexe, bmrManuel: null, estCasMoyen: false };
+        } else {
+            const moy = calculerProfilMoyen(personnesEtendues);
+            profil = { age: Math.round(moy.age), poids: moy.poids, taille: moy.taille, sexe: null, bmrManuel: moy.bmr, estCasMoyen: true };
+        }
+
+        executerGeneration(profil, duree, selectedModes, personnesEtendues);
+    }
+
+    function executerGeneration(profil, duree, selectedModes, personnesSource) {
+        const zoneCartouche = document.getElementById('zone-cartouche');
+        const res = document.getElementById('resultat');
+        const btnGenerer = document.getElementById('btn-generer-banque');
+
+        if (btnGenerer) { btnGenerer.disabled = true; btnGenerer.textContent = "⏳ ANALYSE EN COURS..."; }
+        if (zoneCartouche) zoneCartouche.innerHTML = "⏳ Analyse en cours...";
+
+        setTimeout(() => {
+            try {
+                const erreur = validerEntrees(profil.age, profil.poids, profil.taille);
+                if (erreur) { afficherErreur(erreur, zoneCartouche, res); return; }
+
+                etatPlan = { semaines: {}, cartes: {} };
+                optionsCache = construireOptionsCache(profil.age, selectedModes);
+                const moments = ['matin', 'midi', 'soir'];
+                const estEnfant = (profil.age >= 3 && profil.age <= 6);
+
+                if (moments.some(m => estEnfant ? optionsCache.enfants[m].length === 0 : optionsCache.adultes[m].length === 0)) {
+                    afficherErreur("❌ Aucun repas trouvé pour vos filtres.", zoneCartouche, res);
+                    return;
+                }
+
+                const analyse = analyserProfil(profil.sexe, profil.poids, profil.taille, profil.age, selectedModes, profil.bmrManuel);
+                const bandeau = genererBandeauProfil(personnesSource, profil.estCasMoyen);
+                const semaines = genererStructureSemaines(duree, estEnfant, moments);
+                const clesSemaines = Object.keys(semaines).sort((a, b) => parseInt(a) - parseInt(b));
+
+                let htmlFinal = bandeau + analyse.html;
+                clesSemaines.forEach(numSemaine => {
+                    etatPlan.semaines[numSemaine] = { ingredientsCumules: semaines[numSemaine].ingredientsCumules };
+                    htmlFinal += `<div class="semaine-container">`;
+                    if (clesSemaines.length > 1 || duree >= 7) htmlFinal += `<h2 class="semaine-header">📅 SEMAINE ${numSemaine}</h2>`;
+                    htmlFinal += `
+                        <div class="courses-bloc">
+                            <h3 style="color: var(--accent); margin-top:0;">Liste de Courses</h3>
+                            <div class="courses-grid" id="courses-grid-S${numSemaine}">${genererHtmlIngredients(semaines[numSemaine].ingredientsCumules, facteurPortions)}</div>
+                        </div>` + semaines[numSemaine].repasHTML + `</div>`;
+                });
+
+                res.innerHTML = htmlFinal;
+                if (zoneCartouche) zoneCartouche.innerHTML = `<button class="cartouche-menu" onclick="basculerVue('menu')">📂 menu.ngai</button>`;
+                if (document.getElementById('portions-live')) document.getElementById('portions-live').value = facteurPortions;
+
+            } catch (error) {
+                console.error(error);
+                if (zoneCartouche) zoneCartouche.innerHTML = "⚠️ Erreur technique.";
+            } finally {
+                if (btnGenerer) { btnGenerer.disabled = false; btnGenerer.textContent = "GÉNÉRER MON NUTRIPLAN"; }
+                sauvegarderReglages();
+            }
+        }, 500);
+    }
+
+    function enregistrerEnHTML() {
+        const contenuActuel = document.getElementById('resultat') ? document.getElementById('resultat').innerHTML : "";
+        if (!contenuActuel.trim()) { alert("Générez d'abord un menu !"); return; }
+        
+        const stylesOriginaux = document.getElementsByTagName('head')[0].innerHTML;
+        const classeSombre = document.body.classList.contains('dark-mode') ? ' class="dark-mode"' : '';
+        const codePageExport = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Mon NutriPlan</title>${stylesOriginaux}</head><body${classeSombre}><div class="container" style="margin-top:20px;"><h1 style="text-align:center;">Mon NutriPlan</h1><div>${contenuActuel}</div></div></body></html>`;
+
+        const blob = new Blob([codePageExport], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = "Mon_NutriPlan.html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    /* ----------------------------------------------------------
+       LOGIQUE DU CHATBOT 
+       ---------------------------------------------------------- */
+
+    const PHRASES_SUCCES = [
+        "Ok super, voici ton menu :",
+        "Génial ! Tout est prêt, voici ton NutriPlan :",
+        "C'est configuré ! Bon appétit, voici ton programme :",
+        "Parfait, l'intelligence artificielle a généré ton plan :"
+    ];
+
+    let derniersReglagesChat = null;
+
+    function detecterPersonnesDansMessage(inputNormalise, banque) {
+    const resultats = [];
+    banque.forEach(personne => {
+        const nomNormalise = personne.nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        // Découpe le nom en mots (gère les noms composés "Jean Pierre")
+          const motsNom = nomNormalise.split(/\s+/).filter(Boolean);
+          const trouve = motsNom.some(mot => {
+             const regex = new RegExp(`\\b${mot}\\b`, "i");
+              return regex.test(inputNormalise);
+          });
+          if (trouve) resultats.push(personne);
+      });
+      return resultats;
+  }
+
+// Variantes d'écriture pour chaque unité de durée
+const MOTS_JOUR = ["jour","jours","journee","journees","j","jrs","jr"];
+const MOTS_SEMAINE = ["semaine","semaines","sem","semainne","semainnes","s"];
+const MOTS_MOIS = ["mois","moi","m"];
+const MOTS_AN = ["an","ans","annee","annees","annee civile","année","année civile","a"];
+
+// Expressions figées (raccourcis courants du langage naturel)
+const EXPRESSIONS_DUREE_1J = [
+    "aujourdhui","aujourd hui","ajd","ajourd hui","ce soir","ce midi",
+    "cette apres midi","demain","demain soir","pour demain","pour ce soir",
+    "juste pour aujourdhui","une seule journee","un seul jour","1 seul jour",
+    "au jour le jour"
+];
+const EXPRESSIONS_DUREE_7J = [
+    "week end","weekend","le week end","cette semaine","la semaine prochaine",
+    "pour la semaine","toute la semaine","une semaine complete","1 semaine complete",
+    "sept jours","7 jours"
+];
+const EXPRESSIONS_DUREE_30J = [
+    "ce mois","ce mois ci","le mois prochain","pour le mois","tout le mois",
+    "un mois complet","1 mois complet","trente jours","30 jours","quatre semaines",
+    "4 semaines"
+];
+const EXPRESSIONS_DUREE_365J = [
+    "cette annee","année","l annee prochaine","pour l annee","toute l annee","annee","anné","an","ans",
+    "une annee complete","1 annee complete","douze mois","12 mois","365 jours"
+];
+
+const NOMBRES_LETTRES = {
+    "un":1,"une":1,"deux":2,"trois":3,"quatre":4,"cinq":5,"six":6,
+    "sept":7,"huit":8,"neuf":9,"dix":10,"onze":11,"douze":12,"treize":13,
+    "quatorze":14,"quinze":15,"seize":16,"vingt":20,"vingt et un":21,
+    "vingt cinq":25,"trente":30,"quarante":40,"cinquante":50,"soixante":60
+};
+
+function contientExpression(input, listeExpressions) {
+    return listeExpressions.some(exp => input.includes(exp));
+}
+
+function detecterDureeDansMessage(input) {
+    // 1. Expressions figées, de la plus longue durée à la plus courte
+    //    (évite qu'un mot comme "an" dans "annee prochaine" ne matche trop tôt)
+    if (contientExpression(input, EXPRESSIONS_DUREE_365J)) return "365";
+    if (contientExpression(input, EXPRESSIONS_DUREE_30J)) return "30";
+    if (contientExpression(input, EXPRESSIONS_DUREE_7J)) return "7";
+    if (contientExpression(input, EXPRESSIONS_DUREE_1J)) return "1";
+
+    // 2. Formats "N unité" avec chiffres OU lettres, testés du plus précis au plus large
+    const groupesUnites = [
+        { mots: MOTS_AN, cible: "365" },
+        { mots: MOTS_MOIS, cible: "mois" },   // traitement spécial (voir palier)
+        { mots: MOTS_SEMAINE, cible: "semaine" },
+        { mots: MOTS_JOUR, cible: "jour" }
+    ];
+
+    const patternNombre = `(\\d+|${Object.keys(NOMBRES_LETTRES).sort((a,b)=>b.length-a.length).join('|')})`;
+
+    for (const groupe of groupesUnites) {
+        const patternUnite = groupe.mots.sort((a,b)=>b.length-a.length).join('|');
+        const regex = new RegExp(`${patternNombre}\\s*(${patternUnite})\\b`, "i");
+        const m = regex.exec(input);
+        if (!m) continue;
+
+        const brut = m[1].toLowerCase();
+        const quantite = isNaN(brut) ? (NOMBRES_LETTRES[brut] || 1) : parseInt(brut);
+
+        switch (groupe.cible) {
+            case "365": return "365";
+            case "mois": return quantite <= 1 ? "30" : "365";
+            case "semaine": return quantite <= 1 ? "7" : (quantite <= 4 ? "30" : "365");
+            case "jour":
+                if (quantite <= 1) return "1";
+                if (quantite <= 7) return "7";
+                if (quantite <= 30) return "30";
+                return "365";
+        }
+    }
+
+    // 3. Aucun signal détecté
+    return null;
+}
+
+    function analyserMessageChatbot(messageUtilisateur, listePrenomsActuels) {
+        let input = messageUtilisateur.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
+        
+        // Contraintes
+        const DIC = {
+            veg: ["vegetarien", "vegi", "vege", "sans viande"], sport: ["sport", "muscu", "proteine"],
+            luxe: ["luxe", "premium", "gastronomique"], sucre: ["sucre", "dessert"], sale: ["sale", "epice"],
+            eco: ["ecologique", "eco", "local"], prix: ["economique", "pas cher", "prix"]
+        };
+        const modesAActiver = { veg: false, sport: false, luxe: false, sucre: false, sale: false, eco: false, prix: false };
+        
+        for (const [cle, mots] of Object.entries(DIC)) {
+            if (mots.some(m => input.includes(m))) modesAActiver[cle] = true;
+        }
+
+    // Prénoms (Recherche de multiples prénoms)
+// Prénoms (Recherche de multiples prénoms)
+let prenomsDetectes = [];
+for (const prenom of listePrenomsActuels) {
+    const prenomSansAccent = prenom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const regexPrenom = new RegExp(`\\b${prenomSansAccent}\\b`, "i");
+    if (regexPrenom.test(input)) prenomsDetectes.push(prenom);
+}
+
+        // Durée
+        let dureeDetectee = null; 
+        const durees = [ { r: /\b(1|un)\s*(journee|jour|j)\b/, v: "1" }, { r: /\b(1|une)\s*(semaine|s)\b/, v: "7" }, { r: /\b(1|un)\s*(mois|m)\b/, v: "30" }, { r: /\b(1|un)\s*(an|annee)\b/, v: "365" } ];
+        for (const item of durees) if (item.r.test(input)) { dureeDetectee = item.v; break; }
+        
+        if (!dureeDetectee) {
+            const m = /(\d+)\s*(j|s|m|a)\b/i.exec(input);
+            if (m) {
+                const q = parseInt(m[1]), u = m[2];
+                if (u==='j') dureeDetectee = q <= 7 ? "7" : (q <= 30 ? "30" : "365");
+                else if (u==='s') dureeDetectee = q <= 4 ? "30" : "365";
+            }
+        }
+
+        // Portions
+        let portionsDetectees = null;
+        const nbrL = {"un":1,"deux":2,"trois":3,"quatre":4,"cinq":5,"six":6,"sept":7,"huit":8,"neuf":9,"dix":10};
+        const rHum = new RegExp(`(\\d+|${Object.keys(nbrL).join('|')})\\s*(personne|pers|convive|invite)s?\\b`, "g");
+        let mPort = rHum.exec(input);
+        if (mPort) portionsDetectees = isNaN(mPort[1]) ? nbrL[mPort[1]] : parseInt(mPort[1]);
+        if (!portionsDetectees && /\b(moi|solo)\b/.test(input)) portionsDetectees = 1;
+
+        return { filtresActifs: modesAActiver, prenomsIdentifies: prenomsDetectes, dureeIdentifiee: dureeDetectee, portionsIdentifiees: portionsDetectees };
+    }
+
+    function envoyerMessageChat() {
+        const inputEl = document.getElementById('chat-input');
+        const message = inputEl.value.trim();
+        if (!message) return;
+
+        const banque = chargerBanque();
+        const listePrenoms = banque.map(p => p.nom);
+        const analyse = analyserMessageChatbot(message, listePrenoms);
+
+        const dialogueZone = document.getElementById('chat-dialogue');
+        const responseText = document.getElementById('chat-response-text');
+        const confirmButtons = document.getElementById('chat-confirmation-buttons');
+        const finalZone = document.getElementById('chat-final-zone');
+
+        dialogueZone.style.display = 'block';
+        confirmButtons.style.display = 'none';
+        finalZone.style.display = 'none';
+
+        derniersReglagesChat = analyse;
+
+        const traducteurDuree = { "1": "1 Jour ☀️", "7": "1 Semaine 📅", "30": "1 Mois 🗓️", "365": "1 An 🌍" };
+        const dureeTexte = traducteurDuree[analyse.dureeIdentifiee || "1"];
+        
+        // Ajustement des portions pour englober au moins le nombre de prénoms détectés
+        let portionsAffichees = analyse.portionsIdentifiees || 1;
+        portionsAffichees = Math.max(portionsAffichees, analyse.prenomsIdentifies.length);
+        const portionsTexte = `${portionsAffichees} personne(s)`;
+        
+        const nomsTexte = analyse.prenomsIdentifies.length > 0 ? analyse.prenomsIdentifies.join(', ') : "Invité(s) par défaut";
+
+        const tradNoms = { veg: "Végétarien 🌿", sport: "Sport 💪", luxe: "Luxe ✨", sucre: "Sucré 🍎", sale: "Salé 🧂", eco: "Écolo 🌍", prix: "Éco 💰" };
+        const filtresCoches = Object.entries(analyse.filtresActifs).filter(([_, c]) => c).map(([k]) => tradNoms[k]);
+        const filtresTexte = filtresCoches.length > 0 ? filtresCoches.join(', ') : "Aucun";
+
+        responseText.innerHTML = `Salut ! J'ai analysé ta demande.<br><br>` +
+            `J'ai compris que tu voulais configurer un plan pour <strong>${nomsTexte}</strong> avec ces paramètres :<br>` +
+            `• Durée : <strong>${dureeTexte}</strong><br>` +
+            `• Portion(s) globale(s) : <strong>${portionsTexte}</strong><br>` +
+            `• Option(s) : <strong>${filtresTexte}</strong>.<br><br>` +
+            `Est-ce que c'est bien ça ?`;
+
+        confirmButtons.style.display = 'flex';
+    }
+
+    function confirmerChat(estCorrect) {
+        const confirmButtons = document.getElementById('chat-confirmation-buttons');
+        const finalZone = document.getElementById('chat-final-zone');
+        const finalText = document.getElementById('chat-final-text');
+        const responseText = document.getElementById('chat-response-text');
+
+        confirmButtons.style.display = 'none';
+
+        if (estCorrect && derniersReglagesChat) {
+            const banque = chargerBanque();
+            rafraichirListeBanque();
+            
+            // Cocher les prénoms identifiés
+            const nomsMin = derniersReglagesChat.prenomsIdentifies.map(n => n.toLowerCase());
+            document.querySelectorAll('.checkbox-personne').forEach(cb => {
+                const p = banque.find(b => b.id === cb.value);
+                cb.checked = p && nomsMin.includes(p.nom.toLowerCase());
+            });
+
+            const dureeSelect = document.getElementById('duree-programme');
+            if (dureeSelect) dureeSelect.value = derniersReglagesChat.dureeIdentifiee || "1";
+
+            let portionsFinales = derniersReglagesChat.portionsIdentifiees || 1;
+            portionsFinales = Math.max(portionsFinales, derniersReglagesChat.prenomsIdentifies.length);
+            const portionsInput = document.getElementById('portions');
+            if (portionsInput) portionsInput.value = portionsFinales;
+
+            document.querySelectorAll('.filter-mode').forEach(cb => {
+                cb.checked = derniersReglagesChat.filtresActifs[cb.value];
+            });
+
+            sauvegarderReglages();
+            genererMenuDepuisBanque();
+
+            finalText.textContent = PHRASES_SUCCES[Math.floor(Math.random() * PHRASES_SUCCES.length)];
+            document.getElementById('zone-cartouche-chat').innerHTML = `<button class="cartouche-menu" onclick="basculerVue('menu')" style="margin-top:0;">📂 menu.ngai</button>`;
+            finalZone.style.display = 'block';
+        } else {
+const errorMessages = [
+    "Oh mince, désolé... 😔<br>Merci pour ton retour. Peux-tu reformuler ta demande ? Le texte affiché juste au-dessus peut t'aider.",
+    
+    "Je suis désolé que ma réponse ne t'ait pas aidé. 🙏<br>Essaie de reformuler ta demande en t'appuyant sur le texte affiché juste au-dessus.",
+    
+    "Désolé, je n'ai visiblement pas répondu à ta demande. 😕<br>Le texte juste au-dessus contient quelques indications qui peuvent t'aider à la reformuler.",
+    
+    "Oups... 😔 Désolé pour ça.<br>Regarde le texte affiché juste au-dessus, puis essaie de reformuler ta demande.",
+    
+    "Je comprends, cette réponse ne convenait pas. 😅<br>Tu peux consulter le texte juste au-dessus pour voir comment reformuler ta demande.",
+    
+    "Toutes mes excuses. 💙<br>Le texte affiché juste au-dessus explique comment mieux formuler ta demande. N'hésite pas à réessayer.",
+    
+    "Désolé, je n'ai pas réussi à répondre correctement cette fois. 🤖<br>Le texte au-dessus peut te donner quelques indications avant de réessayer.",
+    
+    "Je suis navré que ça n'ait pas fonctionné. 😔<br>Prends un instant pour regarder le texte affiché juste au-dessus, puis reformule ta demande.",
+    
+    "Merci de me l'avoir signalé. 🙏<br>Le texte juste au-dessus peut t'aider à reformuler ta demande pour que je la comprenne mieux.",
+    
+    "Désolé pour cette réponse. 😊<br>Jette un œil au texte affiché juste au-dessus, puis essaie de reformuler ta demande. Je ferai de mon mieux pour t'aider."
+];
+
+responseText.innerHTML = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+            derniersReglagesChat = null;
+        }
+        document.getElementById('chat-input').value = "";
+    }
+
+    window.addEventListener('DOMContentLoaded', chargerReglages);
+</script>
+</body>
+</html>

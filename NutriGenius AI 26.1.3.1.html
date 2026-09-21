@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI - Moteur Ultra-Stable</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 500px; }
+        .select-box { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; border: 2px solid #27ae60; font-weight: bold; }
+        .btn { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; font-size: 1.1em; display: block; }
+        #btn-gps { background: #2ecc71; }
+        #btn-ville { background: #3498db; }
+        #loader { display: none; margin: 20px 0; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 18px; overflow: hidden; margin: 10px 0; }
+        #progress-bar { width: 0%; height: 100%; background: #27ae60; }
+        #resultat { display: none; margin-top: 20px; max-height: 450px; overflow-y: auto; text-align: left; padding: 10px; border: 1px solid #ddd; }
+        .day-box { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 8px; border-left: 5px solid #27ae60; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    
+    <select id="select-duree" class="select-box">
+        <option value="1">🥗 Menu du Jour</option>
+        <option value="7">📅 Plan de la Semaine</option>
+        <option value="30">📊 Plan du Mois</option>
+    </select>
+
+    <button id="btn-gps" class="btn">📍 Autour de moi</button>
+    <button id="btn-ville" class="btn">🌍 Chercher une ville</button>
+
+    <div id="loader">
+        <div style="font-size: 2em; font-weight: bold; color: #27ae60;"><span id="chiffre">0.0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+        <p id="status-msg">Initialisation...</p>
+    </div>
+
+    <div id="resultat">
+        <div id="menu-content"></div>
+    </div>
+</div>
+
+<script>
+    // --- CONFIGURATION ---
+    let n = 0;
+    let timer;
+
+    // --- ATTACHER LES BOUTONS DIRECTEMENT ---
+    document.getElementById('btn-gps').addEventListener('click', function() { demarrer('gps'); });
+    document.getElementById('btn-ville').addEventListener('click', function() { demarrer('ville'); });
+
+    function demarrer(type) {
+        console.log("Clic réussi : " + type);
+        n = 0;
+        clearInterval(timer);
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+        
+        let duree = parseInt(document.getElementById('select-duree').value);
+        let vitesse = (duree === 1) ? 1.5 : (duree === 7 ? 0.4 : 0.1);
+
+        timer = setInterval(function() {
+            if (n < 99.9) {
+                n += vitesse;
+                document.getElementById('chiffre').innerText = Math.min(n, 99.9).toFixed(1);
+                document.getElementById('progress-bar').style.width = n + "%";
+            } else {
+                finaliser(duree);
+            }
+        }, 30);
+
+        if(type === 'ville') prompt("Quelle ville ?");
+    }
+
+    function finaliser(jours) {
+        clearInterval(timer);
+        document.getElementById('chiffre').innerText = "100.0";
+        document.getElementById('progress-bar').style.width = "100%";
+        
+        // Base de données simplifiée pour éviter les erreurs
+        const p = ["Porridge", "Avocat Toast", "Skyr Noix", "Omelette", "Pancakes"];
+        const m = ["Saumon & Riz", "Poulet & Quinoa", "Salade Lentilles", "Pâtes Pesto", "Wok Crevettes"];
+        const s = ["Soupe Courge", "Gratin Courgettes", "Cabillaud", "Dahl Lentilles", "Salade Féta"];
+
+        setTimeout(function() {
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('resultat').style.display = "block";
+            
+            let html = "";
+            for(let i=1; i<=jours; i++) {
+                html += `<div class="day-box">
+                    <b>JOUR ${i}</b><br>
+                    ☀️ ${p[Math.floor(Math.random()*5)]} | 
+                    🥗 ${m[Math.floor(Math.random()*5)]} | 
+                    🌙 ${s[Math.floor(Math.random()*5)]}
+                </div>`;
+            }
+            document.getElementById('menu-content').innerHTML = html;
+        }, 500);
+    }
+</script>
+
+</body>
+</html>

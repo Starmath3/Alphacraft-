@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.4.4 - Dynamic Edition</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 650px; }
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        .subtitle { color: #009245; font-weight: bold; margin-bottom: 20px; font-size: 0.9em; text-transform: uppercase; }
+        .input-group { margin-bottom: 15px; text-align: left; background: #f9f9f9; padding: 15px; border-radius: 12px; border: 1px solid #eee; }
+        .section-title { font-size: 0.85em; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; display: block; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-field, .select-box { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; font-size: 1em; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: #009245; font-size: 1.1em; margin-bottom: 10px; transition: 0.2s; }
+        .btn:hover { background: #1b5e20; transform: scale(1.01); }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-weight: bold; color: #27ae60; cursor: pointer; margin: 10px 0; }
+        #loader { display: none; margin: 20px 0; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 12px; overflow: hidden; margin: 10px 0; }
+        #progress-bar { width: 0%; height: 100%; background: #27ae60; transition: width 0.1s linear; }
+        #resultat { display: none; margin-top: 20px; text-align: left; }
+        .shopping-list { background: #f0fff4; border: 2px dashed #009245; padding: 15px; border-radius: 12px; margin: 25px 0; }
+        .shopping-item { display: inline-block; background: #fff; padding: 5px 12px; margin: 3px; border-radius: 20px; font-size: 0.8em; color: #1b5e20; border: 1px solid #c3e6cb; }
+        .day-box { background: white; padding: 15px; margin-bottom: 15px; border-radius: 12px; border-left: 8px solid #009245; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .cal-badge { float: right; background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 10px; font-size: 0.8em; font-weight: bold; }
+        @media print { .input-group, .btn, h1, .subtitle { display: none; } }
+    </style>
+</head>
+<body onload="chargerProfil()">
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    <div class="subtitle">Certifié Halal Réunion - Listes Précises</div>
+
+    <div class="input-group">
+        <span class="section-title">Profil (Sauvegarde Automatique)</span>
+        <div class="row">
+            <input type="number" id="age" class="input-field" placeholder="Age" oninput="sauvegarderProfil()">
+            <select id="sexe" class="input-field" onchange="sauvegarderProfil()">
+                <option value="H">Homme</option>
+                <option value="F">Femme</option>
+            </select>
+        </div>
+        <div class="row">
+            <input type="number" id="poids" class="input-field" placeholder="Poids (kg)" oninput="sauvegarderProfil()">
+            <input type="number" id="taille" class="input-field" placeholder="Taille (cm)" oninput="sauvegarderProfil()">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <span class="section-title">Configuration du Menu</span>
+        <select id="select-duree" class="select-box">
+            <option value="1">🥗 Menu du Jour</option>
+            <option value="7">📅 Menu de la Semaine</option>
+            <option value="30">📊 Menu du Mois</option>
+            <option value="365">🗓️ Menu de l'Année</option>
+        </select>
+        <label class="checkbox-group">
+            <input type="checkbox" id="check-veg"> 🥗 Mode Végétarien
+        </label>
+    </div>
+
+    <button type="button" class="btn" onclick="lancer()">GÉNÉRER MON MENU</button>
+
+    <div id="loader">
+        <div style="font-size: 1.2em; font-weight: bold; color: #009245;">Calcul des ingrédients exacts... <span id="chiffre">0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+    </div>
+
+    <div id="resultat">
+        <button class="btn" style="background:#34495e" onclick="window.print()">🖨️ EXPORTER LE PROGRAMME</button>
+        <div id="content-area"></div>
+    </div>
+</div>
+
+<script>
+    function sauvegarderProfil() {
+        const p = { age: document.getElementById('age').value, poids: document.getElementById('poids').value, taille: document.getElementById('taille').value, sexe: document.getElementById('sexe').value };
+        localStorage.setItem('NutriGenius_Mega', JSON.stringify(p));
+    }
+
+    function chargerProfil() {
+        const s = localStorage.getItem('NutriGenius_Mega');
+        if (s) {
+            const d = JSON.parse(s);
+            document.getElementById('age').value = d.age || ""; document.getElementById('poids').value = d.poids || "";
+            document.getElementById('taille').value = d.taille || ""; document.getElementById('sexe').value = d.sexe || "H";
+        }
+    }
+
+    const db = {
+        petitDej: [
+            { n: "Bowl Skyr & Miel 🍯", v: true, c: 320, i: ["Skyr", "Miel", "Amandes", "Graines de chia"] },
+            { n: "Omelette Créole 🍳", v: true, c: 360, i: ["Oeufs certifiés", "Oignons vert", "Persil", "Pain complet", "Beurre"] },
+            { n: "Smoothie Banane-Cacahuète 🍌", v: true, c: 410, i: ["Banane", "Beurre cacahuète", "Lait avoine", "Cannelle"] },
+            { n: "Tartine Saumon & Aneth 🐟", v: false, c: 390, i: ["Pain de seigle", "Fromage frais", "Saumon fumé", "Aneth", "Citron"] },
+            { n: "Pancakes Avoine & Coco 🥞", v: true, c: 340, i: ["Flocons d'avoine", "Lait coco", "Oeuf", "Sirop d'érable"] },
+            { n: "Muesli Papaye & Vanille 🍍", v: true, c: 310, i: ["Muesli", "Papaye", "Yaourt nature", "Gousse vanille"] },
+            { n: "Avocado Toast au Curcuma 🥑", v: true, c: 420, i: ["Pain complet", "Avocat", "Curcuma", "Graines de sésame", "Oeuf poché"] }
+        ],
+        dejeuner: [
+            { n: "Carry Poulet Halal Tradition 🍗", v: false, c: 580, i: ["Poulet certifié", "Tomates", "Oignons", "Ail", "Gingembre", "Curcuma", "Thym", "Riz"] },
+            { n: "Rougail Morue & Grains 🌶️", v: false, c: 520, i: ["Morue", "Oignons", "Lentilles", "Riz", "Piment", "Thym"] },
+            { n: "Dahl de lentilles corail 🍛", v: true, c: 490, i: ["Lentilles corail", "Lait de coco", "Cumin", "Coriandre", "Ail", "Riz"] },
+            { n: "Saumon au four & Patate douce 🍠", v: false, c: 540, i: ["Pavé saumon", "Patate douce", "Brocolis", "Huile d'olive"] },
+            { n: "Sauté de Boeuf Halal Gingembre 🥩", v: false, c: 610, i: ["Boeuf certifié", "Gingembre", "Poivrons", "Riz", "Sauce soja", "Oignons"] },
+            { n: "Quinoa Bowl Feta & Pois chiches 🥗", v: true, c: 450, i: ["Quinoa", "Feta", "Pois chiches", "Concombre"] },
+            { n: "Poisson Rouge & Brèdes 🐟", v: false, c: 470, i: ["Poisson rouge", "Brèdes", "Ail", "Gingembre", "Riz", "Grains"] },
+            { n: "Carry Crevettes à la Créole 🦐", v: false, c: 510, i: ["Crevettes", "Tomates", "Oignons", "Curcuma", "Thym", "Ail", "Riz"] },
+            { n: "Shop Suey Poulet Halal 🍜", v: false, c: 530, i: ["Poulet", "Chou chinois", "Carottes", "Champignons", "Sauce soja", "Riz"] },
+            { n: "Rougail Saucisses Halal 🌭", v: false, c: 590, i: ["Saucisses volaille Halal", "Oignons", "Tomates", "Piment", "Thym", "Riz"] }
+        ],
+        diner: [
+            { n: "Bouillon de Brèdes & Riz 🍵", v: true, c: 280, i: ["Brèdes", "Ail", "Gingembre", "Riz"] },
+            { n: "Gratin de Chouchou Léger 🥘", v: true, c: 340, i: ["Chouchou", "Lait", "Fromage", "Salade verte"] },
+            { n: "Poisson Vapeur Citronnelle 🍋", v: false, c: 290, i: ["Filet poisson blanc", "Citronnelle", "Courgettes"] },
+            { n: "Velouté de Citrouille 🎃", v: true, c: 260, i: ["Citrouille", "Oignons", "Noix", "Crème liquide"] },
+            { n: "Wok de Dinde & Brocoli 🥦", v: false, c: 380, i: ["Dinde certifiée", "Brocoli", "Carottes", "Sauce soja"] },
+            { n: "Soupe de Lentilles au Thym 🥣", v: true, c: 310, i: ["Lentilles", "Thym", "Ail", "Carottes", "Oignons"] },
+            { n: "Salade de Thon & Oeuf 🥗", v: false, c: 330, i: ["Thon au naturel", "Oeuf dur", "Haricots verts", "Tomates"] }
+        ]
+    };
+
+    function lancer() {
+        if (!document.getElementById('age').value) return alert("Complétez votre profil !");
+        let n = 0; document.getElementById('resultat').style.display = "none"; document.getElementById('loader').style.display = "block";
+        let inter = setInterval(() => { n += 5; document.getElementById('chiffre').innerText = n; document.getElementById('progress-bar').style.width = n + "%"; if (n >= 100) { clearInterval(inter); finaliser(); } }, 20);
+    }
+
+    function finaliser() {
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+        document.getElementById('loader').style.display = "none"; document.getElementById('resultat').style.display = "block";
+
+        const fP = isVeg ? db.petitDej.filter(x => x.v) : db.petitDej;
+        const fM = isVeg ? db.dejeuner.filter(x => x.v) : db.dejeuner;
+        const fD = isVeg ? db.diner.filter(x => x.v) : db.diner;
+
+        let planning = [];
+        for (let i = 0; i < jours; i++) {
+            planning.push({
+                p: fP[Math.floor(Math.random() * fP.length)],
+                m: fM[Math.floor(Math.random() * fM.length)],
+                d: fD[Math.floor(Math.random() * fD.length)]
+            });
+        }
+
+        let html = "";
+        planning.forEach((jour, idx) => {
+            let i = idx + 1;
+            // Calcul de la liste de courses uniquement pour les plats sélectionnés dans les 15 prochains jours
+            if (i === 1 || (i - 1) % 15 === 0) {
+                let ingredientsSelectionnes = new Set();
+                let finPeriode = Math.min(idx + 15, jours);
+                for (let k = idx; k < finPeriode; k++) {
+                    planning[k].p.i.forEach(ing => ingredientsSelectionnes.add(ing));
+                    planning[k].m.i.forEach(ing => ingredientsSelectionnes.add(ing));
+                    planning[k].d.i.forEach(ing => ingredientsSelectionnes.add(ing));
+                }
+                html += `<div class="shopping-list"><b>🛒 LISTE DE COURSES (JOUR ${i} À ${finPeriode})</b><br><small>Uniquement les ingrédients nécessaires pour vos repas</small><br>${Array.from(ingredientsSelectionnes).map(ing => `<span class="shopping-item">${ing}</span>`).join('')}</div>`;
+            }
+
+            let total = jour.p.c + jour.m.c + jour.d.c;
+            html += `<div class="day-box"><span class="cal-badge">${total} kcal</span><b>JOUR ${i}</b><br><span style="display:block;margin-top:8px;">☀️ ${jour.p.n} <small>(${jour.p.c} kcal)</small></span><span style="display:block;">🥗 ${jour.m.n} <small>(${jour.m.c} kcal)</small></span><span style="display:block;">🌙 ${jour.d.n} <small>(${jour.d.c} kcal)</small></span></div>`;
+        });
+        document.getElementById('content-area').innerHTML = html;
+    }
+</script>
+</body>
+</html>

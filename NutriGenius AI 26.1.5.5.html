@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.5.5 - PRO KITCHEN EDITION</title>
+    <style>
+        :root { --bg: #f0f4f8; --card: white; --text: #2c3e50; --primary: #009245; --accent: #e67e22; }
+        .dark-mode { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f4f8; --primary: #27ae60; --accent: #d35400; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); text-align: center; padding: 20px; transition: 0.3s; margin: 0; }
+        .container { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 900px; text-align: left; }
+        
+        #loader-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); z-index: 9999;
+            flex-direction: column; justify-content: center; align-items: center; color: white;
+        }
+        .spinner { width: 60px; height: 60px; border: 6px solid rgba(255,255,255,0.2); border-top: 6px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .header-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .dark-toggle { cursor: pointer; background: var(--primary); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        
+        h1 { margin: 0; color: var(--primary); }
+        .input-group { margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-field, .select-box { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; background: var(--card); color: var(--text); }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-weight: bold; color: var(--primary); cursor: pointer; margin: 15px 0; }
+        
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: var(--primary); font-size: 1.1em; transition: 0.2s; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        
+        .btn-sm { padding: 8px 12px; font-size: 0.75em; margin: 4px 2px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-replace { background: var(--accent); }
+        .btn-recipe { background: #3498db; }
+        .btn-variant { background: #8e44ad; }
+
+        .day-box { background: var(--card); padding: 20px; margin-bottom: 25px; border-radius: 15px; border-left: 12px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .meal-section { margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(127, 140, 141, 0.3); }
+        .details-content { display: none; font-size: 0.95em; margin-top: 12px; background: rgba(0,0,0,0.04); padding: 20px; border-radius: 10px; line-height: 1.6; border-left: 4px solid #3498db; }
+        
+        .macro-box { background: var(--primary); color: white; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.9em; }
+
+        .shopping-list { background: #e8f5e9; border: 2px dashed var(--primary); padding: 20px; border-radius: 15px; margin: 25px 0; color: #1b5e20; }
+        .shopping-item { display: inline-block; background: white; padding: 6px 14px; margin: 5px; border-radius: 20px; font-size: 0.85em; font-weight: bold; border: 1px solid #c3e6cb; }
+        .cal-float { float: right; background: var(--primary); color: white; padding: 5px 15px; border-radius: 12px; font-size: 0.95em; font-weight: bold; }
+
+        @media print { .no-print, .btn-sm { display: none !important; } .details-content { display: block !important; border: none; background: none; } }
+    </style>
+</head>
+<body onload="chargerProfil()">
+
+<div id="loader-overlay">
+    <div class="spinner"></div>
+    <div style="font-size: 1.3em;">Cuisine en cours de préparation... 👨‍🍳</div>
+</div>
+
+<div class="container">
+    <div class="header-ui">
+        <h1>NutriGenius AI 🥗</h1>
+        <div class="dark-toggle no-print" onclick="toggleDark()">🌓 Mode Sombre</div>
+    </div>
+
+    <div class="no-print">
+        <div class="input-group">
+            <div class="row">
+                <input type="number" id="age" class="input-field" placeholder="Age" oninput="sauvegarderProfil()">
+                <select id="sexe" class="input-field" onchange="sauvegarderProfil()">
+                    <option value="H">Homme</option>
+                    <option value="F">Femme</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="number" id="poids" class="input-field" placeholder="Poids (kg)" oninput="sauvegarderProfil()">
+                <input type="number" id="taille" class="input-field" placeholder="Taille (cm)" oninput="sauvegarderProfil()">
+            </div>
+        </div>
+        <select id="select-duree" class="select-box">
+            <option value="1">🥗 Menu du Jour</option>
+            <option value="7">📅 Menu de la Semaine</option>
+            <option value="30">📊 Menu du Mois</option>
+        </select>
+        <label class="checkbox-group">
+            <input type="checkbox" id="check-veg" onchange="sauvegarderProfil()"> 🥦 Mode Végétarien
+        </label>
+        <button class="btn" onclick="lancer()">GÉNÉRER MON PLAN NUTRITIONNEL</button>
+    </div>
+
+    <div id="resultat"><div id="content-area"></div></div>
+</div>
+
+<script>
+    const db = {
+        petitDej: [
+            { n: "Omelette Soufflée Master 🍳", c: 380, v: true, i: ["4 Oeufs", "Oignons verts", "Curcuma", "Beurre"],
+                variantes: [
+                    { t: "Classique Aérienne", r: ["1. Blancs en neige.", "2. Mélanger aux jaunes.", "3. Cuire 8min."], ntr: "Protéines: 22g | Glucides: 4g | Lipides: 24g", tip: "Ne pas retourner." },
+                    { t: "Brouillée Créole", r: ["1. Battre les oeufs.", "2. Frire oignons.", "3. Remuer."], ntr: "Protéines: 21g | Glucides: 3g | Lipides: 23g", tip: "Garder baveux." },
+                    { t: "Muffins au Four", r: ["1. Moules huilés.", "2. Enfourner 15min."], ntr: "Protéines: 24g | Glucides: 5g | Lipides: 18g", tip: "Pratique." },
+                    { t: "Roulée Japonaise", r: ["1. Fines couches.", "2. Rouler."], ntr: "Protéines: 20g | Glucides: 6g | Lipides: 20g", tip: "Texture ferme." },
+                    { t: "Version Fromage", r: ["1. Ajouter emmental.", "2. Plier."], ntr: "Protéines: 28g | Glucides: 4g | Lipides: 32g", tip: "Calcium ++." }
+                ]
+            },
+            { n: "Bowl Skyr & Fruits Péi 🥭", c: 310, v: true, i: ["200g Skyr", "Mangue", "Graines de lin", "Miel"],
+                variantes: [
+                    { t: "Énergie Matinale", r: ["1. Mixez mangue.", "2. Mélanger Skyr."], ntr: "Protéines: 25g | Glucides: 35g | Lipides: 5g", tip: "Probiotiques." },
+                    { t: "Crunchy Noisettes", r: ["1. Noisettes concassées.", "2. Miel."], ntr: "Protéines: 26g | Glucides: 38g | Lipides: 12g", tip: "Focus mental." },
+                    { t: "Smoothie Bowl", r: ["1. Tout mixer.", "2. Boire froid."], ntr: "Protéines: 22g | Glucides: 40g | Lipides: 4g", tip: "Express." },
+                    { t: "Façon Trifle", r: ["1. Étages alternés.", "2. Frais."], ntr: "Protéines: 24g | Glucides: 36g | Lipides: 6g", tip: "Esthétique." },
+                    { t: "Version Gingembre", r: ["1. Râper gingembre.", "2. Mélanger."], ntr: "Protéines: 25g | Glucides: 34g | Lipides: 5g", tip: "Immunité." }
+                ]
+            },
+            { n: "Pancakes à la Banane 🥞", c: 350, v: true, i: ["2 Bananes", "2 Oeufs", "Avoine", "Cannelle"],
+                variantes: [
+                    { t: "Sans Farine", r: ["1. Écraser bananes.", "2. Mélanger.", "3. Poêler."], ntr: "Protéines: 15g | Glucides: 45g | Lipides: 8g", tip: "Fondant." },
+                    { t: "Protidiques", r: ["1. Ajouter 30g de whey."], ntr: "Protéines: 35g | Glucides: 40g | Lipides: 9g", tip: "Sportif." },
+                    { t: "Choco", r: ["1. Pépites chocolat noir."], ntr: "Protéines: 14g | Glucides: 52g | Lipides: 15g", tip: "Gourmand." },
+                    { t: "Peanut Butter", r: ["1. Napper de beurre cacahuète."], ntr: "Protéines: 18g | Glucides: 46g | Lipides: 18g", tip: "Énergie." },
+                    { t: "Blueberry", r: ["1. Ajouter myrtilles."], ntr: "Protéines: 15g | Glucides: 48g | Lipides: 9g", tip: "Antioxydant." }
+                ]
+            },
+            { n: "Tartines Avocat & Oeuf 🥑", c: 420, v: true, i: ["Pain complet", "1 Avocat", "2 Oeufs", "Piment"],
+                variantes: [
+                    { t: "Classique", r: ["1. Écraser avocat.", "2. Oeuf poché."], ntr: "Protéines: 18g | Glucides: 30g | Lipides: 25g", tip: "Citronner." },
+                    { t: "Nordique", r: ["1. Saumon fumé."], ntr: "Protéines: 25g | Glucides: 28g | Lipides: 28g", tip: "Oméga-3." },
+                    { t: "Feta", r: ["1. Feta émiettée."], ntr: "Protéines: 20g | Glucides: 32g | Lipides: 30g", tip: "Salé." },
+                    { t: "Bacon de dinde", r: ["1. Griller bacon.", "2. Ajouter."], ntr: "Protéines: 24g | Glucides: 30g | Lipides: 28g", tip: "Protéines." },
+                    { t: "Pesto", r: ["1. Tartiner pesto."], ntr: "Protéines: 17g | Glucides: 32g | Lipides: 32g", tip: "Intense." }
+                ]
+            }
+        ],
+        dejeuner: [
+            { n: "Carry Poulet Grand-Mère 🍗", c: 620, v: false, i: ["Poulet", "Tomates", "Oignons", "Gingembre", "Curcuma"],
+                variantes: [
+                    { t: "Traditionnel", r: ["1. Roussir viande.", "2. Épices.", "3. Mijoter."], ntr: "Protéines: 52g | Glucides: 12g | Lipides: 22g", tip: "Sans eau." },
+                    { t: "Express", r: ["1. Feu vif.", "2. Court."], ntr: "Protéines: 48g | Glucides: 10g | Lipides: 15g", tip: "Vitamines." },
+                    { t: "Coco", r: ["1. Lait coco final."], ntr: "Protéines: 46g | Glucides: 18g | Lipides: 35g", tip: "Doux." },
+                    { t: "Light", r: ["1. Four.", "2. Sans huile."], ntr: "Protéines: 55g | Glucides: 8g | Lipides: 12g", tip: "Minceur." },
+                    { t: "Pimenté", r: ["1. Piment oiseau."], ntr: "Protéines: 52g | Glucides: 11g | Lipides: 21g", tip: "Chaud." }
+                ]
+            },
+            { n: "Rougail Saucisses 🥘", c: 710, v: false, i: ["Saucisses fumées", "Tomates", "Oignons", "Gingembre"],
+                variantes: [
+                    { t: "Authentique", r: ["1. Bouillir.", "2. Frire.", "3. Tomates."], ntr: "Protéines: 40g | Glucides: 15g | Lipides: 45g", tip: "Dégraisser." },
+                    { t: "Gros Piments", r: ["1. Piments entiers."], ntr: "Protéines: 38g | Glucides: 18g | Lipides: 45g", tip: "Relevé." },
+                    { t: "Express", r: ["1. Rondelles.", "2. Rapide."], ntr: "Protéines: 35g | Glucides: 12g | Lipides: 40g", tip: "20min." },
+                    { t: "Curcuma", r: ["1. Safran péi."], ntr: "Protéines: 39g | Glucides: 14g | Lipides: 45g", tip: "Couleur." },
+                    { t: "Fumé", r: ["1. Griller sec."], ntr: "Protéines: 42g | Glucides: 10g | Lipides: 50g", tip: "Intense." }
+                ]
+            },
+            { n: "Carry Crevettes Bourbon 🦐", c: 450, v: false, i: ["Crevettes", "Tomates", "Combava", "Thym"],
+                variantes: [
+                    { t: "Zeste Combava", r: ["1. Sauter.", "2. Zeste.", "3. Tomates."], ntr: "Protéines: 45g | Glucides: 10g | Lipides: 12g", tip: "Unique." },
+                    { t: "Curry Jaune", r: ["1. Curry.", "2. Oignons."], ntr: "Protéines: 43g | Glucides: 15g | Lipides: 14g", tip: "Mauricien." },
+                    { t: "Pimenté sec", r: ["1. Pas de sauce."], ntr: "Protéines: 46g | Glucides: 8g | Lipides: 10g", tip: "Sauté." },
+                    { t: "Citronnelle", r: ["1. Infuser."], ntr: "Protéines: 44g | Glucides: 12g | Lipides: 11g", tip: "Frais." },
+                    { t: "Ail", r: ["1. Dose ail ++."], ntr: "Protéines: 45g | Glucides: 9g | Lipides: 15g", tip: "Puissant." }
+                ]
+            },
+            { n: "Burger Végé Maison 🍔", c: 520, v: true, i: ["Galette céréales", "Pain Bun", "Salade", "Tomate"],
+                variantes: [
+                    { t: "Classique Végé", r: ["1. Toaster bun.", "2. Griller galette."], ntr: "Protéines: 22g | Glucides: 65g | Lipides: 18g", tip: "Sauce yaourt." },
+                    { t: "Avocado Burger", r: ["1. Guacamole."], ntr: "Protéines: 20g | Glucides: 62g | Lipides: 28g", tip: "Bonnes graisses." },
+                    { t: "BBQ Style", r: ["1. Sauce fumée."], ntr: "Protéines: 21g | Glucides: 70g | Lipides: 19g", tip: "Goût grillé." },
+                    { t: "Sans Pain", r: ["1. Enveloppé salade."], ntr: "Protéines: 18g | Glucides: 15g | Lipides: 15g", tip: "Keto-friendly." },
+                    { t: "Chèvre Miel", r: ["1. Fromage chèvre."], ntr: "Protéines: 25g | Glucides: 68g | Lipides: 25g", tip: "Saveur." }
+                ]
+            }
+        ],
+        diner: [
+            { n: "Dahl de Lentilles Corail 🍛", c: 510, v: true, i: ["Lentilles", "Lait coco", "Cumin", "Citron"],
+                variantes: [
+                    { t: "Onctueux", r: ["1. Mixer.", "2. Coco."], ntr: "Protéines: 26g | Glucides: 58g | Lipides: 18g", tip: "Apaisant." },
+                    { t: "Indien", r: ["1. Tarka friture."], ntr: "Protéines: 24g | Glucides: 55g | Lipides: 22g", tip: "Authentique." },
+                    { t: "Détox", r: ["1. Bouillon.", "2. Gingembre."], ntr: "Protéines: 20g | Glucides: 45g | Lipides: 8g", tip: "Léger." },
+                    { t: "Épinards", r: ["1. Ajouter Brèdes."], ntr: "Protéines: 28g | Glucides: 52g | Lipides: 15g", tip: "Fer ++." },
+                    { t: "Royal", r: ["1. Cajou grillées."], ntr: "Protéines: 30g | Glucides: 62g | Lipides: 25g", tip: "Croquant." }
+                ]
+            },
+            { n: "Soupe Chinoise Maison 🍜", c: 420, v: false, i: ["Bouillon", "Nouilles", "Bouchons", "Oignons verts"],
+                variantes: [
+                    { t: "Complète", r: ["1. Bouillon.", "2. Nouilles."], ntr: "Protéines: 30g | Glucides: 55g | Lipides: 10g", tip: "Soja." },
+                    { t: "Végé", r: ["1. Tofu.", "2. Champignons."], ntr: "Protéines: 22g | Glucides: 58g | Lipides: 8g", tip: "Légumes." },
+                    { t: "Pimentée", r: ["1. Huile piment."], ntr: "Protéines: 29g | Glucides: 54g | Lipides: 12g", tip: "Dynamique." },
+                    { t: "Crevettes", r: ["1. Gambas.", "2. Coriandre."], ntr: "Protéines: 35g | Glucides: 50g | Lipides: 7g", tip: "Léger." },
+                    { t: "Miso Style", r: ["1. Pâte Miso."], ntr: "Protéines: 18g | Glucides: 45g | Lipides: 6g", tip: "Santé." }
+                ]
+            }
+        ]
+    };
+
+    let planningGlobal = [];
+
+    function toggleDark() { document.body.classList.toggle('dark-mode'); }
+
+    function lancer() {
+        if (!document.getElementById('age').value) return alert("Veuillez entrer votre Age !");
+        document.getElementById('loader-overlay').style.display = "flex";
+        setTimeout(() => { 
+            genererPlanning(); 
+            document.getElementById('loader-overlay').style.display = "none";
+        }, 1200);
+    }
+
+    function genererPlanning() {
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+        const poolP = isVeg ? db.petitDej.filter(x => x.v) : db.petitDej;
+        const poolM = isVeg ? db.dejeuner.filter(x => x.v) : db.dejeuner;
+        const poolD = isVeg ? db.diner.filter(x => x.v) : db.diner;
+
+        planningGlobal = [];
+        for (let i = 0; i < jours; i++) {
+            planningGlobal.push({
+                p: JSON.parse(JSON.stringify(poolP[Math.floor(Math.random() * poolP.length)])),
+                m: JSON.parse(JSON.stringify(poolM[Math.floor(Math.random() * poolM.length)])),
+                d: JSON.parse(JSON.stringify(poolD[Math.floor(Math.random() * poolD.length)])),
+                vP: 0, vM: 0, vD: 0
+            });
+        }
+        afficherMenu();
+    }
+
+    function remplacerRepas(jIdx, type) {
+        const isVeg = document.getElementById('check-veg').checked;
+        const categorie = type === 'p' ? db.petitDej : (type === 'm' ? db.dejeuner : db.diner);
+        const pool = isVeg ? categorie.filter(x => x.v) : categorie;
+        
+        if (pool.length <= 1) return;
+
+        let nouveauPlat;
+        const platActuelNom = planningGlobal[jIdx][type].n;
+
+        do {
+            nouveauPlat = pool[Math.floor(Math.random() * pool.length)];
+        } while (nouveauPlat.n === platActuelNom);
+
+        planningGlobal[jIdx][type] = JSON.parse(JSON.stringify(nouveauPlat));
+        planningGlobal[jIdx]['v' + type.toUpperCase()] = 0; 
+        afficherMenu();
+    }
+
+    function changerVariante(jIdx, type) {
+        let key = 'v' + type.toUpperCase();
+        let plat = planningGlobal[jIdx][type];
+        planningGlobal[jIdx][key] = (planningGlobal[jIdx][key] + 1) % plat.variantes.length;
+        afficherMenu();
+    }
+
+    function toggleDetails(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function afficherMenu() {
+        let html = "";
+        planningGlobal.forEach((jour, idx) => {
+            if (idx % 7 === 0) {
+                let listIng = new Set();
+                let fin = Math.min(idx + 7, planningGlobal.length);
+                for(let k=idx; k<fin; k++) {
+                    [planningGlobal[k].p, planningGlobal[k].m, planningGlobal[k].d].forEach(r => r.i.forEach(ing => listIng.add(ing)));
+                }
+                html += `<div class="shopping-list"><b>🛒 LISTE DE COURSES (Semaine ${Math.floor(idx/7)+1})</b><br>${Array.from(listIng).map(n => `<span class="shopping-item">${n}</span>`).join('')}</div>`;
+            }
+
+            html += `
+            <div class="day-box">
+                <span class="cal-float">${jour.p.c + jour.m.c + jour.d.c} kcal</span>
+                <h3>JOUR ${idx + 1}</h3>
+                ${renderMeal(idx, 'p', '☀️ Petit-Déjeuner', jour.p, jour.vP)}
+                ${renderMeal(idx, 'm', '🥗 Déjeuner', jour.m, jour.vM)}
+                ${renderMeal(idx, 'd', '🌙 Dîner', jour.d, jour.vD)}
+            </div>`;
+        });
+        document.getElementById('content-area').innerHTML = html;
+    }
+
+    function renderMeal(jIdx, type, label, meal, vIdx) {
+        const id = `det-${jIdx}-${type}`;
+        const v = meal.variantes[vIdx];
+        return `
+        <div class="meal-section">
+            <b>${label} :</b> ${meal.n} <small>(${v.t})</small>
+            <span class="ing-label">🛒 Ingrédients : ${meal.i.join(', ')}</span>
+            <div class="no-print">
+                <button class="btn-sm btn-replace" onclick="remplacerRepas(${jIdx}, '${type}')">🔄 Changer Plat</button>
+                <button class="btn-sm btn-variant" onclick="changerVariante(${jIdx}, '${type}')">✨ Variante (${vIdx+1}/${meal.variantes.length})</button>
+                <button class="btn-sm btn-recipe" onclick="toggleDetails('${id}')">📖 Recette</button>
+            </div>
+            <div id="${id}" class="details-content">
+                <b>👨‍🍳 PRÉPARATION :</b><br>
+                ${v.r.map((step, i) => `<b>${i+1}.</b> ${step}`).join('<br>')}
+                <div class="macro-box">
+                    📊 <b>Valeurs Nutritionnelles :</b><br>${v.ntr}
+                </div>
+                <small>💡 <b>Astuce :</b> ${v.tip}</small>
+            </div>
+        </div>`;
+    }
+
+    function sauvegarderProfil() {
+        const p = { age: document.getElementById('age').value, poids: document.getElementById('poids').value, taille: document.getElementById('taille').value, sexe: document.getElementById('sexe').value, veg: document.getElementById('check-veg').checked };
+        localStorage.setItem('NutriGenius_V9_FINAL', JSON.stringify(p));
+    }
+
+    function chargerProfil() {
+        const s = localStorage.getItem('NutriGenius_V9_FINAL');
+        if (s) {
+            const d = JSON.parse(s);
+            document.getElementById('age').value = d.age || "";
+            document.getElementById('poids').value = d.poids || "";
+            document.getElementById('taille').value = d.taille || "";
+            document.getElementById('sexe').value = d.sexe || "H";
+            document.getElementById('check-veg').checked = d.veg || false;
+        }
+    }
+</script>
+</body>
+</html>

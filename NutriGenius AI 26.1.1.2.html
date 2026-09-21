@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI - Ton Menu Local</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #27ae60; text-align: center; font-size: 2em; }
+        .btn-main { width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1em; cursor: pointer; transition: 0.3s; }
+        .btn-main:hover { background: #219150; }
+        .menu-box { margin-top: 20px; border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; background: #fff; }
+        .meal { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #ddd; }
+        .meal strong { color: #2ecc71; text-transform: uppercase; font-size: 0.9em; }
+        .shop-list { background: #f9f9f9; padding: 10px; border-radius: 5px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    <p style="text-align: center;">Détection de quartier et menus locaux en temps réel.</p>
+    
+    <button class="btn-main" onclick="lancerNutriGenius()">📍 Scanner mon quartier & Générer Menu</button>
+    
+    <div id="status" style="margin-top: 15px; text-align: center; color: #666;"></div>
+    
+    <div id="resultat" style="display:none;">
+        <div class="menu-box">
+            <h3>📅 Ton Menu du Jour</h3>
+            <div id="contenu-menu"></div>
+        </div>
+        
+        <div class="menu-box">
+            <h3>🛒 Magasins à proximité</h3>
+            <div id="liste-magasins"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=TA_CLE_API_ICI&libraries=places"></script>
+
+<script>
+    function lancerNutriGenius() {
+        const status = document.getElementById('status');
+        const resDiv = document.getElementById('resultat');
+        
+        if (!navigator.geolocation) {
+            status.innerText = "GPS non supporté.";
+            return;
+        }
+
+        status.innerText = "Analyse du quartier en cours...";
+        
+        navigator.geolocation.getCurrentPosition((pos) => {
+            const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            
+            // 1. Chercher les magasins
+            const service = new google.maps.places.PlacesService(document.createElement('div'));
+            service.nearbySearch({ location: coords, radius: 1000, type: ['supermarket'] }, (results, statusAPI) => {
+                
+                if (statusAPI === google.maps.places.PlacesServiceStatus.OK) {
+                    resDiv.style.display = "block";
+                    status.innerText = "Analyse terminée !";
+                    
+                    // Affichage Magasins
+                    const shopDiv = document.getElementById('liste-magasins');
+                    shopDiv.innerHTML = results.slice(0, 3).map(p => `• <strong>${p.name}</strong> (${p.vicinity})`).join('<br>');
+                    
+                    // Génération Menu (Simulation IA locale)
+                    genererMenuAuto();
+                }
+            });
+        });
+    }
+
+    function genererMenuAuto() {
+        const menus = [
+            { m: "Petit-déjeuner local", d: "Midi : Salade composée du marché", s: "Soir : Soupe de saison et pain frais", c: "Liste : Légumes frais, Pain, Oeufs" },
+            { m: "Bowl de fruits", d: "Midi : Plat signature du quartier", s: "Soir : Grillades et légumes vapeur", c: "Liste : Fruits, Viande/Tofu, Herbes" }
+        ];
+        const random = menus[Math.floor(Math.random() * menus.length)];
+        document.getElementById('contenu-menu').innerHTML = `
+            <div class="meal"><strong>Matin :</strong> ${random.m}</div>
+            <div class="meal"><strong>Midi :</strong> ${random.d}</div>
+            <div class="meal"><strong>Soir :</strong> ${random.s}</div>
+            <div class="shop-list">📝 ${random.c}</div>
+        `;
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.6.3 - FIX</title>
+    <style>
+        :root { --bg: #f0f4f8; --card: white; --text: #2c3e50; --primary: #009245; --accent: #e67e22; }
+        .dark-mode { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f4f8; --primary: #27ae60; --accent: #d35400; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); text-align: center; padding: 20px; transition: 0.3s; margin: 0; }
+        .container { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 900px; text-align: left; }
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        .spinner { width: 60px; height: 60px; border: 6px solid rgba(255,255,255,0.2); border-top: 6px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .header-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .controls-top { display: flex; gap: 10px; }
+        .dark-toggle, .lang-select { cursor: pointer; background: var(--primary); color: white; padding: 10px 18px; border-radius: 25px; font-size: 0.9em; font-weight: bold; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .input-group { margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-field, .select-box { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; background: var(--card); color: var(--text); font-weight: 500; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-weight: bold; color: var(--primary); cursor: pointer; margin: 15px 0; }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-weight: 900; cursor: pointer; color: white; background: linear-gradient(135deg, var(--primary), #2ecc71); font-size: 1.2em; transition: 0.3s; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(39, 174, 96, 0.4); }
+        .day-box { background: var(--card); padding: 25px; margin-bottom: 30px; border-radius: 20px; border-left: 15px solid var(--primary); box-shadow: 0 8px 20px rgba(0,0,0,0.08); position: relative; }
+        .cal-float { position: absolute; top: 15px; right: 20px; background: var(--primary); color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.85em; font-weight: bold; }
+        .meal-card { margin-top: 15px; padding: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .shopping-list { background: #e8f5e9; border: 3px dashed var(--primary); padding: 25px; border-radius: 20px; margin: 30px 0; color: #1b5e20; }
+        .shopping-item { display: inline-block; background: white; padding: 8px 16px; margin: 6px; border-radius: 25px; font-size: 0.9em; font-weight: bold; border: 1px solid #c3e6cb; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .btn-sm { padding: 10px 15px; font-size: 0.8em; margin: 5px 3px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; transition: 0.2s; }
+        .btn-replace { background: var(--accent); }
+        .btn-variant { background: #8e44ad; }
+        .btn-recipe { background: #3498db; }
+        .details-content { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 15px; border-left: 5px solid #3498db; }
+        .macro-box { background: var(--primary); color: white; padding: 15px; border-radius: 12px; margin: 15px 0; font-size: 0.9em; line-height: 1.6; }
+    </style>
+</head>
+<body onload="chargerProfil()">
+
+<div id="loader-overlay"><div class="spinner"></div><div id="loader-text">Loading...</div></div>
+
+<div class="container">
+    <div class="header-ui">
+        <h1>NutriGenius AI 🥗✨</h1>
+        <div class="controls-top">
+            <select id="lang-picker" class="lang-select" onchange="changerLangue()">
+                <option value="fr">🇫🇷 Français</option><option value="en">🇺🇸 English</option><option value="es">🇪🇸 Español</option>
+                <option value="zh">🇨🇳 中文</option><option value="hi">🇮🇳 हिन्दी</option><option value="ar">🇸🇦 العربية</option>
+                <option value="bn">🇧🇩 বাংলা</option><option value="pt">🇧🇷 Português</option><option value="ru">🇷🇺 Русский</option>
+                <option value="ur">🇵🇰 اردو</option>
+            </select>
+            <button class="dark-toggle no-print" onclick="toggleDark()">🌓</button>
+        </div>
+    </div>
+
+    <div class="no-print">
+        <div class="input-group">
+            <div class="row">
+                <input type="number" id="age" class="input-field" placeholder="Âge">
+                <select id="sexe" class="input-field">
+                    <option value="H" id="opt-h">♂️ Homme</option><option value="F" id="opt-f">♀️ Femme</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="number" id="poids" class="input-field" placeholder="Poids (kg)">
+                <input type="number" id="taille" class="input-field" placeholder="Taille (cm)">
+            </div>
+        </div>
+        <select id="select-duree" class="select-box">
+            <option value="1" id="dur-1">📅 Menu du Jour</option>
+            <option value="7" id="dur-7">🗓️ Menu de la Semaine</option>
+            <option value="30" id="dur-30">🌙 Menu du Mois</option>
+            <option value="365" id="dur-365">🌍 Menu de l'Année</option>
+        </select>
+        <label class="checkbox-group"><input type="checkbox" id="check-veg"> <span id="lbl-veg">🥗 Mode Végétarien</span></label>
+        <button class="btn" onclick="lancer()" id="btn-gen">🚀 GÉNÉRER MON PLAN ULTIME</button>
+    </div>
+
+    <div id="content-area"></div>
+</div>
+
+<script>
+    let currentLang = 'fr';
+    let planningGlobal = [];
+
+    const translations = {
+        fr: { age: "Âge", poids: "Poids (kg)", taille: "Taille (cm)", gen: "🚀 GÉNÉRER MON PLAN ULTIME", veg: "🥗 Mode Végétarien", shopping: "🛒 LISTE DE COURSES", change: "🔄 Changer", variant: "✨ Variante", recipe: "📖 Détails", steps: "👨‍🍳 PRÉPARATION :", tip: "💡 CONSEIL", male: "♂️ Homme", female: "♀️ Femme", day: "JOUR", menu1: "📅 Menu du Jour", menu7: "🗓️ Menu de la Semaine", menu30: "🌙 Menu du Mois", menu365: "🌍 Menu de l'Année", macroTitle: "📊 Valeurs Nutritionnelles :", bfast: "☀️ PETIT-DÉJEUNER", lunch: "🍴 DÉJEUNER", dinner: "🌙 DÎNER", load: "Chargement...", ing: "Ingrédients :" },
+        en: { age: "Age", poids: "Weight (kg)", taille: "Height (cm)", gen: "🚀 GENERATE ULTIMATE PLAN", veg: "🥗 Vegetarian Mode", shopping: "🛒 SHOPPING LIST", change: "🔄 Change", variant: "✨ Variant", recipe: "📖 Details", steps: "👨‍🍳 PREPARATION:", tip: "💡 TIP", male: "♂️ Male", female: "♀️ Female", day: "DAY", menu1: "📅 Daily Menu", menu7: "🗓️ Weekly Menu", menu30: "🌙 Monthly Menu", menu365: "🌍 Yearly Menu", macroTitle: "📊 Nutritional Values:", bfast: "☀️ BREAKFAST", lunch: "🍴 LUNCH", dinner: "🌙 DINNER", load: "Loading...", ing: "Ingredients:" },
+        es: { age: "Edad", poids: "Peso (kg)", taille: "Altura (cm)", gen: "🚀 GENERAR MI PLAN", veg: "🥗 Modo Vegetariano", shopping: "🛒 LISTA DE COMPRAS", change: "🔄 Cambiar", variant: "✨ Variante", recipe: "📖 Detalles", steps: "👨‍🍳 PREPARACIÓN:", tip: "💡 CONSEJO", male: "♂️ Hombre", female: "♀️ Mujer", day: "DÍA", menu1: "📅 Menú del Día", menu7: "🗓️ Menú Semanal", menu30: "🌙 Menú Mensual", menu365: "🌍 Menú Anual", macroTitle: "📊 Valores Nutricionales:", bfast: "☀️ DESAYUNO", lunch: "🍴 ALMUERZO", dinner: "🌙 CENA", load: "Cargando...", ing: "Ingredientes:" }
+        // ... (Tu peux rajouter les autres langues ici si besoin)
+    };
+
+    const db = {
+        petitDej: [
+            { 
+                n: { fr: "L'Omelette Soufflée Royale 🍳", en: "Royal Soufflé Omelette 🍳", es: "Tortilla Soufflé Real 🍳" },
+                c: 410, v: true,
+                i: { fr: ["4 Œufs", "Fromage", "Beurre"], en: ["4 Eggs", "Cheese", "Butter"], es: ["4 Huevos", "Queso", "Mantequilla"] },
+                variantes: [
+                    { t: { fr: "Version Classique", en: "Classic Version" }, r: { fr: ["Battre", "Cuire"], en: ["Beat", "Cook"] }, ntr: { fr: "P: 20g", en: "P: 20g" }, tip: { fr: "Feu doux", en: "Low heat" } },
+                    { t: { fr: "Version Fromage", en: "Cheesy Version" }, r: { fr: ["Ajouter fromage"], en: ["Add cheese"] }, ntr: { fr: "P: 25g", en: "P: 25g" }, tip: { fr: "Fondant", en: "Melty" } },
+                    { t: { fr: "Version Épicée", en: "Spicy Version" }, r: { fr: ["Ajouter piment"], en: ["Add chili"] }, ntr: { fr: "P: 20g", en: "P: 20g" }, tip: { fr: "Relevé", en: "Spicy" } },
+                    { t: { fr: "Version Herbes", en: "Herbs Version" }, r: { fr: ["Ciboulette"], en: ["Chives"] }, ntr: { fr: "P: 20g", en: "P: 20g" }, tip: { fr: "Frais", en: "Fresh" } },
+                    { t: { fr: "Version Truffe", en: "Truffle Version" }, r: { fr: ["Huile de truffe"], en: ["Truffle oil"] }, ntr: { fr: "P: 20g", en: "P: 20g" }, tip: { fr: "Luxe", en: "Luxury" } }
+                ]
+            }
+        ],
+        dejeuner: [
+            { 
+                n: { fr: "Bowl de Quinoa Impérial 🥗", en: "Imperial Quinoa Bowl 🥗", es: "Bol de Quinoa Imperial 🥗" },
+                c: 550, v: true,
+                i: { fr: ["Quinoa", "Avocat", "Pois chiches"], en: ["Quinoa", "Avocado", "Chickpeas"], es: ["Quinoa", "Aguacate", "Garbanzos"] },
+                variantes: [
+                    { t: { fr: "Zen", en: "Zen" }, r: { fr: ["Mélanger"], en: ["Mix"] }, ntr: { fr: "G: 45g", en: "C: 45g" }, tip: { fr: "Froid", en: "Cold" } },
+                    { t: { fr: "Grec", en: "Greek" }, r: { fr: ["Ajouter Feta"], en: ["Add Feta"] }, ntr: { fr: "G: 45g", en: "C: 45g" }, tip: { fr: "Citron", en: "Lemon" } },
+                    { t: { fr: "Mexicain", en: "Mexican" }, r: { fr: ["Maïs"], en: ["Corn"] }, ntr: { fr: "G: 50g", en: "C: 50g" }, tip: { fr: "Piquant", en: "Hot" } },
+                    { t: { fr: "Protéiné", en: "Protein+" }, r: { fr: ["Double pois chiche"], en: ["Double chickpeas"] }, ntr: { fr: "P: 25g", en: "P: 25g" }, tip: { fr: "Satiété", en: "Fullness" } },
+                    { t: { fr: "Crunchy", en: "Crunchy" }, r: { fr: ["Graines"], en: ["Seeds"] }, ntr: { fr: "L: 15g", en: "F: 15g" }, tip: { fr: "Texture", en: "Texture" } }
+                ]
+            }
+        ],
+        diner: [
+            { 
+                n: { fr: "Poulet au Curry Express 🍗", en: "Express Chicken Curry 🍗", es: "Pollo al Curry Express 🍗" },
+                c: 600, v: false,
+                i: { fr: ["Poulet", "Curry", "Lait de coco"], en: ["Chicken", "Curry", "Coconut milk"], es: ["Pollo", "Curry", "Leche de coco"] },
+                variantes: [
+                    { t: { fr: "Doux", en: "Mild" }, r: { fr: ["Mijoter"], en: ["Simmer"] }, ntr: { fr: "P: 40g", en: "P: 40g" }, tip: { fr: "Onctueux", en: "Creamy" } },
+                    { t: { fr: "Thaï", en: "Thai" }, r: { fr: ["Citronnelle"], en: ["Lemongrass"] }, ntr: { fr: "P: 40g", en: "P: 40g" }, tip: { fr: "Parfumé", en: "Scented" } },
+                    { t: { fr: "Indien", en: "Indian" }, r: { fr: ["Garam Masala"], en: ["Garam Masala"] }, ntr: { fr: "P: 40g", en: "P: 40g" }, tip: { fr: "Authentique", en: "Authentic" } },
+                    { t: { fr: "Rouge", en: "Red" }, r: { fr: ["Pâte curry rouge"], en: ["Red curry paste"] }, ntr: { fr: "P: 40g", en: "P: 40g" }, tip: { fr: "Fort", en: "Strong" } },
+                    { t: { fr: "Léger", en: "Light" }, r: { fr: ["Moins de coco"], en: ["Less coco"] }, ntr: { fr: "L: 10g", en: "F: 10g" }, tip: { fr: "Diététique", en: "Diet" } }
+                ]
+            }
+        ]
+    };
+
+    function toggleDark() { document.body.classList.toggle('dark-mode'); }
+
+    function changerLangue() {
+        currentLang = document.getElementById('lang-picker').value;
+        const t = translations[currentLang] || translations['en'];
+        document.getElementById('age').placeholder = t.age;
+        document.getElementById('poids').placeholder = t.poids;
+        document.getElementById('taille').placeholder = t.taille;
+        document.getElementById('btn-gen').innerText = t.gen;
+        document.getElementById('lbl-veg').innerText = t.veg;
+        document.getElementById('opt-h').innerText = t.male;
+        document.getElementById('opt-f').innerText = t.female;
+        document.getElementById('dur-1').innerText = t.menu1;
+        document.getElementById('dur-7').innerText = t.menu7;
+        document.getElementById('dur-30').innerText = t.menu30;
+        document.getElementById('dur-365').innerText = t.menu365;
+        document.getElementById('loader-text').innerText = t.load;
+        if (planningGlobal.length > 0) afficherMenu();
+    }
+
+    function lancer() {
+        if (!document.getElementById('age').value) {
+            return alert(currentLang === 'fr' ? "Veuillez entrer votre âge !" : "Please enter your age!");
+        }
+        document.getElementById('loader-overlay').style.display = "flex";
+        setTimeout(() => { 
+            genererPlanning(); 
+            document.getElementById('loader-overlay').style.display = "none";
+        }, 1200);
+    }
+
+    function genererPlanning() {
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+        const poolP = isVeg ? db.petitDej.filter(x => x.v) : db.petitDej;
+        const poolM = isVeg ? db.dejeuner.filter(x => x.v) : db.dejeuner;
+        const poolD = isVeg ? db.diner.filter(x => x.v) : db.diner;
+
+        planningGlobal = [];
+        for (let i = 0; i < jours; i++) {
+            planningGlobal.push({
+                p: JSON.parse(JSON.stringify(poolP[Math.floor(Math.random() * poolP.length)])),
+                m: JSON.parse(JSON.stringify(poolM[Math.floor(Math.random() * poolM.length)])),
+                d: JSON.parse(JSON.stringify(poolD[Math.floor(Math.random() * poolD.length)])),
+                vP: 0, vM: 0, vD: 0
+            });
+        }
+        afficherMenu();
+        sauvegarderProfil();
+    }
+
+    function afficherMenu() {
+        const t = translations[currentLang] || translations['en'];
+        let html = "";
+        planningGlobal.forEach((jour, idx) => {
+            if (idx % 7 === 0) {
+                let listIng = new Set();
+                let fin = Math.min(idx + 7, planningGlobal.length);
+                for(let k=idx; k<fin; k++) {
+                    [planningGlobal[k].p, planningGlobal[k].m, planningGlobal[k].d].forEach(r => {
+                        let ingLang = r.i[currentLang] || r.i['en'] || r.i['fr'];
+                        ingLang.forEach(ing => listIng.add(ing));
+                    });
+                }
+                html += `<div class="shopping-list"><h3>${t.shopping}</h3>${Array.from(listIng).map(n => `<span class="shopping-item">${n}</span>`).join('')}</div>`;
+            }
+            html += `
+            <div class="day-box">
+                <div class="cal-float">${jour.p.c + jour.m.c + jour.d.c} kcal</div>
+                <h2 style="color:var(--primary)">✨ ${t.day} ${idx + 1}</h2>
+                ${renderMeal(idx, 'p', t.bfast, jour.p, jour.vP)}
+                ${renderMeal(idx, 'm', t.lunch, jour.m, jour.vM)}
+                ${renderMeal(idx, 'd', t.dinner, jour.d, jour.vD)}
+            </div>`;
+        });
+        document.getElementById('content-area').innerHTML = html;
+    }
+
+    function renderMeal(jIdx, type, label, meal, vIdx) {
+        const t = translations[currentLang] || translations['en'];
+        const id = `det-${jIdx}-${type}`;
+        const lang = currentLang;
+        const v = meal.variantes[vIdx] || meal.variantes[0];
+        return `
+        <div class="meal-card">
+            <b>${label} :</b> <span>${meal.n[lang] || meal.n['en']}</span><br>
+            <i style="color:var(--primary)">🛒 ${(meal.i[lang] || meal.i['en']).join(', ')}</i>
+            <div class="no-print">
+                <button class="btn-sm btn-replace" onclick="remplacerRepas(${jIdx}, '${type}')">${t.change}</button>
+                <button class="btn-sm btn-variant" onclick="changerVariante(${jIdx}, '${type}')">${t.variant}</button>
+                <button class="btn-sm btn-recipe" onclick="toggleDetails('${id}')">${t.recipe}</button>
+            </div>
+            <div id="${id}" class="details-content">
+                <h4>${v.t[lang] || v.t['en']}</h4>
+                <b>${t.steps}</b><br>
+                ${(v.r[lang] || v.r['en']).join('<br>')}
+                <div class="macro-box"><b>${t.macroTitle}</b><br>${v.ntr[lang] || v.ntr['en']}</div>
+            </div>
+        </div>`;
+    }
+
+    function remplacerRepas(jIdx, type) {
+        const isVeg = document.getElementById('check-veg').checked;
+        const cat = type === 'p' ? db.petitDej : (type === 'm' ? db.dejeuner : db.diner);
+        const pool = isVeg ? cat.filter(x => x.v) : cat;
+        planningGlobal[jIdx][type] = JSON.parse(JSON.stringify(pool[Math.floor(Math.random() * pool.length)]));
+        afficherMenu();
+    }
+
+    function changerVariante(jIdx, type) {
+        let key = 'v' + type.toUpperCase();
+        planningGlobal[jIdx][key] = (planningGlobal[jIdx][key] + 1) % 5;
+        afficherMenu();
+    }
+
+    function toggleDetails(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function sauvegarderProfil() {
+        const p = { age: document.getElementById('age').value, poids: document.getElementById('poids').value, taille: document.getElementById('taille').value, sexe: document.getElementById('sexe').value, veg: document.getElementById('check-veg').checked };
+        localStorage.setItem('NutriGenius_V26', JSON.stringify(p));
+    }
+
+    function chargerProfil() {
+        const s = localStorage.getItem('NutriGenius_V26');
+        if (s) {
+            const d = JSON.parse(s);
+            document.getElementById('age').value = d.age || "";
+            document.getElementById('poids').value = d.poids || "";
+            document.getElementById('taille').value = d.taille || "";
+            document.getElementById('sexe').value = d.sexe || "H";
+            document.getElementById('check-veg').checked = d.veg || false;
+        }
+        changerLangue();
+    }
+</script>
+</body>
+</html>

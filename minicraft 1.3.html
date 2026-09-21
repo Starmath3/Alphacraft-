@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Minicraft</title>
+<style>
+  body {
+    margin: 0;
+    background: #6db3f2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  canvas {
+    border: 3px solid #000;
+    image-rendering: pixelated;
+    background: #87CEEB;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="game" width="640" height="480"></canvas>
+
+<script>
+// ================= CONFIG =================
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const TILE = 32;
+const WORLD_W = 100;
+const WORLD_H = 30;
+
+const GRAVITY = 0.15;
+const MOVE_SPEED = 0.12;
+const MAX_SPEED = 0.25;
+const JUMP = -0.65;
+const FRICTION = 0.8;
+
+// ================= BLOCS =================
+const BLOCKS = {
+  air: null,
+  grass: "#3cb043",
+  dirt: "#8B4513",
+  stone: "#777"
+};
+
+// ================= MONDE =================
+let world = [];
+function generateWorld() {
+  for (let y = 0; y < WORLD_H; y++) {
+    world[y] = [];
+    for (let x = 0; x < WORLD_W; x++) {
+      if (y === 14) world[y][x] = "grass";
+      else if (y > 14 && y < 18) world[y][x] = "dirt";
+      else if (y >= 18) world[y][x] = "stone";
+      else world[y][x] = "air";
+    }
+  }
+}
+
+// ================= JOUEUR =================
+let player = {
+  x: 5,
+  y: 0,
+  vx: 0,
+  vy: 0,
+  w: 0.8,
+  h: 1.8,
+  onGround: false
+};
+
+// ================= CAMERA =================
+let camera = { x: 0, y: 0 };
+
+// ================= UTILS =================
+function inWorld(x, y) {
+  return x >= 0 && x < WORLD_W && y >= 0 && y < WORLD_H;
+}
+function isSolid(x, y) {
+  if (!inWorld(x, y)) return true;
+  return world[y][x] !== "air";
+}
+
+// ================= PHYSIQUE =================
+function applyPhysics() {
+  player.vy += GRAVITY;
+
+  // Horizontal
+  let nextX = player.x + player.vx;
+  if (
+    !isSolid(Math.floor(nextX), Math.floor(player.y)) &&
+    !isSolid(Math.floor(nextX), Math.floor(player.y + player.h - 0.1))
+  ) {
+    player.x = nextX;
+  } else {
+    player.vx = 0;
+  }
+
+  // Vertical
+  let nextY = player.y + player.vy;
+  if (player.vy > 0) {
+    if (
+      !isSolid(Math.floor(player.x), Math.floor(nextY + player.h)) &&
+      !isSolid(Math.floor(player.x + player.w), Math.floor(nextY + player.h))
+    ) {
+      player.y = nextY;
+      player.onGround = false;
+    } else {
+      player.y = Math.floor(nextY + player.h) - player.h;
+      player.vy = 0;
+      player.onGround = true;
+    }
+  } else {
+    if (
+      !isSolid(Math.floor(player.x), Math.floor(nextY)) &&
+      !isSolid(Math.floor(player.x + player.w), Math.floor(nextY))
+    ) {
+      player.y = nextY;
+    } else {
+      player.vy = 0;
+    }
+  }
+
+  // friction au sol
+  if (player.onGround) {
+    player.vx *= FRICTION;
+    if (Math.abs(player.vx) < 0.01) player.vx = 0;
+  }
+}
+
+// ================= CAMERA =================
+function updateCamera() {
+  camera.x = player.x * TILE - canvas.width / 2;
+  camera.y = player.y * TILE - canvas.height / 2;
+}
+
+// ================= RENDU =================
+function drawWorld() {
+  const startX = Math.floor(camera.x / TILE);
+  const endX = startX + Math.ceil(canvas.width / TILE) + 1;
+
+  for (let y = 0; y < WORLD_H; y++) {
+    for (let x = startX; x < endX; x++) {
+      if (!inWorld(x, y)) continue;
+      let b = world[y][x];
+      if (b !== "air") {
+        ctx.fillStyle = BLOCKS[b];
+        ctx.fillRect(
+          x * TILE - camera.x,
+          y * TILE - camera.y,
+          TILE,
+          TILE
+        );
+      }
+    }
+  }
+}
+
+// ================= JOUEUR VISUEL =================
+function drawPlayer() {
+  const px = player.x * TILE - camera.x;
+  const py = player.y * TILE - camera.y;
+
+  // jambes
+  ctx.fillStyle = "#1f4fd8";
+  ctx.fillRect(px, py + TILE, TILE * player.w, TILE * 0.8);
+
+  // corps
+  ctx.fillStyle = "#4fa3ff";
+  ctx.fillRect(px, py + TILE * 0.5, TILE * player.w, TILE * 0.6);
+
+  // tête
+  ctx.fillStyle = "#f1c27d";
+  ctx.fillRect(px, py, TILE * player.w, TILE * 0.5);
+}
+
+// ================= CONTROLES =================
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft") player.vx = Math.max(player.vx - MOVE_SPEED, -MAX_SPEED);
+  if (e.key === "ArrowRight") player.vx = Math.min(player.vx + MOVE_SPEED, MAX_SPEED);
+  if (e.key === "ArrowUp" && player.onGround) {
+    player.vy = JUMP;
+    player.onGround = false;
+  }
+});
+
+document.addEventListener("contextmenu", e => e.preventDefault());
+canvas.addEventListener("mousedown", e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left + camera.x) / TILE);
+  const y = Math.floor((e.clientY - rect.top + camera.y) / TILE);
+  if (!inWorld(x, y)) return;
+  if (e.button === 0) world[y][x] = "air";
+  if (e.button === 2) world[y][x] = "dirt";
+});
+
+// ================= LOOP =================
+function loop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  applyPhysics();
+  updateCamera();
+  drawWorld();
+  drawPlayer();
+  requestAnimationFrame(loop);
+}
+
+// ================= START =================
+generateWorld();
+loop();
+</script>
+
+</body>
+</html>

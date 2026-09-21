@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Minecraft</title>
+  <style>
+    body {
+      margin: 0;
+      background: #87CEEB;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      border: 3px solid black;
+      image-rendering: pixelated;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="game" width="640" height="480"></canvas>
+
+<script>
+// ================= CONFIG =================
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const BLOCK_SIZE = 32;
+const WORLD_WIDTH = 20;
+const WORLD_HEIGHT = 15;
+
+// ================= MONDE =================
+let world = [];
+
+// Génération du monde
+function generateWorld() {
+  for (let y = 0; y < WORLD_HEIGHT; y++) {
+    world[y] = [];
+    for (let x = 0; x < WORLD_WIDTH; x++) {
+      if (y > 10) world[y][x] = "pierre";
+      else if (y > 8) world[y][x] = "terre";
+      else world[y][x] = "air";
+    }
+  }
+}
+
+// ================= JOUEUR =================
+let player = {
+  x: 5,
+  y: 0,
+  vx: 0,
+  vy: 0,
+  width: 1,
+  height: 1,
+  onGround: false
+};
+
+// ================= BLOCS =================
+function drawBlock(type, x, y) {
+  if (type === "air") return;
+
+  if (type === "terre") ctx.fillStyle = "#8B4513";
+  if (type === "pierre") ctx.fillStyle = "#777";
+
+  ctx.fillRect(
+    x * BLOCK_SIZE,
+    y * BLOCK_SIZE,
+    BLOCK_SIZE,
+    BLOCK_SIZE
+  );
+}
+
+// ================= RENDU =================
+function drawWorld() {
+  for (let y = 0; y < WORLD_HEIGHT; y++) {
+    for (let x = 0; x < WORLD_WIDTH; x++) {
+      drawBlock(world[y][x], x, y);
+    }
+  }
+}
+
+function drawPlayer() {
+  ctx.fillStyle = "red";
+  ctx.fillRect(
+    player.x * BLOCK_SIZE,
+    player.y * BLOCK_SIZE,
+    BLOCK_SIZE,
+    BLOCK_SIZE
+  );
+}
+
+// ================= PHYSIQUE =================
+function applyGravity() {
+  player.vy += 0.05;
+}
+
+function collision(x, y) {
+  if (y >= WORLD_HEIGHT || x < 0 || x >= WORLD_WIDTH) return true;
+  return world[Math.floor(y)][Math.floor(x)] !== "air";
+}
+
+function movePlayer() {
+  player.x += player.vx;
+  if (collision(player.x, player.y)) player.x -= player.vx;
+
+  player.y += player.vy;
+  if (collision(player.x, player.y + player.height)) {
+    player.y = Math.floor(player.y);
+    player.vy = 0;
+    player.onGround = true;
+  } else {
+    player.onGround = false;
+  }
+}
+
+// ================= CONTROLES =================
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft") player.vx = -0.1;
+  if (e.key === "ArrowRight") player.vx = 0.1;
+  if (e.key === "ArrowUp" && player.onGround) {
+    player.vy = -0.9;
+  }
+});
+
+document.addEventListener("keyup", e => {
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") player.vx = 0;
+});
+
+// ================= INTERACTIONS =================
+canvas.addEventListener("click", e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / BLOCK_SIZE);
+  const y = Math.floor((e.clientY - rect.top) / BLOCK_SIZE);
+
+  if (world[y][x] === "air") {
+    world[y][x] = "terre"; // poser
+  } else {
+    world[y][x] = "air"; // casser
+  }
+});
+
+// ================= GAME LOOP =================
+function update() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  applyGravity();
+  movePlayer();
+  drawWorld();
+  drawPlayer();
+
+  requestAnimationFrame(update);
+}
+
+// ================= LANCEMENT =================
+generateWorld();
+update();
+</script>
+
+</body>
+</html>

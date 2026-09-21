@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI - Version Finale 2026</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #27ae60; text-align: center; font-size: 2.2em; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 25px; }
+        
+        .btn-main { width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 1.1em; cursor: pointer; margin-bottom: 10px; font-weight: bold; transition: 0.3s; }
+        .btn-main:hover { background: #219150; transform: translateY(-1px); }
+        .btn-blue { background: #3498db; }
+        .btn-blue:hover { background: #2980b9; }
+
+        #progress-wrapper { display: none; margin: 25px 0; }
+        #percent-text { text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #27ae60; font-size: 1.8em; margin-bottom: 8px; }
+        #progress-container { background: #eee; border-radius: 15px; height: 25px; overflow: hidden; border: 1px solid #ddd; }
+        #progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); transition: width 0.05s linear; }
+
+        .menu-box { margin-top: 20px; border: 1px solid #e0e0e0; border-radius: 15px; padding: 20px; background: #fff; animation: fadeIn 0.5s; }
+        .meal { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #ddd; }
+        .meal strong { color: #2ecc71; text-transform: uppercase; font-size: 0.85em; }
+        .shop-list { background: #f9f9f9; padding: 15px; border-radius: 10px; border-left: 5px solid #27ae60; font-size: 0.95em; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    <p class="subtitle">Intelligence Nutritionnelle Géolocalisée</p>
+    
+    <button class="btn-main" id="btn-gps">📍 Scanner mon quartier</button>
+    <button class="btn-main btn-blue" id="btn-ville">🌍 Explorer une autre ville</button>
+    
+    <div id="status" style="text-align: center; margin-top: 15px; font-weight: bold; color: #555; min-height: 20px;"></div>
+
+    <div id="progress-wrapper">
+        <div id="percent-text">0.0%</div>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+    </div>
+    
+    <div id="resultat" style="display:none;">
+        <div class="menu-box">
+            <h3>📅 Votre Plan Nutritionnel</h3>
+            <div id="contenu-menu"></div>
+        </div>
+        <div class="menu-box">
+            <h3>🛒 Commerces identifiés</h3>
+            <div id="liste-magasins"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkWWqMx0C4DGNeEax1VHGcnu-UdsDpksg&libraries=places" 
+        onerror="alert('Erreur Google Maps : Vérifiez votre connexion ou votre clé API.')"></script>
+
+<script>
+    let intervalleProgression;
+
+    // Attente du chargement du DOM pour activer les boutons
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('btn-gps').onclick = lancerNutriGenius;
+        document.getElementById('btn-ville').onclick = demanderVille;
+    });
+
+    function animerBarre(cible, callback) {
+        const bar = document.getElementById('progress-bar');
+        const text = document.getElementById('percent-text');
+        clearInterval(intervalleProgression);
+        
+        intervalleProgression = setInterval(() => {
+            let actuel = parseFloat(bar.style.width) || 0;
+            
+            if (actuel < cible) {
+                actuel += 0.1; 
+            } else if (cible === 100 && actuel < 100) {
+                actuel += 0.5;
+            } else if (actuel >= cible && cible < 100) {
+                actuel += 0.01;
+            }
+
+            if (actuel > 100) actuel = 100;
+            bar.style.width = actuel + "%";
+            text.innerText = actuel.toFixed(1) + "%";
+            
+            if (actuel >= 100) {
+                clearInterval(intervalleProgression);
+                if(callback) callback();
+            }
+        }, 30); 
+    }
+
+    function lancerNutriGenius() {
+        resetUI();
+        if (typeof google === 'undefined') {
+            alert("Google Maps n'est pas chargé. Vérifiez votre clé.");
+            return;
+        }
+        
+        if (navigator.geolocation) {
+            document.getElementById('status').innerText = "🛰️ Synchronisation GPS...";
+            animerBarre(40.0);
+            navigator.geolocation.getCurrentPosition(
+                (pos) => lancerRecherche(pos.coords.latitude, pos.coords.longitude),
+                (err) => { 
+                    document.getElementById('status').innerText = "❌ GPS non autorisé. Utilisez le bouton bleu.";
+                    alert("Le GPS est bloqué. Merci d'utiliser la recherche par ville.");
+                }
+            );
+        }
+    }
+
+    function demanderVille() {
+        if (typeof google === 'undefined') {
+            alert("Google Maps n'est pas chargé.");
+            return;
+        }
+        const ville = prompt("Entrez une ville ou un quartier :");
+        if (ville) {
+            resetUI();
+            animerBarre(50.0);
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: ville }, (results, status) => {
+                if (status === "OK") {
+                    const loc = results[0].geometry.location;
+                    lancerRecherche(loc.lat(), loc.lng());
+                } else {
+                    alert("Lieu introuvable. Erreur : " + status);
+                    resetUI();
+                }
+            });
+        }
+    }
+
+    function lancerRecherche(lat, lng) {
+        document.getElementById('status').innerText = "🔬 Analyse des stocks locaux...";
+        animerBarre(98.0);
+
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+        service.nearbySearch({
+            location: { lat, lng },
+            radius: 1500,
+            type: ['supermarket']
+        }, (results, statusAPI) => {
+            if (statusAPI === google.maps.places.PlacesServiceStatus.OK) {
+                animerBarre(100.0, () => {
+                    afficherResultats(results);
+                });
+            } else {
+                document.getElementById('status').innerText = "⚠️ Aucun magasin trouvé.";
+                alert("Désolé, Google n'a trouvé aucun magasin à proximité.");
+                resetUI();
+            }
+        });
+    }
+
+    function afficherResultats(results) {
+        document.getElementById('status').innerText = "✅ Analyse terminée !";
+        document.getElementById('resultat').style.display = "block";
+        
+        const shopDiv = document.getElementById('liste-magasins');
+        shopDiv.innerHTML = results.slice(0, 3).map(p => `📍 <strong>${p.name}</strong><br><small>${p.vicinity}</small>`).join('<br><br>');
+        
+        document.getElementById('contenu-menu').innerHTML = `
+            <div class="meal"><strong>Petit-Déjeuner :</strong> Porridge aux fruits</div>
+            <div class="meal"><strong>Déjeuner :</strong> Poulet grillé et légumes du marché</div>
+            <div class="meal"><strong>Dîner :</strong> Velouté de légumes et poisson</div>
+            <div class="shop-list">📝 <strong>Liste optimisée pour ${results[0].name}</strong></div>
+        `;
+    }
+
+    function resetUI() {
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('progress-wrapper').style.display = "block";
+        document.getElementById('progress-bar').style.width = "0%";
+        document.getElementById('percent-text').innerText = "0.0%";
+        document.getElementById('status').innerText = "";
+    }
+</script>
+
+</body>
+</html>

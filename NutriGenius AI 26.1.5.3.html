@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.5.3 - Ultimate Edition</title>
+    <style>
+        :root { --bg: #f0f4f8; --card: white; --text: #2c3e50; --primary: #009245; --accent: #e67e22; }
+        .dark-mode { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f4f8; --primary: #27ae60; --accent: #d35400; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); text-align: center; padding: 20px; transition: 0.3s; }
+        .container { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 800px; text-align: left; }
+        
+        .header-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .dark-toggle { cursor: pointer; background: var(--primary); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        
+        h1 { margin: 0; color: var(--primary); }
+        .subtitle { font-weight: bold; font-size: 0.85em; text-transform: uppercase; margin-bottom: 20px; display: block; color: #7f8c8d; }
+        
+        .input-group { margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-field, .select-box { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; background: var(--card); color: var(--text); }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-weight: bold; color: var(--primary); cursor: pointer; margin: 15px 0; }
+        
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: var(--primary); font-size: 1.1em; transition: 0.2s; margin-top: 10px; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        
+        .btn-sm { width: auto; padding: 8px 12px; font-size: 0.75em; margin: 4px 2px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-replace { background: var(--accent); }
+        .btn-recipe { background: #3498db; }
+
+        #loader { display: none; margin: 20px 0; font-weight: bold; color: var(--primary); font-size: 1.2em; font-style: italic; text-align: center; }
+        
+        .day-box { background: var(--card); padding: 20px; margin-bottom: 20px; border-radius: 15px; border-left: 10px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .meal-section { margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(127, 140, 141, 0.3); }
+        .details-content { display: none; font-size: 0.95em; margin-top: 10px; background: rgba(0,0,0,0.04); padding: 20px; border-radius: 10px; line-height: 1.6; border-left: 4px solid #3498db; }
+        
+        .shopping-list { background: #e8f5e9; border: 2px dashed var(--primary); padding: 15px; border-radius: 12px; margin: 25px 0; color: #1b5e20; }
+        .shopping-item { display: inline-block; background: white; padding: 5px 12px; margin: 4px; border-radius: 20px; font-size: 0.8em; font-weight: bold; border: 1px solid #c3e6cb; }
+
+        .cal-float { float: right; background: var(--primary); color: white; padding: 4px 12px; border-radius: 10px; font-size: 0.9em; font-weight: bold; }
+
+        @media print { .no-print, .btn-sm { display: none !important; } .details-content { display: block !important; border: none; background: none; } }
+    </style>
+</head>
+<body onload="chargerProfil()">
+
+<div class="container">
+    <div class="header-ui">
+        <h1>NutriGenius AI 🥗</h1>
+        <div class="dark-toggle no-print" onclick="toggleDark()">🌓 Mode Sombre</div>
+    </div>
+    <span class="subtitle">v26.1.5.3 - Ultimate Fusion (Végé/Halal/Pro)</span>
+
+    <div class="no-print">
+        <div class="input-group">
+            <div class="row">
+                <input type="number" id="age" class="input-field" placeholder="Age" oninput="sauvegarderProfil()">
+                <select id="sexe" class="input-field" onchange="sauvegarderProfil()">
+                    <option value="H">Homme</option>
+                    <option value="F">Femme</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="number" id="poids" class="input-field" placeholder="Poids (kg)" oninput="sauvegarderProfil()">
+                <input type="number" id="taille" class="input-field" placeholder="Taille (cm)" oninput="sauvegarderProfil()">
+            </div>
+        </div>
+        <select id="select-duree" class="select-box">
+            <option value="1">🥗 Menu du Jour</option>
+            <option value="7">📅 Menu de la Semaine</option>
+            <option value="30">📊 Menu du Mois</option>
+            <option value="365">🗓️ Menu de l'Année</option>
+        </select>
+        <label class="checkbox-group">
+            <input type="checkbox" id="check-veg" onchange="sauvegarderProfil()"> 🥗 Mode Végétarien
+        </label>
+        <button class="btn" onclick="lancer()">GÉNÉRER MON PROGRAMME</button>
+    </div>
+
+    <div id="loader">Génération de vos recettes en cours...</div>
+    <div id="resultat">
+        <div id="content-area"></div>
+    </div>
+</div>
+
+<script>
+    // --- MEGA BASE DE DONNÉES FUSIONNÉE ---
+    const db = {
+        petitDej: [
+            { n: "Bowl Skyr & Miel 🍯", c: 320, v: true, i: ["Skyr", "Miel", "Amandes"], r: ["Versez 150g de Skyr dans un bol.", "Ajoutez une cuillère à soupe de miel.", "Parsemez d'amandes concassées."], ntr: "P: 22g | G: 30g | L: 8g", tip: "Super pour la récupération musculaire." },
+            { n: "Omelette Soufflée au Curcuma 🍳", c: 360, v: true, i: ["Oeufs", "Oignons verts", "Curcuma"], r: ["Séparez les blancs des jaunes.", "Montez les blancs en neige ferme.", "Incorporez les jaunes et épices délicatement.", "Cuisez 8 min à feu doux."], ntr: "P: 18g | G: 5g | L: 20g", tip: "Couvrez la poêle pour un effet vapeur." }
+        ],
+        dejeuner: [
+            { n: "Carry Poulet Halal 🍗", c: 580, v: false, i: ["Poulet Halal", "Tomates", "Curcuma", "Gingembre"], r: ["Détaillez le poulet.", "Faites roussir 10 min dans l'huile.", "Ajoutez épices pilées et oignons.", "Mijotez avec les tomates 30 min."], ntr: "P: 45g | G: 10g | L: 18g", tip: "Le secret est dans le roussissage de la viande." },
+            { n: "Rougail Saucisses Halal 🌭", c: 590, v: false, i: ["Saucisses Volaille Halal", "Oignons", "Tomates"], r: ["Faites bouillir les saucisses 10 min.", "Coupez-les et faites-les frire.", "Ajoutez oignons émincés puis tomates.", "Laissez réduire la sauce 20 min."], ntr: "P: 35g | G: 12g | L: 25g", tip: "Ne salez pas, les saucisses le sont déjà." },
+            { n: "Dahl de Lentilles Corail 🍛", c: 490, v: true, i: ["Lentilles corail", "Lait coco", "Cumin"], r: ["Rincez les lentilles.", "Faites revenir ail et cumin.", "Ajoutez lentilles et eau (2x volume).", "Ajoutez le lait de coco en fin de cuisson."], ntr: "P: 25g | G: 60g | L: 14g", tip: "Riche en fer et fibres." }
+        ],
+        diner: [
+            { n: "Gratin de Chouchou 🥘", c: 340, v: true, i: ["Chouchous", "Lait", "Fromage"], r: ["Cuire les dés de chouchou à la vapeur 20 min.", "Préparez une béchamel légère.", "Mélangez et gratinez 15 min au four."], ntr: "P: 12g | G: 35g | L: 10g", tip: "Pressez le chouchou pour enlever l'eau." },
+            { n: "Bouillon de Brèdes 🍵", c: 280, v: true, i: ["Brèdes", "Ail", "Gingembre"], r: ["Faites dorer l'ail écrasé.", "Ajoutez les brèdes et l'eau.", "Portez à ébullition 5 min."], ntr: "P: 8g | G: 40g | L: 2g", tip: "Léger et parfait pour la digestion." }
+        ]
+    };
+
+    let planningGlobal = [];
+
+    function toggleDark() { document.body.classList.toggle('dark-mode'); }
+
+    function lancer() {
+        if (!document.getElementById('age').value) return alert("Veuillez remplir votre profil !");
+        document.getElementById('loader').style.display = "block";
+        document.getElementById('resultat').style.display = "none";
+        setTimeout(() => { genererPlanning(); }, 800);
+    }
+
+    function genererPlanning() {
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+        
+        const fP = isVeg ? db.petitDej.filter(x => x.v) : db.petitDej;
+        const fM = isVeg ? db.dejeuner.filter(x => x.v) : db.dejeuner;
+        const fD = isVeg ? db.diner.filter(x => x.v) : db.diner;
+
+        planningGlobal = [];
+        for (let i = 0; i < jours; i++) {
+            planningGlobal.push({
+                p: JSON.parse(JSON.stringify(fP[Math.floor(Math.random() * fP.length)])),
+                m: JSON.parse(JSON.stringify(fM[Math.floor(Math.random() * fM.length)])),
+                d: JSON.parse(JSON.stringify(fD[Math.floor(Math.random() * fD.length)]))
+            });
+        }
+        afficherMenu();
+    }
+
+    function remplacerRepas(jIdx, type) {
+        const isVeg = document.getElementById('check-veg').checked;
+        const cat = type === 'p' ? db.petitDej : (type === 'm' ? db.dejeuner : db.diner);
+        const pool = isVeg ? cat.filter(x => x.v) : cat;
+        planningGlobal[jIdx][type] = JSON.parse(JSON.stringify(pool[Math.floor(Math.random() * pool.length)]));
+        afficherMenu();
+    }
+
+    function toggleDetails(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function afficherMenu() {
+        document.getElementById('loader').style.display = "none";
+        document.getElementById('resultat').style.display = "block";
+        let html = "";
+        
+        planningGlobal.forEach((jour, idx) => {
+            if (idx % 15 === 0) {
+                let listIng = new Set();
+                let fin = Math.min(idx + 15, planningGlobal.length);
+                for(let k=idx; k<fin; k++) {
+                    planningGlobal[k].p.i.forEach(x => listIng.add(x));
+                    planningGlobal[k].m.i.forEach(x => listIng.add(x));
+                    planningGlobal[k].d.i.forEach(x => listIng.add(x));
+                }
+                html += `<div class="shopping-list"><b>🛒 LISTE DE COURSES (JOUR ${idx+1} À ${fin})</b><br>${Array.from(listIng).map(n => `<span class="shopping-item">${n}</span>`).join('')}</div>`;
+            }
+
+            html += `
+            <div class="day-box">
+                <span class="cal-float">${jour.p.c + jour.m.c + jour.d.c} kcal</span>
+                <h3>JOUR ${idx + 1}</h3>
+                ${renderMeal(idx, 'p', '☀️ Petit-Déjeuner', jour.p)}
+                ${renderMeal(idx, 'm', '🥗 Déjeuner', jour.m)}
+                ${renderMeal(idx, 'd', '🌙 Dîner', jour.d)}
+            </div>`;
+        });
+        document.getElementById('content-area').innerHTML = html;
+    }
+
+    function renderMeal(jIdx, type, label, meal) {
+        const id = `det-${jIdx}-${type}`;
+        return `
+        <div class="meal-section">
+            <b>${label} :</b> ${meal.n}
+            <div class="no-print">
+                <button class="btn-sm btn-replace" onclick="remplacerRepas(${jIdx}, '${type}')">🔄 Changer</button>
+                <button class="btn-sm btn-recipe" onclick="toggleDetails('${id}')">📖 Voir Recette</button>
+            </div>
+            <div id="${id}" class="details-content">
+                <b>Préparation :</b><br>
+                ${meal.r.map((s, i) => `<b>${i+1}.</b> ${s}`).join('<br>')}
+                <hr>
+                <small>📊 ${meal.ntr} | 💡 ${meal.tip}</small>
+            </div>
+        </div>`;
+    }
+
+    function sauvegarderProfil() {
+        const p = { 
+            age: document.getElementById('age').value, 
+            poids: document.getElementById('poids').value, 
+            taille: document.getElementById('taille').value, 
+            sexe: document.getElementById('sexe').value,
+            veg: document.getElementById('check-veg').checked
+        };
+        localStorage.setItem('NutriGenius_26_1_5_3', JSON.stringify(p));
+    }
+
+    function chargerProfil() {
+        const s = localStorage.getItem('NutriGenius_26_1_5_3');
+        if (s) {
+            const d = JSON.parse(s);
+            document.getElementById('age').value = d.age || ""; 
+            document.getElementById('poids').value = d.poids || "";
+            document.getElementById('taille').value = d.taille || ""; 
+            document.getElementById('sexe').value = d.sexe || "H";
+            document.getElementById('check-veg').checked = d.veg || false;
+        }
+    }
+</script>
+</body>
+</html>

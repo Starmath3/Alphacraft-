@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.4.1 - Master Edition</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 550px; }
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        .subtitle { color: #009245; font-weight: bold; margin-bottom: 20px; font-size: 0.9em; text-transform: uppercase; }
+        
+        .input-group { margin-bottom: 15px; text-align: left; background: #f9f9f9; padding: 15px; border-radius: 12px; border: 1px solid #eee; }
+        .section-title { font-size: 0.85em; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; display: block; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-field, .select-box { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; font-size: 1em; box-sizing: border-box; }
+        
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: #009245; font-size: 1.1em; margin-bottom: 10px; transition: 0.2s; }
+        .btn:hover { background: #1b5e20; transform: translateY(-2px); }
+        .btn-print { background: #34495e; font-size: 0.9em; }
+
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-weight: bold; color: #27ae60; cursor: pointer; margin: 10px 0; }
+        
+        #loader { display: none; margin: 20px 0; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 12px; overflow: hidden; margin: 10px 0; }
+        #progress-bar { width: 0%; height: 100%; background: #27ae60; transition: width 0.1s linear; }
+
+        #resultat { display: none; margin-top: 20px; text-align: left; }
+        .shopping-list { background: #fff; border: 2px dashed #009245; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .shopping-item { display: inline-block; background: #e8f5e9; padding: 5px 12px; margin: 3px; border-radius: 20px; font-size: 0.85em; color: #1b5e20; }
+        
+        .day-box { background: white; padding: 12px; margin-bottom: 10px; border-radius: 12px; border-left: 6px solid #009245; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .meal-item { display: block; margin: 5px 0; font-size: 0.95em; }
+        .error { border-color: #e74c3c !important; }
+
+        @media print { .input-group, .btn, h1, .subtitle { display: none; } }
+    </style>
+</head>
+<body onload="chargerProfil()">
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    <div class="subtitle">Certifié Halal Réunion & Intelligent</div>
+
+    <div class="input-group">
+        <span class="section-title">Profil Physique (Sauvegarde auto)</span>
+        <div class="row">
+            <input type="number" id="age" class="input-field" placeholder="Age" min="1" oninput="sauvegarderProfil()">
+            <select id="sexe" class="input-field" onchange="sauvegarderProfil()">
+                <option value="H">Homme</option>
+                <option value="F">Femme</option>
+            </select>
+        </div>
+        <div class="row">
+            <input type="number" id="poids" class="input-field" placeholder="Poids (kg)" min="1" oninput="sauvegarderProfil()">
+            <input type="number" id="taille" class="input-field" placeholder="Taille (cm)" min="1" oninput="sauvegarderProfil()">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <span class="section-title">Paramètres du Plan</span>
+        <select id="select-duree" class="select-box">
+            <option value="1">🥗 Menu du Jour</option>
+            <option value="7">📅 Menu de la Semaine</option>
+            <option value="30">📊 Menu du Mois</option>
+            <option value="365">🗓️ Menu de l'Année</option>
+        </select>
+        <label class="checkbox-group">
+            <input type="checkbox" id="check-veg"> 🥗 Mode Végétarien uniquement
+        </label>
+    </div>
+
+    <button type="button" class="btn" onclick="lancer()">Générer mon programme certifié</button>
+
+    <div id="loader">
+        <div style="font-size: 1.5em; font-weight: bold; color: #009245;"><span id="chiffre">0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+    </div>
+
+    <div id="resultat">
+        <button class="btn btn-print" onclick="window.print()">🖨️ Imprimer mon plan & ma liste</button>
+        <div id="shopping-container"></div>
+        <div id="menu-content"></div>
+    </div>
+</div>
+
+<script>
+    // MÉMOIRE LOCALSTORAGE
+    function sauvegarderProfil() {
+        const profil = {
+            age: document.getElementById('age').value,
+            poids: document.getElementById('poids').value,
+            taille: document.getElementById('taille').value,
+            sexe: document.getElementById('sexe').value
+        };
+        localStorage.setItem('NutriGeniusData', JSON.stringify(profil));
+    }
+
+    function chargerProfil() {
+        const data = localStorage.getItem('NutriGeniusData');
+        if (data) {
+            const p = JSON.parse(data);
+            document.getElementById('age').value = p.age;
+            document.getElementById('poids').value = p.poids;
+            document.getElementById('taille').value = p.taille;
+            document.getElementById('sexe').value = p.sexe;
+        }
+    }
+
+    // BASE DE DONNÉES CERTIFIÉE
+    const db = {
+        petitDej: [
+            { n: "Bowl Skyr & Miel", v: true, i: ["Skyr", "Miel"] },
+            { n: "Omelette fines herbes", v: true, i: ["Oeufs", "Persil"] },
+            { n: "Tartine Saumon fumé", v: false, i: ["Pain", "Saumon fumé"] }
+        ],
+        dejeuner: [
+            { n: "Carry Poulet Halal", v: false, i: ["Poulet certifié", "Tomates"] },
+            { n: "Rougail Morue", v: false, i: ["Morue", "Oignons"] },
+            { n: "Dahl lentilles coco", v: true, i: ["Lentilles", "Lait coco"] }
+        ],
+        diner: [
+            { n: "Soupe de Brèdes", v: true, i: ["Brèdes", "Gingembre"] },
+            { n: "Poisson Vapeur", v: false, i: ["Poisson", "Citron"] },
+            { n: "Gratin Chouchou", v: true, i: ["Chouchou", "Fromage"] }
+        ]
+    };
+
+    function lancer() {
+        if(!document.getElementById('age').value || document.getElementById('age').value <= 0) {
+            alert("Veuillez remplir votre profil correctement.");
+            return;
+        }
+        let n = 0;
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+        let timer = setInterval(() => {
+            n += 10;
+            document.getElementById('chiffre').innerText = n;
+            document.getElementById('progress-bar').style.width = n + "%";
+            if (n >= 100) { clearInterval(timer); finaliser(); }
+        }, 40);
+    }
+
+    function finaliser() {
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+        document.getElementById('loader').style.display = "none";
+        document.getElementById('resultat').style.display = "block";
+
+        let menuHtml = "";
+        let ingredients = new Set();
+
+        const fP = isVeg ? db.petitDej.filter(x => x.v) : db.petitDej;
+        const fM = isVeg ? db.dejeuner.filter(x => x.v) : db.dejeuner;
+        const fD = isVeg ? db.diner.filter(x => x.v) : db.diner;
+
+        for(let i=1; i<=jours; i++) {
+            let p = fP[Math.floor(Math.random() * fP.length)];
+            let m = fM[Math.floor(Math.random() * fM.length)];
+            let d = fD[Math.floor(Math.random() * fD.length)];
+
+            [p, m, d].forEach(repas => repas.i.forEach(ing => ingredients.add(ing)));
+
+            menuHtml += `
+            <div class="day-box">
+                <b>JOUR ${i}</b><br>
+                <span class="meal-item">☀️ ${p.n}</span>
+                <span class="meal-item">🥗 ${m.n}</span>
+                <span class="meal-item">🌙 ${d.n}</span>
+            </div>`;
+        }
+
+        document.getElementById('shopping-container').innerHTML = `
+            <div class="shopping-list">
+                <b>🛒 LISTE DE COURSES</b><br>
+                ${Array.from(ingredients).map(ing => `<span class="shopping-item">${ing}</span>`).join('')}
+            </div>`;
+        document.getElementById('menu-content').innerHTML = menuHtml;
+    }
+</script>
+</body>
+</html>

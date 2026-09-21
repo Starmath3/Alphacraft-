@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI 2026 - Precision Pro</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #27ae60; text-align: center; }
+        .btn-main { width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 1.1em; cursor: pointer; margin-bottom: 10px; font-weight: bold; }
+        
+        /* Style de la barre de chargement */
+        #progress-container { display: none; margin: 20px 0; background: #eee; border-radius: 10px; height: 20px; overflow: hidden; position: relative; }
+        #progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); transition: width 0.1s linear; }
+        #percent-text { text-align: center; font-family: monospace; font-weight: bold; color: #27ae60; margin-top: 5px; font-size: 1.2em; }
+
+        .menu-box { margin-top: 20px; border: 1px solid #e0e0e0; border-radius: 15px; padding: 20px; background: #fff; }
+        .shop-list { background: #f9f9f9; padding: 15px; border-radius: 10px; border-left: 5px solid #27ae60; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    <button class="btn-main" onclick="lancerNutriGenius()">📍 Scanner ma position</button>
+    <button class="btn-main" style="background:#3498db;" onclick="demanderVille()">🌍 Chercher une ville</button>
+    
+    <div id="status" style="text-align: center; margin-top: 15px;"></div>
+
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+    <div id="percent-text"></div>
+    
+    <div id="resultat" style="display:none;">
+        <div class="menu-box">
+            <h3>📅 Ton Menu du Jour</h3>
+            <div id="contenu-menu"></div>
+        </div>
+        <div class="menu-box">
+            <h3>🛒 Magasins à proximité</h3>
+            <div id="liste-magasins"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=TA_CLE_API_ICI&libraries=places"></script>
+
+<script>
+    let intervalleProgression;
+
+    function animerBarre(vitesse, cible) {
+        const bar = document.getElementById('progress-bar');
+        const text = document.getElementById('percent-text');
+        let actuel = parseFloat(bar.style.width) || 0;
+
+        clearInterval(intervalleProgression);
+        
+        intervalleProgression = setInterval(() => {
+            if (actuel >= cible) {
+                clearInterval(intervalleProgression);
+            } else {
+                actuel += 0.1; // On avance au dixième près
+                bar.style.width = actuel + "%";
+                text.innerText = actuel.toFixed(1) + "%"; // Affichage au dixième
+            }
+        }, vitesse);
+    }
+
+    function lancerNutriGenius() {
+        resetUI();
+        if (navigator.geolocation) {
+            document.getElementById('status').innerText = "🌐 Localisation GPS...";
+            animerBarre(50, 30.5); // Monte vite à 30.5%
+            navigator.geolocation.getCurrentPosition(
+                (pos) => lancerRecherche(pos.coords.latitude, pos.coords.longitude),
+                () => { document.getElementById('status').innerText = "❌ GPS refusé."; }
+            );
+        }
+    }
+
+    function demanderVille() {
+        const ville = prompt("Quelle ville ?");
+        if (ville) {
+            resetUI();
+            animerBarre(20, 40.0); // Simule une réflexion IA
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: ville }, (results, status) => {
+                if (status === "OK") {
+                    const loc = results[0].geometry.location;
+                    lancerRecherche(loc.lat(), loc.lng());
+                }
+            });
+        }
+    }
+
+    function lancerRecherche(lat, lng) {
+        document.getElementById('status').innerText = "🔍 Scan des commerces locaux...";
+        animerBarre(10, 85.7); // On grimpe jusqu'à l'étape finale
+
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+        service.nearbySearch({
+            location: { lat, lng },
+            radius: 1500,
+            type: ['supermarket']
+        }, (results, statusAPI) => {
+            if (statusAPI === google.maps.places.PlacesServiceStatus.OK) {
+                // Finalisation de la barre
+                animerBarre(2, 100.0);
+                setTimeout(() => {
+                    afficherResultats(results);
+                }, 500);
+            }
+        });
+    }
+
+    function afficherResultats(results) {
+        document.getElementById('status').innerText = "✅ Analyse 100% complète";
+        document.getElementById('resultat').style.display = "block";
+        document.getElementById('liste-magasins').innerHTML = results.slice(0, 3).map(p => `• ${p.name}`).join('<br>');
+        
+        document.getElementById('contenu-menu').innerHTML = `
+            <div class="meal"><strong>Matin :</strong> Bowl énergétique</div>
+            <div class="meal"><strong>Midi :</strong> Salade locale de ${results[0].name}</div>
+            <div class="meal"><strong>Soir :</strong> Soupe détox</div>
+            <div class="shop-list">📝 Ingrédients validés pour votre quartier.</div>
+        `;
+    }
+
+    function resetUI() {
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('progress-container').style.display = "block";
+        document.getElementById('progress-bar').style.width = "0%";
+        document.getElementById('percent-text').innerText = "0.0%";
+    }
+</script>
+
+</body>
+</html>

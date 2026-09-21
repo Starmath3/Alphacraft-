@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.7.3</title>
+    <style>
+        :root { --bg: #f0f4f8; --card: white; --text: #2c3e50; --primary: #009245; --accent: #e67e22; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); text-align: center; padding: 20px; margin: 0; }
+        .container { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 900px; text-align: left; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        input, select, button { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+        button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .save-btn { background: #34495e; margin-top: 10px; }
+        .recipe-card { background: #fff; padding: 20px; border-radius: 15px; margin-top: 15px; border-left: 5px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .moment-title { background: var(--primary); color: white; padding: 8px; border-radius: 5px; margin-top: 25px; display: inline-block; }
+        .ntr { font-weight: bold; color: var(--accent); margin: 10px 0; }
+        .tip { font-style: italic; color: #555; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin-top: 10px; }
+        .baby-msg { background: #fff3cd; color: #856404; padding: 20px; border-radius: 10px; border: 1px solid #ffeeba; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    <div class="grid">
+        <input type="number" id="age" placeholder="Âge" onchange="sauvegarderProfil()">
+        <input type="number" id="poids" placeholder="Poids (kg)" onchange="sauvegarderProfil()">
+        <input type="number" id="taille" placeholder="Taille (cm)" onchange="sauvegarderProfil()">
+        <select id="sexe" onchange="sauvegarderProfil()">
+            <option value="H">Homme</option>
+            <option value="F">Femme</option>
+        </select>
+    </div>
+    <label><input type="checkbox" id="check-veg" onchange="sauvegarderProfil()"> Mode Végétarien 🌿</label>
+    
+    <button onclick="genererMenu()">GÉNÉRER MON PLAN NUTRITIONNEL</button>
+    <button class="save-btn" onclick="enregistrerSurPC()">💾 ENREGESTRER SUR VOTRE ORDINATEUR</button>
+
+    <div id="resultat"></div>
+</div>
+
+<script>
+const db = [
+    // --- MATIN (2 Recettes différentes) ---
+    { 
+        n: "Omelette du Matin 🍳", cat: "matin", v: true,
+        variantes: [
+            { t: "Classique Épinards", r: ["1. Battre les œufs.", "2. Poêler les épinards.", "3. Verser les œufs.", "4. Cuire 3 min.", "5. Plier.", "6. Servir."], ntr: "P: 20g | G: 2g | L: 14g", tip: "Les épinards apportent du magnésium dès le réveil." },
+            { t: "Omelette Gourmande Fromage", r: ["1. Battre les œufs.", "2. Ajouter du comté.", "3. Poêler avec du beurre.", "4. Cuire doucement.", "5. Poivrer.", "6. Servir."], ntr: "P: 22g | G: 1g | L: 19g", tip: "Le fromage apporte du calcium pour la journée." }
+        ]
+    },
+    { 
+        n: "Skyr Bowl Protéiné 🍓", cat: "matin", v: true,
+        variantes: [
+            { t: "Fruits Rouges & Chia", r: ["1. Verser le skyr.", "2. Ajouter les baies.", "3. Saupoudrer de chia.", "4. Mélanger.", "5. Laisser reposer.", "6. Déguster."], ntr: "P: 25g | G: 15g | L: 2g", tip: "Le skyr est la protéine la plus maigre pour le matin." },
+            { t: "Beurre de Cacahuète & Banane", r: ["1. Verser le skyr.", "2. Couper la banane.", "3. Ajouter le beurre de cacahuète.", "4. Mélanger.", "5. Ajouter du granola.", "6. Servir."], ntr: "P: 28g | G: 30g | L: 12g", tip: "Le bon gras de l'arachide soutient la concentration." }
+        ]
+    },
+    // --- MIDI (2 Recettes différentes) ---
+    { 
+        n: "Poulet au Boulghour 🍗", cat: "midi", v: false,
+        variantes: [
+            { t: "Curry Doux", r: ["1. Cuire le poulet.", "2. Bouillir le boulghour.", "3. Ajouter le curry.", "4. Mélanger les deux.", "5. Saler.", "6. Servir."], ntr: "P: 35g | G: 40g | L: 5g", tip: "Le curry booste le métabolisme et la digestion." },
+            { t: "Version Méditerranéenne", r: ["1. Griller le poulet.", "2. Cuire le boulghour.", "3. Ajouter des olives.", "4. Verser de l'huile d'olive.", "5. Parsemer de thym.", "6. Servir."], ntr: "P: 33g | G: 38g | L: 12g", tip: "L'huile d'olive protège votre système cardiovasculaire." }
+        ]
+    },
+    { 
+        n: "Brochettes de Bœuf Teriyaki 🥩", cat: "midi", v: false,
+        variantes: [
+            { t: "Traditionnel Japonais", r: ["1. Couper le bœuf.", "2. Mariner soja/miel.", "3. Monter en brochettes.", "4. Griller.", "5. Servir avec du riz.", "6. Déguster."], ntr: "P: 36g | G: 45g | L: 15g", tip: "Le laquage au miel aide à la récupération glycogénique." },
+            { t: "Boeuf aux Poivrons", r: ["1. Couper le bœuf.", "2. Alterner avec poivrons.", "3. Griller à la plancha.", "4. Ajouter des épices.", "5. Servir avec du riz.", "6. Déguster."], ntr: "P: 34g | G: 42g | L: 14g", tip: "Le poivron rouge double votre apport en Vitamine C." }
+        ]
+    }
+// --- SOIR (2 Recettes différentes) ---
+    ,
+    { 
+        n: "Gratin de Courgettes 🥘", cat: "soir", v: true,
+        variantes: [
+            { t: "Ricotta & Muscade", r: ["1. Trancher les courgettes.", "2. Mélanger la ricotta.", "3. Ajouter la muscade.", "4. Disposer en couches.", "5. Enfourner 30 min.", "6. Servir chaud."], ntr: "P: 15g | G: 12g | L: 18g", tip: "La muscade aide à l'endormissement le soir." },
+            { t: "Chèvre & Miel", r: ["1. Trancher les courgettes.", "2. Ajouter le chèvre.", "3. Verser un filet de miel.", "4. Enfourner.", "5. Gratiner.", "6. Déguster."], ntr: "P: 14g | G: 18g | L: 16g", tip: "Le miel au soir calme le système nerveux." }
+        ]
+    },
+    { 
+        n: "Poisson Blanc Vapeur 🐟", cat: "soir", v: false,
+        variantes: [
+            { t: "Citron & Aneth", r: ["1. Préparer le poisson.", "2. Cuire à la vapeur.", "3. Ajouter du citron.", "4. Parsemer l'aneth.", "5. Accompagner de haricots.", "6. Servir."], ntr: "P: 28g | G: 5g | L: 4g", tip: "Le poisson blanc est la protéine la plus légère pour la nuit." },
+            { t: "Sauce Vierge", r: ["1. Cuire le poisson.", "2. Hacher tomates/oignons.", "3. Mélanger huile/citron.", "4. Napper le poisson.", "5. Ajouter du riz complet.", "6. Servir."], ntr: "P: 26g | G: 22g | L: 10g", tip: "Les antioxydants de la tomate luttent contre le stress oxydatif." }
+        ]
+    }
+];
+
+function genererMenu() {
+    const age = parseInt(document.getElementById('age').value);
+    const res = document.getElementById('resultat');
+    const isVeg = document.getElementById('check-veg').checked;
+    
+    if (!age) { alert("Indiquez votre âge"); return; }
+
+    // --- LOGIQUE BÉBÉ 1-6 ANS ---
+    if (age >= 1 && age <= 6) {
+        res.innerHTML = `<div class="baby-msg">Ce nourrisson est trop jeune pour se nourrir d'aliment, il doit prendre du lait de préférence du lait maternelle pour une meilleur santé, vous pouvez essayer d'alterné avec différente purée comme "pomme de terre", "patate douce" et plein d'autres.</div>`;
+        return;
+    }
+
+    let html = "<h2>VOTRE PROGRAMME DU JOUR</h2>";
+    const categories = ["matin", "midi", "soir"];
+
+    categories.forEach(cat => {
+        html += `<div class="moment-title">${cat.toUpperCase()}</div>`;
+        let filtered = db.filter(r => r.cat === cat && (!isVeg || r.v));
+        
+        // On affiche les 2 recettes différentes par moment
+        filtered.slice(0, 2).forEach(r => {
+            let v = r.variantes[Math.floor(Math.random() * r.variantes.length)];
+            html += `
+                <div class="recipe-card">
+                    <h3>${r.n}</h3>
+                    <p><strong>Variante :</strong> ${v.t}</p>
+                    <div class="steps">${v.r.map(s => `<p>${s}</p>`).join('')}</div>
+                    <div class="ntr">📊 ${v.ntr}</div>
+                    <div class="tip">💡 ${v.tip}</div>
+                </div>`;
+        });
+    });
+    res.innerHTML = html;
+}
+
+function enregistrerSurPC() {
+    const text = document.getElementById('resultat').innerText;
+    if (!text) { alert("Générez un menu d'abord !"); return; }
+    const blob = new Blob([text], { type: 'text/plain' });
+    const anchor = document.createElement('a');
+    anchor.download = "Mon_Menu_NutriGenius.txt";
+    anchor.href = window.URL.createObjectURL(blob);
+    anchor.click();
+}
+
+function sauvegarderProfil() {
+    const p = { 
+        age: document.getElementById('age').value, 
+        poids: document.getElementById('poids').value, 
+        taille: document.getElementById('taille').value, 
+        sexe: document.getElementById('sexe').value, 
+        veg: document.getElementById('check-veg').checked 
+    };
+    localStorage.setItem('NutriGenius_Save', JSON.stringify(p));
+}
+
+window.onload = () => {
+    const s = localStorage.getItem('NutriGenius_Save');
+    if (s) {
+        const d = JSON.parse(s);
+        document.getElementById('age').value = d.age || "";
+        document.getElementById('poids').value = d.poids || "";
+        document.getElementById('taille').value = d.taille || "";
+        document.getElementById('sexe').value = d.sexe || "H";
+        document.getElementById('check-veg').checked = d.veg || false;
+    }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Minicraft 3D</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87ceeb;font-family:Arial,sans-serif}
+#game{display:block;width:100vw;height:100vh}
+#crosshair{position:fixed;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);pointer-events:none;z-index:5}
+#crosshair:before,#crosshair:after{content:"";position:absolute;background:white;box-shadow:0 0 2px #000}
+#crosshair:before{width:2px;height:18px;left:8px;top:0}
+#crosshair:after{height:2px;width:18px;left:0;top:8px}
+#hotbar{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:5}
+.slot{width:52px;height:52px;background:#555b;border:3px solid #999;display:flex;align-items:center;justify-content:center;position:relative}
+.slot.selected{border-color:white;box-shadow:0 0 0 2px #222}
+.swatch{width:32px;height:32px;border:2px solid #222}
+.num{position:absolute;top:1px;left:4px;color:white;font-weight:bold;text-shadow:1px 1px #000}
+#help{position:fixed;top:12px;left:12px;color:white;background:#0008;padding:9px 12px;border-radius:5px;z-index:5;font-size:14px}
+#lock{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0005;color:white;z-index:10;font-size:18px;text-align:center;cursor:pointer}
+#lock div{background:#111d;padding:18px 24px;border:2px solid #fff;border-radius:8px}
+#menu{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:linear-gradient(#5eb7f0,#9edcff);padding:20px}
+.menu-card{width:min(420px,92vw);padding:32px 24px;background:#ffffffee;border:3px solid #222;border-radius:20px;text-align:center;box-shadow:0 12px 35px #0005}
+.menu-card h1{margin:0 0 8px;font-size:38px;color:#222}
+.menu-card p{margin:0 0 22px;color:#555;font-size:18px}
+.menu-card button{display:block;width:100%;margin:12px 0;padding:17px;border:0;border-radius:12px;font-size:19px;font-weight:bold;cursor:pointer;background:#333;color:white;box-shadow:0 4px 0 #111}
+.menu-card button:active{transform:translateY(3px);box-shadow:0 1px 0 #111}
+.menu-note{margin-top:18px;font-size:12px;color:#777}
+#mobileControls{display:none;position:fixed;inset:0;z-index:6;pointer-events:none}
+#joystick{position:absolute;left:25px;bottom:30px;width:125px;height:125px;border-radius:50%;background:#ffffff38;border:3px solid #fff8;pointer-events:auto;touch-action:none}
+#stick{position:absolute;left:37px;top:37px;width:48px;height:48px;border-radius:50%;background:#fff9;box-shadow:0 2px 6px #0005}
+#jumpBtn,#breakBtn,#placeBtn{position:absolute;width:62px;height:62px;border-radius:50%;border:2px solid #fff;background:#222b;color:white;font-size:28px;font-weight:bold;pointer-events:auto;touch-action:none}
+#jumpBtn{right:25px;bottom:45px}
+#breakBtn{right:105px;bottom:115px;font-size:24px}
+#placeBtn{right:25px;bottom:125px}
+@media (pointer:coarse){
+  #help{display:none}
+  #crosshair{opacity:.8}
+}
+</style>
+</head>
+<body>
+<div id="menu">
+  <div class="menu-card">
+    <h1>⛏️ Minicraft</h1>
+    <p>Choisis ta version</p>
+    <button id="btn3d">🌍 Minicraft 3D</button>
+    <button id="btn2d">🟩 Minicraft 2D</button>
+    <div class="menu-note">Version 3D optimisée pour téléphone</div>
+  </div>
+</div>
+
+<div id="mobileControls">
+  <div id="joystick"><div id="stick"></div></div>
+  <button id="jumpBtn">↑</button>
+  <button id="breakBtn">⛏</button>
+  <button id="placeBtn">＋</button>
+</div>
+
+<canvas id="game"></canvas>
+<div id="crosshair"></div>
+<div id="help">Clic pour jouer · ZQSD / WASD : déplacer · Espace : sauter · Souris : regarder · Clic gauche : casser · Clic droit : poser · 1-3 : bloc</div>
+<div id="hotbar"></div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+"use strict";
+
+let gameStarted=false;
+const menu=document.getElementById("menu");
+const mobileControls=document.getElementById("mobileControls");
+document.getElementById("btn3d").addEventListener("click",()=>{
+  gameStarted=true;
+  menu.style.display="none";
+  mobileControls.style.display="block";
+  canvas.requestPointerLock?.();
+});
+document.getElementById("btn2d").addEventListener("click",()=>{
+  alert("La version 2D de ton programme original est conservée séparément. Cette version 3D est celle chargée ici.");
+});
+
+// ================= CONFIG =================
+const canvas=document.getElementById("game");
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x87ceeb);
+scene.fog=new THREE.Fog(0x87ceeb,18,75);
+
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,150);
+const renderer=new THREE.WebGLRenderer({canvas,antialias:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+const WORLD_W=48,WORLD_D=48,WORLD_H=24;
+const BLOCK_SIZE=1;
+
+// ================= BLOCS =================
+const BLOCKS={
+ air:{solid:false,color:0x000000},
+ grass:{solid:true,color:0x3cb043},
+ dirt:{solid:true,color:0x8b4513},
+ stone:{solid:true,color:0x777777},
+ wood:{solid:true,color:0xa0522d},
+ leaf:{solid:true,color:0x2ecc71}
+};
+const hotbar=["dirt","stone","wood"];
+let selected=0;
+
+// ================= MONDE =================
+const world=Array.from({length:WORLD_H},()=>Array(WORLD_D).fill(null).map(()=>Array(WORLD_W).fill("air")));
+
+function setBlock(x,y,z,b){
+  if(x>=0&&x<WORLD_W&&z>=0&&z<WORLD_D&&y>=0&&y<WORLD_H) world[y][z][x]=b;
+}
+function getBlock(x,y,z){
+  if(x<0||x>=WORLD_W||z<0||z>=WORLD_D||y<0||y>=WORLD_H)return "stone";
+  return world[y][z][x];
+}
+function generateWorld(){
+  for(let z=0;z<WORLD_D;z++){
+    for(let x=0;x<WORLD_W;x++){
+      let h=6+Math.floor(Math.sin(x*.35)*.7+Math.cos(z*.28)*.7);
+      h=Math.max(4,Math.min(8,h));
+      for(let y=0;y<=h;y++){
+        if(y===h)setBlock(x,y,z,"grass");
+        else if(y>=h-3)setBlock(x,y,z,"dirt");
+        else setBlock(x,y,z,"stone");
+      }
+    }
+  }
+
+  // Arbres
+  for(let z=4;z<WORLD_D-4;z+=11){
+    for(let x=5;x<WORLD_W-5;x+=13){
+      if((x+z)%3===0) continue;
+      const ground=topSolid(x,z);
+      for(let y=ground+1;y<=ground+3;y++)setBlock(x,y,z,"wood");
+      for(let dx=-2;dx<=2;dx++){
+        for(let dz=-2;dz<=2;dz++){
+          for(let dy=2;dy<=4;dy++){
+            if(Math.abs(dx)+Math.abs(dz)+(dy===4?1:0)<=4)
+              setBlock(x+dx,ground+dy,z+dz,"leaf");
+          }
+        }
+      }
+    }
+  }
+}
+function topSolid(x,z){
+  for(let y=WORLD_H-1;y>=0;y--)if(getBlock(x,y,z)!=="air")return y;
+  return 0;
+}
+
+// ================= RENDU DES BLOCS =================
+const materials={};
+for(const [name,b] of Object.entries(BLOCKS)){
+  if(name==="air")continue;
+  materials[name]=new THREE.MeshLambertMaterial({color:b.color,flatShading:true});
+}
+const group=new THREE.Group();
+scene.add(group);
+
+function visible(x,y,z){
+  const neighbors=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+  return neighbors.some(([dx,dy,dz])=>getBlock(x+dx,y+dy,z+dz)==="air");
+}
+function buildWorld(){
+  while(group.children.length)group.remove(group.children[0]);
+  const geo=new THREE.BoxGeometry(1,1,1);
+  for(let y=0;y<WORLD_H;y++)for(let z=0;z<WORLD_D;z++)for(let x=0;x<WORLD_W;x++){
+    const b=getBlock(x,y,z);
+    if(b==="air"||!visible(x,y,z))continue;
+    const mesh=new THREE.Mesh(geo,materials[b]);
+    mesh.position.set(x+.5,y+.5,z+.5);
+    mesh.castShadow=true;
+    mesh.receiveShadow=true;
+    mesh.userData={x,y,z};
+    group.add(mesh);
+  }
+}
+generateWorld();
+buildWorld();
+
+// ================= LUMIÈRE =================
+scene.add(new THREE.HemisphereLight(0xbfe9ff,0x665544,1.15));
+const sun=new THREE.DirectionalLight(0xffffff,1.5);
+sun.position.set(25,40,15);
+sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024);
+sun.shadow.camera.left=-35;sun.shadow.camera.right=35;
+sun.shadow.camera.top=35;sun.shadow.camera.bottom=-35;
+scene.add(sun);
+
+// ================= JOUEUR =================
+const player={
+  x:WORLD_W/2+.5,z:WORLD_D/2+.5,y:topSolid(Math.floor(WORLD_W/2),Math.floor(WORLD_D/2))+1,
+  vy:0,r:.28,height:1.8,onGround:false
+};
+let yaw=0,pitch=-.15;
+camera.position.set(player.x,player.y+1.62,player.z);
+
+function collides(px,py,pz){
+  const minX=Math.floor(px-player.r),maxX=Math.floor(px+player.r);
+  const minY=Math.floor(py),maxY=Math.floor(py+player.height-.001);
+  const minZ=Math.floor(pz-player.r),maxZ=Math.floor(pz+player.r);
+  for(let y=minY;y<=maxY;y++)for(let z=minZ;z<=maxZ;z++)for(let x=minX;x<=maxX;x++){
+    if(getBlock(x,y,z)!=="air")return true;
+  }
+  return false;
+}
+function moveAxis(axis,amount){
+  const old=player[axis];
+  player[axis]+=amount;
+  if(collides(player.x,player.y,player.z)){
+    player[axis]=old;
+    return false;
+  }
+  return true;
+}
+
+// ================= CONTRÔLES =================
+const keys={};
+addEventListener("keydown",e=>{
+  keys[e.key.toLowerCase()]=true;
+  if(e.code==="Space")keys.space=true;
+  if(e.key>="1"&&e.key<="3"){selected=+e.key-1;updateHotbar()}
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();
+});
+addEventListener("keyup",e=>{
+  keys[e.key.toLowerCase()]=false;
+  if(e.code==="Space")keys.space=false;
+});
+
+const lock=null;
+
+document.addEventListener("pointerlockchange",()=>{});
+document.addEventListener("mousemove",e=>{
+  if(document.pointerLockElement!==canvas)return;
+  yaw-=e.movementX*.0025;
+  pitch-=e.movementY*.0025;
+  pitch=Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitch));
+});
+
+// ================= HOTBAR =================
+function updateHotbar(){
+  const bar=document.getElementById("hotbar");
+  bar.innerHTML="";
+  hotbar.forEach((b,i)=>{
+    const slot=document.createElement("div");
+    slot.className="slot"+(i===selected?" selected":"");
+    slot.innerHTML='<span class="num">'+(i+1)+'</span><div class="swatch" style="background:#'+BLOCKS[b].color.toString(16).padStart(6,"0")+'"></div>';
+    slot.onclick=()=>{selected=i;updateHotbar()};
+    bar.appendChild(slot);
+  });
+}
+updateHotbar();
+
+// ================= CASSER / POSER =================
+const raycaster=new THREE.Raycaster();
+function targetBlock(){
+  raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
+  const hits=raycaster.intersectObjects(group.children,false);
+  return hits.length&&hits[0].distance<6?hits[0]:null;
+}
+function editBlock(button){
+  const hit=targetBlock();
+  if(!hit)return;
+  const p=hit.object.userData;
+  if(button===0){
+    setBlock(p.x,p.y,p.z,"air");
+  }else if(button===2){
+    const n=hit.face.normal;
+    const x=p.x+Math.round(n.x),y=p.y+Math.round(n.y),z=p.z+Math.round(n.z);
+    if(getBlock(x,y,z)==="air"){
+      setBlock(x,y,z,hotbar[selected]);
+      if(collides(player.x,player.y,player.z))setBlock(x,y,z,"air");
+    }
+  }
+  buildWorld();
+}
+canvas.addEventListener("mousedown",e=>{
+  if(document.pointerLockElement!==canvas){canvas.requestPointerLock();return}
+  if(e.button===0||e.button===2)editBlock(e.button);
+});
+canvas.addEventListener("contextmenu",e=>e.preventDefault());
+
+// ================= PHYSIQUE =================
+let last=performance.now();
+function update(dt){
+  const speed=4.2;
+  let forward=0,right=0;
+  if(keys.z||keys.w||keys.arrowup)forward++;
+  if(keys.s||keys.arrowdown)forward--;
+  if(keys.d||keys.arrowright)right++;
+  if(keys.q||keys.a||keys.arrowleft)right--;
+  if(joyActive){ forward=-joyY; right=joyX; }
+
+  const len=Math.hypot(forward,right)||1;
+  forward/=len;right/=len;
+
+  const fx=-Math.sin(yaw),fz=-Math.cos(yaw);
+  const rx=Math.cos(yaw),rz=-Math.sin(yaw);
+  const dx=(fx*forward+rx*right)*speed*dt;
+  const dz=(fz*forward+rz*right)*speed*dt;
+  moveAxis("x",dx);moveAxis("z",dz);
+
+  if(keys.space&&player.onGround){
+    player.vy=8.5;
+    player.onGround=false;
+    keys.space=false;
+  }
+
+  player.vy-=18*dt;
+  const oldY=player.y;
+  player.y+=player.vy*dt;
+  if(collides(player.x,player.y,player.z)){
+    player.y=oldY;
+    if(player.vy<0)player.onGround=true;
+    player.vy=0;
+  }else player.onGround=false;
+
+  if(player.y<-10){
+    player.x=WORLD_W/2+.5;player.z=WORLD_D/2+.5;
+    player.y=topSolid(Math.floor(player.x),Math.floor(player.z))+1;
+    player.vy=0;
+  }
+
+  camera.position.set(player.x,player.y+1.62,player.z);
+  camera.rotation.order="YXZ";
+  camera.rotation.y=yaw;
+  camera.rotation.x=pitch;
+}
+
+// ================= CONTROLES TACTILES =================
+let joyActive=false,joyX=0,joyY=0;
+const joystick=document.getElementById("joystick"),stick=document.getElementById("stick");
+function setJoy(e){
+  const r=joystick.getBoundingClientRect();
+  let x=e.clientX-(r.left+r.width/2), y=e.clientY-(r.top+r.height/2);
+  const max=38, d=Math.hypot(x,y);
+  if(d>max){x=x/d*max;y=y/d*max}
+  stick.style.transform=`translate(${x}px,${y}px)`;
+  joyX=x/max; joyY=y/max;
+}
+joystick.addEventListener("pointerdown",e=>{joyActive=true;joystick.setPointerCapture(e.pointerId);setJoy(e)});
+joystick.addEventListener("pointermove",e=>{if(joyActive)setJoy(e)});
+joystick.addEventListener("pointerup",()=>{joyActive=false;joyX=joyY=0;stick.style.transform=""});
+joystick.addEventListener("pointercancel",()=>{joyActive=false;joyX=joyY=0;stick.style.transform=""});
+
+document.getElementById("jumpBtn").addEventListener("pointerdown",e=>{e.preventDefault();keys.space=true});
+document.getElementById("breakBtn").addEventListener("pointerdown",e=>{e.preventDefault();editBlock(0)});
+document.getElementById("placeBtn").addEventListener("pointerdown",e=>{e.preventDefault();editBlock(2)});
+
+// Glissement du doigt sur la zone de jeu = rotation de la caméra.
+let lookPointer=null,lastPX=0,lastPY=0;
+canvas.addEventListener("pointerdown",e=>{
+  if(e.pointerType==="touch" && !e.target.closest("#mobileControls")){
+    lookPointer=e.pointerId;lastPX=e.clientX;lastPY=e.clientY;
+  }
+});
+canvas.addEventListener("pointermove",e=>{
+  if(e.pointerType==="touch" && e.pointerId===lookPointer){
+    yaw-=(e.clientX-lastPX)*.006;
+    pitch-=(e.clientY-lastPY)*.006;
+    pitch=Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitch));
+    lastPX=e.clientX;lastPY=e.clientY;
+  }
+});
+canvas.addEventListener("pointerup",e=>{if(e.pointerId===lookPointer)lookPointer=null});
+canvas.addEventListener("pointercancel",e=>{if(e.pointerId===lookPointer)lookPointer=null});
+
+// ================= BOUCLE =================
+function loop(now){
+  const dt=Math.min((now-last)/1000,.05);last=now;
+  update(dt);
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI - Fin de blocage</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; text-align: center; padding-top: 50px; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 90%; max-width: 500px; }
+        button { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 1.1em; transition: 0.2s; }
+        .btn-gps { background: #27ae60; }
+        .btn-ville { background: #3498db; }
+        .btn-gps:hover, .btn-ville:hover { opacity: 0.8; }
+        
+        #loader { display: none; margin: 20px 0; }
+        #percent-container { font-family: monospace; font-size: 2.5em; color: #27ae60; font-weight: bold; margin-bottom: 10px; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 20px; width: 100%; overflow: hidden; border: 1px solid #ddd; }
+        .progress-bar { width: 0%; height: 100%; background: #27ae60; transition: width 0.1s linear; }
+        
+        #resultat { display: none; text-align: left; margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 10px; background: #fff; animation: slideUp 0.5s ease; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    
+    <button class="btn-gps" onclick="lancer('gps')">📍 Scanner ma position</button>
+    <button class="btn-ville" onclick="lancer('ville')">🌍 Chercher une ville</button>
+
+    <div id="loader">
+        <div id="percent-container"><span id="chiffre">0.0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+        <p id="status" style="color: #666; font-style: italic;">Initialisation...</p>
+    </div>
+
+    <div id="resultat">
+        <h3 style="color:#27ae60; margin-top:0;">✅ Menu Prêt !</h3>
+        <div id="menu-txt"></div>
+        <p style="margin-top:15px; font-size: 0.9em; color: #666; border-top: 1px solid #eee; padding-top: 10px;">
+            🛒 Commerce : <span id="shop-txt" style="font-weight:bold; color: #333;"></span>
+        </p>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkWWqMx0C4DGNeEax1VHGcnu-UdsDpksg&libraries=places"></script>
+
+<script>
+    let interval;
+    let n = 0;
+    let forceFin;
+
+    function lancer(mode) {
+        // Reset complet
+        n = 0;
+        clearInterval(interval);
+        clearTimeout(forceFin);
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+        document.getElementById('status').innerText = "Analyse des données...";
+        
+        // Animation de la barre
+        interval = setInterval(() => {
+            if (n < 95) {
+                n += 0.4;
+                majBarre();
+            }
+        }, 30);
+
+        // --- SECURITE ANTI-BLOCAGE (Le Turbo-Boost) ---
+        // Si après 4 secondes rien n'est arrivé, on force l'affichage
+        forceFin = setTimeout(() => {
+            if (n < 100) {
+                console.log("Sécurité activée : Google est trop lent.");
+                afficher("Commerce de proximité");
+            }
+        }, 4000);
+
+        if (mode === 'gps') {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    p => chercher(p.coords.latitude, p.coords.longitude),
+                    e => { alert("GPS refusé. Utilisez le bouton bleu."); resetUI(); }
+                );
+            }
+        } else {
+            let v = prompt("Dans quelle ville êtes-vous ?");
+            if (v) {
+                let geo = new google.maps.Geocoder();
+                geo.geocode({address: v}, (res, stat) => {
+                    if (stat === 'OK') chercher(res[0].geometry.location.lat(), res[0].geometry.location.lng());
+                    else { alert("Lieu introuvable."); resetUI(); }
+                });
+            } else { resetUI(); }
+        }
+    }
+
+    function chercher(lat, lng) {
+        document.getElementById('status').innerText = "Scan du quartier en cours...";
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+        
+        service.nearbySearch({
+            location: {lat, lng},
+            radius: 1500,
+            type: ['supermarket']
+        }, (results, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+                afficher(results[0].name);
+            } else {
+                // Si Google ne trouve rien, on ne bloque pas, on affiche un nom générique
+                afficher("Commerce local");
+            }
+        });
+    }
+
+    function afficher(nomMagasin) {
+        clearTimeout(forceFin); // On annule la sécurité car Google a répondu
+        clearInterval(interval);
+        
+        // Propulsion finale à 100%
+        n = 100;
+        majBarre();
+        document.getElementById('status').innerText = "Analyse terminée !";
+
+        setTimeout(() => {
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('resultat').style.display = "block";
+            document.getElementById('shop-txt').innerText = nomMagasin;
+            
+            // On génère un menu aléatoire pour que ce soit varié
+            const menus = [
+                "<b>Matin :</b> Pancakes à la banane<br><b>Midi :</b> Salade de pois chiches au cumin<br><b>Soir :</b> Soupe de lentilles et pain complet",
+                "<b>Matin :</b> Yaourt grec et amandes<br><b>Midi :</b> Poulet grillé et patates douces<br><b>Soir :</b> Omelette aux épinards frais",
+                "<b>Matin :</b> Toast avocat et œuf<br><b>Midi :</b> Pâtes complètes au pesto<br><b>Soir :</b> Salade de thon et haricots verts"
+            ];
+            document.getElementById('menu-txt').innerHTML = menus[Math.floor(Math.random() * menus.length)];
+        }, 600);
+    }
+
+    function majBarre() {
+        document.getElementById('chiffre').innerText = n.toFixed(1);
+        document.getElementById('progress-bar').style.width = n + "%";
+    }
+
+    function resetUI() {
+        clearInterval(interval);
+        clearTimeout(forceFin);
+        document.getElementById('loader').style.display = "none";
+    }
+</script>
+
+</body>
+</html>

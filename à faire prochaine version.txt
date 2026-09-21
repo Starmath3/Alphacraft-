@@ -1,0 +1,21 @@
+26.1
+
+- enrichissement des bases de donné
+- mode sombre couleur écriture
+- petit loader (sans pourcentage)
+- bouton impression non-fonctionnel
+
+26.2 or 27.1
+
+- mode pays (nourriture française en France, nourriture chinoise en chine)
+      db_anglais { const db_kid [];
+                   const db [];
+                 };
+      db_français { const db_kid [];
+                   const db [];
+                  };
+      db_chinois { const db_kid [];
+                   const db [];
+                 }; etc...
+- mode changer la langue (google trad)
+- enrichissement des bases de donné

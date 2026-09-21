@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI 2026 - Turbo</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #27ae60; text-align: center; font-size: 2.2em; margin-bottom: 10px; }
+        .btn-main { width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 1.1em; cursor: pointer; transition: 0.3s; margin-bottom: 10px; font-weight: bold; }
+        .btn-main:hover { background: #219150; transform: translateY(-2px); }
+        .btn-blue { background: #3498db; }
+        .btn-blue:hover { background: #2980b9; }
+        .menu-box { margin-top: 20px; border: 1px solid #e0e0e0; border-radius: 15px; padding: 20px; background: #fff; transition: 0.5s; }
+        .meal { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #ddd; }
+        .meal strong { color: #2ecc71; text-transform: uppercase; font-size: 0.85em; }
+        .shop-list { background: #f9f9f9; padding: 15px; border-radius: 10px; font-size: 0.95em; border-left: 5px solid #27ae60; margin-top: 10px; }
+        .loading-text { font-style: italic; color: #27ae60; font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    <p style="text-align: center; color: #7f8c8d;">L'intelligence nutritionnelle locale en temps réel.</p>
+    
+    <button class="btn-main" onclick="lancerNutriGenius()">📍 Scanner ma position actuelle</button>
+    <button class="btn-main btn-blue" onclick="demanderVille()">🌍 Explorer une autre ville</button>
+    
+    <div id="status" style="margin-top: 15px; text-align: center; min-height: 24px;"></div>
+    
+    <div id="resultat" style="display:none;">
+        <div class="menu-box">
+            <h3>📅 Plan de Nutrition Personnalisé</h3>
+            <div id="contenu-menu"></div>
+        </div>
+        
+        <div class="menu-box">
+            <h3>🛒 Commerces de proximité trouvés</h3>
+            <div id="liste-magasins" style="line-height: 1.6;"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=TA_CLE_API_ICI&libraries=places"></script>
+
+<script>
+    // --- MOTEUR NUTRIGENIUS ---
+    const cachePosition = {};
+
+    function lancerNutriGenius() {
+        const status = document.getElementById('status');
+        if (navigator.geolocation) {
+            status.innerHTML = "<span class='loading-text'>🛰️ Connexion satellites en cours...</span>";
+            navigator.geolocation.getCurrentPosition(
+                (pos) => lancerRecherche(pos.coords.latitude, pos.coords.longitude),
+                () => { status.innerHTML = "❌ GPS bloqué. Utilisez la recherche par ville."; }
+            );
+        } else { demanderVille(); }
+    }
+
+    function demanderVille() {
+        const ville = prompt("Dans quelle ville êtes-vous ?");
+        if (ville) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: ville }, (results, status) => {
+                if (status === "OK") {
+                    const loc = results[0].geometry.location;
+                    lancerRecherche(loc.lat(), loc.lng());
+                } else { alert("Lieu introuvable."); }
+            });
+        }
+    }
+
+    function lancerRecherche(lat, lng) {
+        const status = document.getElementById('status');
+        const resDiv = document.getElementById('resultat');
+        const key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+
+        status.innerHTML = "<span class='loading-text'>🚀 IA en action... Analyse du quartier...</span>";
+        resDiv.style.opacity = "0.3";
+
+        if (cachePosition[key]) {
+            setTimeout(() => afficherResultats(cachePosition[key]), 300); // Petit délai pour le feeling
+            return;
+        }
+
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+        service.nearbySearch({
+            location: { lat, lng },
+            radius: 1500,
+            type: ['supermarket']
+        }, (results, statusAPI) => {
+            if (statusAPI === google.maps.places.PlacesServiceStatus.OK) {
+                cachePosition[key] = results;
+                afficherResultats(results);
+            } else {
+                status.innerHTML = "⚠️ Aucun magasin trouvé. Essayez une zone plus urbaine.";
+            }
+        });
+    }
+
+    function afficherResultats(results) {
+        const status = document.getElementById('status');
+        const resDiv = document.getElementById('resultat');
+        const shopDiv = document.getElementById('liste-magasins');
+        
+        status.innerHTML = "✅ **Menu prêt !** Bonne dégustation.";
+        resDiv.style.display = "block";
+        resDiv.style.opacity = "1";
+        
+        shopDiv.innerHTML = results.slice(0, 3).map(p => `• <strong>${p.name}</strong><br><small>${p.vicinity}</small>`).join('<br><br>');
+        genererMenuIA(results[0].name);
+    }
+
+    function genererMenuIA(nomMagasin) {
+        const menus = [
+            { m: "Smoothie Bowl Vitaminé", d: "Buddha Bowl au Quinoa", s: "Pavé de saumon aux asperges", l: "Avocat, Quinoa, Saumon, Myrtilles" },
+            { m: "Omelette aux fines herbes", d: "Salade de lentilles corail", s: "Poulet citronné et brocolis", l: "Oeufs, Lentilles, Poulet, Citron" }
+        ];
+        const random = menus[Math.floor(Math.random() * menus.length)];
+        
+        document.getElementById('contenu-menu').innerHTML = `
+            <div class="meal"><strong>Matin :</strong> ${random.m}</div>
+            <div class="meal"><strong>Midi :</strong> ${random.d}</div>
+            <div class="meal"><strong>Soir :</strong> ${random.s}</div>
+            <div class="shop-list">📝 <strong>Liste de courses pour ${nomMagasin} :</strong><br>${random.l}</div>
+        `;
+    }
+</script>
+
+</body>
+</html>

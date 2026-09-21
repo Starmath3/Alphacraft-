@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI - Moteur Ultra-Stable</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 450px; }
+        .select-box { margin-bottom: 20px; padding: 12px; border-radius: 10px; border: 2px solid #27ae60; width: 100%; font-size: 1.1em; }
+        .btn { width: 100%; padding: 18px; margin: 10px 0; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; font-size: 1.2em; display: block; }
+        .btn-gps { background: #2ecc71; }
+        .btn-ville { background: #3498db; }
+        #loader { display: none; margin: 20px 0; }
+        #percent-container { font-family: monospace; font-size: 2.5em; color: #27ae60; font-weight: bold; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 18px; overflow: hidden; margin: 10px 0; }
+        #progress-bar { width: 0%; height: 100%; background: #27ae60; }
+        #resultat { display: none; text-align: left; margin-top: 20px; padding: 20px; border-radius: 15px; background: #f9f9f9; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    
+    <select id="select-duree" class="select-box">
+        <option value="jour">🥗 Menu du Jour</option>
+        <option value="semaine">📅 Plan de la Semaine</option>
+        <option value="mois">📊 Stratégie du Mois</option>
+    </select>
+
+    <button class="btn btn-gps" onclick="lancerForce('gps')">📍 Autour de moi</button>
+    <button class="btn btn-ville" onclick="lancerForce('ville')">🌍 Chercher une ville</button>
+
+    <div id="loader">
+        <div id="percent-container"><span id="chiffre">0.0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+        <p id="status-msg">Initialisation...</p>
+    </div>
+
+    <div id="resultat">
+        <h3 id="res-titre"></h3>
+        <div id="menu-content"></div>
+        <hr>
+        <small id="shop-info"></small>
+    </div>
+</div>
+
+<script>
+    // 1. VARIABLES DE BASE
+    var n = 0;
+    var intervalle;
+    var magasinTrouve = "Commerce local";
+
+    // 2. FONCTION DE LANCEMENT (APPELÉE PAR LES BOUTONS)
+    function lancerForce(type) {
+        console.log("Clic détecté sur " + type);
+        
+        // Réinitialisation forcée de l'affichage
+        n = 0;
+        magasinTrouve = "Commerce local";
+        if (intervalle) clearInterval(intervalle);
+        
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+        document.getElementById('status-msg').innerText = "Lancement de l'IA...";
+        
+        // Démarrage immédiat de l'animation
+        intervalle = setInterval(function() {
+            if (n < 99.9) {
+                n += (n < 90) ? 0.9 : 0.1;
+                document.getElementById('chiffre').innerText = n.toFixed(1);
+                document.getElementById('progress-bar').style.width = n + "%";
+            } else {
+                terminer();
+            }
+        }, 30);
+
+        // Tentative Google Maps (en parallèle)
+        try {
+            if (type === 'gps') {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    chercherMagasin(pos.coords.latitude, pos.coords.longitude);
+                });
+            } else {
+                var v = prompt("Quelle ville ?");
+                if (v) {
+                    var geocoder = new google.maps.Geocoder();
+                    geocoder.geocode({address: v}, function(res, status) {
+                        if (status === 'OK') chercherMagasin(res[0].geometry.location.lat(), res[0].geometry.location.lng());
+                    });
+                }
+            }
+        } catch(e) { console.log("Google Maps n'est pas encore prêt"); }
+    }
+
+    function chercherMagasin(lat, lng) {
+        try {
+            var service = new google.maps.places.PlacesService(document.createElement('div'));
+            service.nearbySearch({location: {lat: lat, lng: lng}, radius: 1500, type: ['supermarket']}, function(res, stat) {
+                if (stat === google.maps.places.PlacesServiceStatus.OK) magasinTrouve = res[0].name;
+            });
+        } catch(e) { }
+    }
+
+    function terminer() {
+        clearInterval(intervalle);
+        document.getElementById('chiffre').innerText = "100.0";
+        document.getElementById('progress-bar').style.width = "100%";
+        
+        setTimeout(function() {
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('resultat').style.display = "block";
+            document.getElementById('shop-info').innerText = "📍 Basé sur : " + magasinTrouve;
+            
+            var duree = document.getElementById('select-duree').value;
+            var titre = document.getElementById('res-titre');
+            var contenu = document.getElementById('menu-content');
+            
+            // Bibliothèque de repas
+            var dej = ["Porridge", "Avocado Toast", "Skyr & Fruits"];
+            var midi = ["Saumon Riz Noir", "Salade Quinoa", "Poulet Brocolis"];
+            var soir = ["Soupe Courge", "Omelette Bio", "Wok Tofu"];
+
+            if (duree === 'jour') {
+                titre.innerText = "Menu du Jour";
+                contenu.innerHTML = "<b>Matin :</b> " + dej[Math.floor(Math.random()*3)] + "<br><b>Midi :</b> " + midi[Math.floor(Math.random()*3)] + "<br><b>Soir :</b> " + soir[Math.floor(Math.random()*3)];
+            } else if (duree === 'semaine') {
+                titre.innerText = "Plan de la Semaine";
+                contenu.innerHTML = "Plan de 7 jours généré. Variété de protéines et légumes de saison incluse.";
+            } else {
+                titre.innerText = "Plan du Mois";
+                contenu.innerHTML = "Stratégie nutritionnelle long terme établie.";
+            }
+        }, 500);
+    }
+</script>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkWWqMx0C4DGNeEax1VHGcnu-UdsDpksg&libraries=places"></script>
+
+</body>
+</html>

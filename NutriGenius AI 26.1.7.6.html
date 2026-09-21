@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.7.6</title>
+    <style>
+        :root { --bg: #f0f4f8; --card: white; --text: #2c3e50; --primary: #009245; --accent: #e67e22; }
+        .dark-mode { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f4f8; --primary: #27ae60; --accent: #d35400; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); text-align: center; padding: 20px; transition: 0.3s; margin: 0; }
+        .container { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 900px; text-align: left; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        input, select, button { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+        
+        /* Styles des Modes */
+        .modes-title { font-weight: bold; margin-top: 20px; color: var(--primary); }
+        .modes-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 10px 0; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 10px; }
+        .mode-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .mode-item input { width: 18px; height: 18px; cursor: pointer; }
+
+        button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; margin-top: 10px; }
+        button:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        
+        .recipe-card { background: var(--card); padding: 25px; border-radius: 15px; margin-top: 20px; border-left: 8px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        .ntr-box { background: var(--bg); padding: 15px; border-radius: 10px; margin: 15px 0; font-weight: bold; color: var(--primary); border: 1px solid rgba(0,0,0,0.1); }
+        .tip-box { font-style: italic; background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; border-left: 5px solid #ffeeba; margin-top: 10px; }
+        .error-msg { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 15px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <button onclick="document.body.classList.toggle('dark-mode')" style="width:auto; padding: 10px 20px; margin-bottom:20px;">🌓 MODE SOMBRE</button>
+    <h1>NutriGenius AI 🥗</h1>
+    
+<div class="grid">
+    <input type="number" id="age" placeholder="Âge" onchange="sauvegarderProfil()">
+    <input type="number" id="poids" placeholder="Poids (kg)" onchange="sauvegarderProfil()">
+    <input type="number" id="taille" placeholder="Taille (cm)" onchange="sauvegarderProfil()">
+    <select id="sexe" onchange="sauvegarderProfil()">
+        <option value="H">Homme</option>
+        <option value="F">Femme</option>
+    </select>
+    <select id="duree-programme" onchange="sauvegarderProfil()">
+        <option value="1">1 Jour (Standard)</option>
+        <option value="7">1 Semaine</option>
+        <option value="30">1 Mois</option>
+        <option value="365">1 An</option>
+    </select>
+</div>
+
+    <div class="modes-title">🎯 PERSONNALISATION DU PLAN :</div>
+    <div class="modes-container">
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="veg" onchange="sauvegarderProfil()"> Végétarien 🌿</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="sport" onchange="sauvegarderProfil()"> Sport 💪</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="luxe" onchange="sauvegarderProfil()"> Luxe ✨</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="sucre" onchange="sauvegarderProfil()"> Sucré 🍎</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="sale" onchange="sauvegarderProfil()"> Salé 🧂</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="eco" onchange="sauvegarderProfil()"> Écologique 🌍</label>
+        <label class="mode-item"><input type="checkbox" class="filter-mode" value="prix" onchange="sauvegarderProfil()"> Économique 💰</label>
+    </div>
+    
+    <button onclick="genererMenu()" style="font-size: 18px; padding: 15px;">GÉNÉRER MON NUTRIPLAN</button>
+    <button onclick="enregistrerSurPC()" style="background:#7f8c8d; margin-top:5px;">💾 SAUVEGARDER LE MENU (.TXT)</button>
+    
+    <div id="resultat"></div>
+</div>
+
+<script>
+    // LES BASES DE DONNÉES
+    const db_kids = [
+    // --- 3 ANS (Textures très tendres + Lait) ---
+    { 
+        n: "Bol Éveil & Lait", cat: "matin", ageMin: 3,
+        r: ["1. Chauffer 150ml de lait de croissance.", "2. Écraser une demi-banane bien mûre.", "3. Mélanger avec des céréales infantiles.", "4. Vérifier la température sur le poignet.", "5. Servir dans un bol coloré adapté.", "6. Proposer quelques morceaux de poire douce."],
+        tip: "Le lait de croissance apporte le fer nécessaire à 3 ans."
+    },
+    { 
+        n: "Purée Douce de Patate Douce", cat: "midi", ageMin: 3,
+        r: ["1. Cuire la patate douce à la vapeur douce.", "2. Mixer avec une noisette de beurre frais.", "3. Ajouter 10g de jambon blanc mixé très fin.", "4. Incorporer une cuillère de fromage frais.", "5. Présenter en forme de petit dôme rigolo.", "6. Servir tiède pour ne pas brûler l'enfant."],
+        tip: "La patate douce est riche en vitamine A pour la vue."
+    },
+    { 
+        n: "Velouté de Potiron dodo", cat: "soir", ageMin: 3,
+        r: ["1. Cuire le potiron et une petite pomme de terre.", "2. Mixer avec un peu de lait pour l'onctuosité.", "3. Servir en petite tasse facile à tenir.", "4. Accompagner d'un petit morceau de pain mie.", "5. Donner un yaourt nature en dessert.", "6. Finir par un petit verre d'eau plate."],
+        tip: "Un repas léger pour favoriser un sommeil paisible."
+    },
+
+    // --- 4 ANS (Apprentissage des morceaux) ---
+    { 
+        n: "Tartine d'Ourson", cat: "matin", ageMin: 4,
+        r: ["1. Griller légèrement une tranche de pain de mie.", "2. Étaler du fromage frais sur toute la surface.", "3. Faire des yeux avec deux rondelles de banane.", "4. Faire le nez avec une petite myrtille.", "5. Accompagner d'un petit bol de lait chaud.", "6. Proposer un jus d'orange pressé maison."],
+        tip: "Rendre le plat visuel aide l'enfant à goûter de tout."
+    },
+    { 
+        n: "Petites Pâtes 'Étoiles' au Poulet", cat: "midi", ageMin: 4,
+        r: ["1. Cuire les petites pâtes étoiles al dente.", "2. Hacher très finement un blanc de poulet cuit.", "3. Mélanger avec une purée de carottes fondante.", "4. Ajouter un filet d'huile de colza bio.", "5. Saupoudrer d'un tout petit peu de parmesan.", "6. Vérifier qu'il n'y a pas de gros morceaux."],
+        tip: "L'huile de colza est essentielle pour le cerveau des petits."
+    },
+
+    // --- 5-6 ANS (Comme les grands, mais coupé petit) ---
+    { 
+        n: "Omelette 'Soleil' & Mouillettes", cat: "matin", ageMin: 5,
+        r: ["1. Battre un œuf avec une goutte de lait.", "2. Cuire doucement pour garder du moelleux.", "3. Couper des bâtonnets de pain beurré.", "4. Disposer l'omelette ronde comme un soleil.", "5. Faire des rayons avec les bâtonnets de pain.", "6. Servir avec un fruit frais de saison."],
+        tip: "L'œuf est une excellente protéine pour la concentration."
+    },
+    { 
+        n: "Poisson Blanc & Riz Fondant", cat: "midi", ageMin: 5,
+        r: ["1. Cuire le filet de poisson sans aucune arête.", "2. Préparer un riz bien cuit et moelleux.", "3. Ajouter des petits pois extra-fins vapeur.", "4. Faire une sauce blanche très légère au lait.", "5. Mélanger les couleurs dans l'assiette.", "6. Servir avec un quartier de clémentine."],
+        tip: "Attention : vérifiez toujours deux fois l'absence d'arêtes."
+    }
+];
+
+    const db = [
+    // ==========================================
+    // MATIN (3 RECETTES x 10 VARIANTES)
+    // ==========================================
+    { 
+        n: "Omelette du Matin 🍳", cat: "matin",
+        variantes: [
+            { t: "Épinards & Feta", m: ["veg", "sale", "prix", "eco"], r: ["1. Battre trois œufs frais énergiquement dans un bol avec du poivre.", "2. Faire tomber les feuilles d'épinards frais dans une poêle chaude.", "3. Verser les œufs sur les légumes et parsemer de feta émiettée.", "4. Cuire à feu doux pour garder une texture baveuse et fondante.", "5. Rabattre les bords avec une spatule pour former un demi-lune.", "6. Servir immédiatement sur une assiette préalablement chauffée."], ntr: "Protéines : 22g | Glucides : 4g | Lipides : 18g", tip: "La feta apporte le sodium nécessaire pour l'énergie du matin." },
+            { t: "Saumon Fumé & Aneth", m: ["sale", "luxe", "sport"], r: ["1. Battre les œufs sans saler à cause du goût du saumon fumé.", "2. Verser dans la poêle et laisser prendre pendant une minute.", "3. Déposer des lanières de saumon fumé sur le dessus de l'œuf.", "4. Ajouter une cuillère de crème fraîche légère pour l'onctuosité.", "5. Plier l'omelette et couper le feu pour ne pas trop cuire le poisson.", "6. Parsemer d'aneth fraîche pour sublimer le goût du saumon."], ntr: "Protéines : 25g | Glucides : 3g | Lipides : 20g", tip: "Les oméga-3 du saumon sont essentiels pour votre cerveau." },
+            { t: "Truffe & Parmesan", m: ["veg", "sale", "luxe"], r: ["1. Utiliser une huile de truffe de qualité pour parfumer les œufs.", "2. Verser l'appareil dans la poêle chaude avec du beurre frais.", "3. Râper du parmesan vieux sur toute la surface de l'omelette.", "4. Cuire très lentement pour ne pas dénaturer l'arôme de truffe.", "5. Fermer l'omelette en portefeuille pour une présentation pro.", "6. Servir avec une mouillette de pain de campagne bien grillée."], ntr: "Protéines : 22g | Glucides : 4g | Lipides : 21g", tip: "Le parmesan vieux est très riche en calcium biodisponible." },
+            { t: "Banane & Miel", m: ["veg", "sucre", "sport", "prix"], r: ["1. Écraser une demi-banane mûre et l'incorporer aux œufs battus.", "2. Verser la préparation dans une poêle beurrée bien chaude.", "3. Laisser dorer doucement jusqu'à ce que les bords décollent.", "4. Ajouter un filet de miel de fleurs sur la surface tiède.", "5. Saupoudrer une pincée de cannelle pour booster le métabolisme.", "6. Servir chaud comme une galette énergétique avant l'entraînement."], ntr: "Protéines : 18g | Glucides : 22g | Lipides : 14g", tip: "La cannelle aide à réguler la glycémie après le repas." },
+            { t: "Champignons Aillés", m: ["veg", "sale", "prix", "eco"], r: ["1. Sauter les champignons de Paris avec une gousse d'ail hachée.", "2. Ajouter les œufs battus par-dessus les champignons dorés.", "3. Parsemer de persil plat fraîchement haché au couteau fin.", "4. Cuire à feu moyen en ramenant les bords vers le centre.", "5. Saler très légèrement pour préserver le goût naturel des bois.", "6. Accompagner d'une tranche de pain complet bien grillée."], ntr: "Protéines : 19g | Glucides : 5g | Lipides : 15g", tip: "Les champignons sont riches en sélénium pour l'immunité." },
+            { t: "Avocat & Piment", m: ["veg", "sale", "sport", "luxe"], r: ["1. Préparer une omelette nature classique et rester bien ferme.", "2. Trancher un avocat bien mûr et le disposer sur l'œuf chaud.", "3. Ajouter une pincée de piment d'Espelette pour le dynamisme.", "4. Verser un filet d'huile de citron sur toute la préparation.", "5. Refermer délicatement l'omelette pour emprisonner la chaleur.", "6. Servir avec une poignée de jeunes pousses d'épinards frais."], ntr: "Protéines : 19g | Glucides : 7g | Lipides : 24g", tip: "L'avocat apporte de bonnes graisses pour le système hormonal." },
+            { t: "Pommes & Érable", m: ["veg", "sucre", "prix", "eco"], r: ["1. Faire revenir des dés de pommes dans une poêle très chaude.", "2. Verser les œufs battus légèrement sucrés sur les fruits.", "3. Cuire comme une galette épaisse et bien dorée au four doux.", "4. Arroser de sirop d'érable pur au moment du service final.", "5. Ajouter quelques noix concassées pour un croquant parfait.", "6. Un petit-déjeuner complet qui rappelle les pancakes US."], ntr: "Protéines : 17g | Glucides : 30g | Lipides : 13g", tip: "La pomme cuite est très douce pour votre système digestif." },
+            { t: "Bacon & Cheddar", m: ["sale", "sport", "prix"], r: ["1. Griller les tranches de bacon jusqu'à ce qu'elles croustillent.", "2. Verser les œufs et ajouter des tranches de cheddar maturé.", "3. Laisser fondre le fromage sous un couvercle deux minutes.", "4. Poivrer le mélange mais ne pas rajouter de sel du tout.", "5. Plier l'omelette en deux et servir avec un grand verre d'eau.", "6. Idéal pour un gros apport en protéines avant un effort long."], ntr: "Protéines : 30g | Glucides : 2g | Lipides : 25g", tip: "Le cheddar est une source de calcium très concentrée." },
+            { t: "Asperges & Zestes", m: ["veg", "sale", "eco", "luxe"], r: ["1. Cuire les pointes d'asperges à la vapeur pendant trois minutes.", "2. Faire revenir au beurre et verser les œufs bien battus.", "3. Râper des zestes de citron jaune bio sur la surface cuite.", "4. Cuire à feu doux pour ne pas brunir les asperges vertes.", "5. Ajouter une touche de crème de soja pour le liant végétal.", "6. Servir ce plat raffiné avec un thé blanc très délicat."], ntr: "Protéines : 19g | Glucides : 5g | Lipides : 16g", tip: "L'asperge est reconnue pour ses propriétés détoxifiantes." },
+            { t: "Tomate & Mozzarella", m: ["veg", "sale", "eco", "prix"], r: ["1. Couper les tomates cerises en deux et les poêler brièvement.", "2. Ajouter les œufs et des dés de mozzarella di bufala.", "3. Parsemer de basilic frais ciselé au dernier moment possible.", "4. Laisser le fromage filer sans trop cuire le jaune d'œuf.", "5. Ajouter un filet d'huile d'olive extra vierge à la fin.", "6. Une recette aux couleurs de l'Italie pour bien commencer."], ntr: "Protéines : 20g | Glucides : 6g | Lipides : 19g", tip: "La mozzarella apporte des protéines de haute qualité." }
+        ]
+    },
+    { 
+        n: "Skyr Bowl Énergie 🍓", cat: "matin",
+        variantes: [
+            { t: "Baies & Chia", m: ["veg", "sucre", "eco", "prix"], r: ["1. Verser le skyr nature dans un bol creux bien propre.", "2. Disposer des framboises et des myrtilles bien fraîches.", "3. Saupoudrer de graines de chia pour l'apport en fibres.", "4. Ajouter un filet de sirop d'agave pour la douceur.", "5. Mélanger délicatement pour ne pas écraser les baies.", "6. Laisser reposer pour que les graines de chia gonflent."], ntr: "Protéines : 24g | Glucides : 18g | Lipides : 3g", tip: "Le skyr contient 0% de gras mais rassasie durablement." },
+            { t: "Banane & Cacahuète", m: ["veg", "sucre", "sport", "prix"], r: ["1. Mélanger le skyr avec une cuillère de beurre d'arachide.", "2. Couper une banane en rondelles et les poser dessus.", "3. Ajouter des pépites de chocolat noir pour le plaisir.", "4. Saupoudrer de graines de chanvre pour les protéines.", "5. Verser un trait de lait d'amande si c'est trop épais.", "6. Un bol énergétique parfait pour les matins de sport."], ntr: "Protéines : 32g | Glucides : 25g | Lipides : 12g", tip: "La cacahuète est riche en acides gras mono-insaturés." },
+            { t: "Pistache & Figue", m: ["veg", "sucre", "luxe", "eco"], r: ["1. Utiliser un skyr onctueux et ajouter des figues fraîches.", "2. Torréfier des pistaches concassées à la poêle sèche.", "3. Verser un miel de lavande rare sur l'ensemble du bol.", "4. Ajouter des grains de grenade pour une touche acide.", "5. Décorer avec quelques pétales de fleurs comestibles.", "6. Un réveil royal riche en saveurs fines et complexes."], ntr: "Protéines : 22g | Glucides : 35g | Lipides : 9g", tip: "La pistache aide à réduire le stress oxydatif du corps." },
+            { t: "Concombre & Menthe", m: ["veg", "sale", "eco", "prix"], r: ["1. Mélanger le skyr avec du sel et du poivre moulu.", "2. Ajouter des dés de concombre frais et de la menthe.", "3. Verser un filet d'huile d'olive extra vierge dessus.", "4. Saupoudrer de graines de tournesol pour le croquant.", "5. Servir avec une tranche de pain de seigle noir dense.", "6. Un petit-déjeuner islandais traditionnel et très frais."], ntr: "Protéines : 21g | Glucides : 10g | Lipides : 8g", tip: "Le concombre hydrate le corps dès le saut du lit." },
+            { t: "Noix & Érable Éco", m: ["veg", "sucre", "eco", "prix"], r: ["1. Verser le skyr et ajouter des cerneaux de noix locaux.", "2. Sucrer uniquement avec une touche de sirop d'érable.", "3. Ajouter des morceaux de pomme de saison bien juteuse.", "4. Saupoudrer de son d'avoine pour un transit parfait.", "5. Mélanger le tout pour obtenir une texture variée.", "6. Un choix écologique avec des produits de proximité."], ntr: "Protéines : 23g | Glucides : 28g | Lipides : 10g", tip: "Les noix sont les meilleures alliées de votre cerveau." },
+            { t: "Whey & Amandes", m: ["veg", "sucre", "sport", "luxe"], r: ["1. Incorporer une dose de whey protéine dans le skyr.", "2. Ajouter une poignée d'amandes entières non salées.", "3. Découper des quartiers de poire pour les vitamines.", "4. Saupoudrer de cacao pur sans sucre pour le goût.", "5. Verser un peu d'eau pour lisser la crème obtenue.", "6. La collation ultime pour la récupération musculaire."], ntr: "Protéines : 45g | Glucides : 15g | Lipides : 7g", tip: "L'amande contient de la vitamine E protectrice du muscle." },
+            { t: "Exotique Mango", m: ["veg", "sucre", "luxe"], r: ["1. Mixer une partie du skyr avec de la mangue mûre.", "2. Verser le reste du skyr blanc par-dessus l'autre.", "3. Ajouter des copeaux de noix de coco grillés bio.", "4. Décorer avec des graines de cardamome écrasées.", "5. Ajouter un fruit de la passion pour l'acidité.", "6. Un voyage sensoriel pour un réveil vitaminé."], ntr: "Protéines : 20g | Glucides : 32g | Lipides : 6g", tip: "La mangue booste la production de collagène naturel." },
+            { t: "Tomates & Sel", m: ["veg", "sale", "prix"], r: ["1. Couper des tomates cerises en deux et les saler.", "2. Disposer sur le skyr avec quelques olives noires.", "3. Ajouter du basilic ciselé et un peu d'origan sec.", "4. Verser un trait d'huile de colza pour les oméga-3.", "5. Déguster avec des gressins complets croustillants.", "6. Une alternative salée originale et très protéinée."], ntr: "Protéines : 21g | Glucides : 12g | Lipides : 9g", tip: "L'huile de colza est riche en oméga-3 indispensables." },
+            { t: "Muesli & Pomme", m: ["veg", "sucre", "eco", "prix"], r: ["1. Verser le skyr et ajouter du muesli sans sucre.", "2. Râper une pomme entière directement dans le bol.", "3. Ajouter une pointe de miel de fleurs local et bio.", "4. Saupoudrer de graines de lin brun pour le cœur.", "5. Laisser le muesli s'imprégner deux minutes au frais.", "6. Simple, pas cher et excellent pour la santé."], ntr: "Protéines : 24g | Glucides : 35g | Lipides : 5g", tip: "La pomme râpée libère plus de saveurs que coupée." },
+            { t: "Saumon & Ciboulette", m: ["sale", "luxe", "sport"], r: ["1. Ciseler de la ciboulette fraîche dans le skyr nature.", "2. Ajouter des petits dés de saumon fumé de qualité.", "3. Poivrer généreusement avec un moulin cinq baies.", "4. Garnir de quelques œufs de truite pour le croquant.", "5. Servir très frais avec une tranche de pain citron.", "6. Un petit-déjeuner gastronomique riche en iode."], ntr: "Protéines : 28g | Glucides : 5g | Lipides : 12g", tip: "La ciboulette stimule la circulation sanguine." }
+        ]
+    },
+    { 
+        n: "Pancakes Healthy 🥞", cat: "matin",
+        variantes: [
+            { t: "Avoine & Myrtilles", m: ["veg", "sucre", "eco", "prix"], r: ["1. Mixer des flocons d'avoine pour obtenir une farine fine.", "2. Mélanger avec un œuf et un peu de lait végétal bio.", "3. Ajouter des myrtilles fraîches directement dans la pâte.", "4. Cuire dans une poêle antiadhésive sans matière grasse.", "5. Retourner dès que des bulles apparaissent sur le dessus.", "6. Servir chaud avec un léger filet de sirop d'érable."], ntr: "Protéines : 12g | Glucides : 35g | Lipides : 6g", tip: "L'avoine diffuse une énergie lente pour toute la matinée." },
+            { t: "Protéine Choco-Noir", m: ["veg", "sucre", "sport"], r: ["1. Mélanger la farine d'épeautre avec de la whey au chocolat.", "2. Ajouter un blanc d'œuf pour une texture très aérienne.", "3. Incorporer des pépites de chocolat noir à 85% de cacao.", "4. Former des petits cercles dans une poêle bien chaude.", "5. Laisser dorer deux minutes de chaque côté avec soin.", "6. Accompagner d'un fromage blanc pour encore plus de protéines."], ntr: "Protéines : 30g | Glucides : 28g | Lipides : 9g", tip: "Le chocolat noir booste la sécrétion d'endorphines." },
+            { t: "Luxe : Vanille & Or", m: ["veg", "sucre", "luxe"], r: ["1. Infuser du lait avec une gousse de vanille de Madagascar.", "2. Préparer la pâte avec une farine de châtaigne raffinée.", "3. Cuire les pancakes très finement pour une élégance rare.", "4. Disposer des tranches de poire pochées sur le dessus.", "5. Ajouter une touche de crème montée légèrement sucrée.", "6. Décorer avec des éclats de noisettes du Piémont grillées."], ntr: "Protéines : 10g | Glucides : 42g | Lipides : 14g", tip: "La châtaigne offre un goût boisé unique et prestigieux." },
+            { t: "Salé : Jambon & Comté", m: ["sale", "prix", "sport"], r: ["1. Réaliser une pâte à pancake sans aucun ajout de sucre.", "2. Couper du jambon blanc et du comté en tout petits dés.", "3. Verser la pâte et parsemer le fromage et le jambon.", "4. Couvrir la poêle pour que le fromage fonde parfaitement.", "5. Retourner délicatement pour griller la face garnie.", "6. Servir avec une poignée de roquette bien assaisonnée."], ntr: "Protéines : 24g | Glucides : 22g | Lipides : 16g", tip: "Le comté apporte du calcium et un goût fruité intense." },
+            { t: "Banane & Noix Éco", m: ["veg", "sucre", "eco", "prix"], r: ["1. Écraser une banane très mûre pour lier la préparation.", "2. Ajouter des noix de Grenoble concassées pour le croquant.", "3. Utiliser du lait local pour une empreinte carbone basse.", "4. Cuire à feu moyen pour ne pas brûler les fruits sucrés.", "5. Empiler les pancakes et saupoudrer de cannelle fine.", "6. Un réveil savoureux qui utilise vos fruits trop mûrs."], ntr: "Protéines : 11g | Glucides : 45g | Lipides : 12g", tip: "La banane mûre remplace parfaitement le sucre ajouté." },
+            { t: "Luxe : Saumon & Aneth", m: ["sale", "luxe", "sport"], r: ["1. Préparer des blinis épais avec une touche de sarasin.", "2. Cuire doucement pour garder un cœur très moelleux.", "3. Tartiner de crème d'Isigny et poser le saumon fumé.", "4. Ajouter quelques perles de citron pour l'acidité.", "5. Décorer avec de l'aneth fraîchement cueillie au jardin.", "6. Un petit-déjeuner de fête riche en bons acides gras."], ntr: "Protéines : 22g | Glucides : 20g | Lipides : 15g", tip: "Le sarasin est naturellement sans gluten et très digeste." },
+            { t: "Citron & Graines Pavot", m: ["veg", "sucre", "luxe", "eco"], r: ["1. Ajouter des zestes de citron bio dans votre pâte fluide.", "2. Verser une pluie de graines de pavot pour le visuel.", "3. Cuire de larges pancakes bien ronds et bien blonds.", "4. Préparer un sirop léger au citron pour le nappage.", "5. Servir avec une cuillère de yaourt grec très onctueux.", "6. Frais et original, ce pancake réveille les papilles."], ntr: "Protéines : 12g | Glucides : 38g | Lipides : 10g", tip: "Le pavot apporte des minéraux et un croquant discret." },
+            { t: "Pommes & Caramel Salé", m: ["veg", "sucre", "prix"], r: ["1. Caraméliser des quartiers de pommes avec du beurre.", "2. Verser la pâte par-dessus les fruits dans la poêle.", "3. Retourner l'ensemble comme une petite tatin minute.", "4. Ajouter une pointe de fleur de sel sur le dessus chaud.", "5. Finir avec un filet de sauce caramel faite maison.", "6. Une variante très gourmande pour les matins de repos."], ntr: "Protéines : 9g | Glucides : 52g | Lipides : 14g", tip: "La fleur de sel rehausse la saveur sucrée des pommes." },
+            { t: "Épinards & Chèvre Sport", m: ["veg", "sale", "sport", "eco"], r: ["1. Mixer des épinards frais avec la pâte pour la colorer.", "2. Cuire ces pancakes verts originaux à la poêle huilée.", "3. Déposer une rondelle de chèvre frais sur chaque face.", "4. Laisser fondre légèrement avant de retirer du feu.", "5. Ajouter quelques pignons de pin pour le croquant fini.", "6. Riche en fer et magnésium pour une forme olympique."], ntr: "Protéines : 18g | Glucides : 24g | Lipides : 15g", tip: "Les épinards mixés passent inaperçus pour les enfants." },
+            { t: "Courge & Épices Éco", m: ["veg", "sucre", "eco", "prix"], r: ["1. Utiliser une purée de potiron pour une pâte orangée.", "2. Ajouter du gingembre et de la muscade en poudre.", "3. Cuire doucement pour que le cœur reste très humide.", "4. Servir avec des graines de courge grillées dessus.", "5. Ajouter un peu de miel de forêt pour la profondeur.", "6. Parfait en automne avec des produits de saison locaux."], ntr: "Protéines : 10g | Glucides : 40g | Lipides : 8g", tip: "La courge est riche en bêta-carotène pour la peau." }
+        ]
+    },
+
+    // ==========================================
+    // MIDI (3 RECETTES x 10 VARIANTES)
+    // ==========================================
+    { 
+        n: "Poulet au Boulghour 🍗", cat: "midi",
+        variantes: [
+            { t: "Curry Indien", m: ["sale", "prix", "eco"], r: ["1. Découper le poulet en cubes réguliers et les saler.", "2. Faire dorer avec du curry fort et des oignons émincés.", "3. Cuire le boulghour à l'eau bouillante durant dix minutes.", "4. Verser un peu de lait de coco pour lier la sauce onctueuse.", "5. Mélanger le tout dans la sauteuse encore bien chaude.", "6. Servir avec de la coriandre fraîche pour le goût final."], ntr: "Protéines : 35g | Glucides : 42g | Lipides : 12g", tip: "Le curry facilite la digestion des protéines animales." },
+            { t: "Citron & Thym Sport", m: ["sale", "sport", "eco"], r: ["1. Mariner le poulet avec du citron frais et du thym bio.", "2. Griller les blancs sans aucun ajout de matière grasse.", "3. Cuire le boulghour al dente pour conserver les fibres.", "4. Ajouter des brocolis cuits à la vapeur à la préparation.", "5. Verser le jus de marinade réduit comme sauce légère.", "6. Un repas de champion idéal pour la masse musculaire."], ntr: "Protéines : 42g | Glucides : 38g | Lipides : 7g", tip: "Le citron aide à l'absorption du fer contenu dans le plat." },
+            { t: "Morilles & Crème Luxe", m: ["sale", "luxe"], r: ["1. Sauter le poulet fermier avec des morilles sauvages.", "2. Déglacer au vin blanc sec et ajouter de la crème épaisse.", "3. Cuire le boulghour dans un bouillon de volaille maison.", "4. Dresser le poulet nappé de sa sauce onctueuse et noble.", "5. Ajouter des lamelles de truffe noire si vous en avez.", "6. Un déjeuner d'exception riche en saveurs forestières."], ntr: "Protéines : 38g | Glucides : 35g | Lipides : 22g", tip: "Les morilles sont d'excellentes sources de vitamine D." },
+            { t: "Abricots & Miel", m: ["sucre", "sale", "eco"], r: ["1. Faire dorer le poulet avec des abricots secs coupés.", "2. Ajouter une cuillère de miel de fleurs et de la cannelle.", "3. Cuire le boulghour avec quelques amandes frites salées.", "4. Mélanger les saveurs sucrées-salées dans le plat chaud.", "5. Ajouter un peu de menthe fraîche pour la note finale.", "6. Une recette orientale riche en fer et en vitamines."], ntr: "Protéines : 34g | Glucides : 55g | Lipides : 10g", tip: "L'abricot sec concentre le potassium pour votre cœur." },
+            { t: "Légumes du Potager", m: ["sale", "eco", "prix"], r: ["1. Utiliser des légumes de saison coupés en petits dés.", "2. Cuire le poulet avec les légumes et le boulghour fin.", "3. Utiliser un seul faitout pour limiter la vaisselle.", "4. Assaisonner avec des herbes du jardin bien séchées.", "5. Verser un filet d'huile de colza locale pour finir.", "6. Un plat zéro déchet, simple et extrêmement efficace."], ntr: "Protéines : 33g | Glucides : 40g | Lipides : 9g", tip: "La cuisson 'One Pot' préserve tous les sels minéraux." },
+            { t: "Ail Noir & Sésame", m: ["sale", "luxe", "sport"], r: ["1. Émincer le poulet et le sauter à l'huile de sésame bio.", "2. Ajouter des gousses d'ail noir pour le goût umami rare.", "3. Incorporer le boulghour et des graines de sésame blanc.", "4. Déglacer avec une sauce soja de très haute qualité.", "5. Servir avec des oignons nouveaux ciselés très finement.", "6. Un plat technique riche en antioxydants précieux."], ntr: "Protéines : 36g | Glucides : 39g | Lipides : 14g", tip: "L'ail noir contient deux fois plus d'antioxydants que le blanc." },
+            { t: "Moutarde & Épinards", m: ["sale", "prix", "sport"], r: ["1. Napper le poulet de moutarde forte et griller au four.", "2. Faire tomber les épinards avec le boulghour en fin.", "3. Ajouter une touche de fromage frais léger pour le liant.", "4. Mélanger pour obtenir une texture crémeuse et chaude.", "5. Poivrer vigoureusement pour relever le goût de moutarde.", "6. Repas rapide, équilibré et parfait pour le déjeuner."], ntr: "Protéines : 35g | Glucides : 35g | Lipides : 11g", tip: "La moutarde stimule les sucs gastriques pour digérer." },
+            { t: "Ananas & Soja Sucre", m: ["sucre", "sale", "prix"], r: ["1. Sauter le poulet avec des dés d'ananas frais juteux.", "2. Ajouter du boulghour cuit et de la sauce soja salée.", "3. Sucrer avec le jus d'ananas naturellement sans ajout.", "4. Ajouter des poivrons rouges pour une couleur vive.", "5. Cuire à feu vif pour caraméliser les fruits du plat.", "6. Un classique asiatique revisité avec du boulghour."], ntr: "Protéines : 32g | Glucides : 48g | Lipides : 8g", tip: "La bromélaïne de l'ananas aide à digérer les protéines." },
+            { t: "Pesto & Pignons Luxe", m: ["sale", "luxe", "eco"], r: ["1. Cuire le poulet à la vapeur pour garder la tendreté.", "2. Mélanger le boulghour avec un pesto de basilic frais.", "3. Ajouter des pignons de pin torréfiés sur le plat fini.", "4. Saupoudrer de parmesan vieux et d'un filet d'huile.", "5. Servir avec quelques tomates cerises coupées en deux.", "6. Un plat aux saveurs d'été, riche en excellents lipides."], ntr: "Protéines : 36g | Glucides : 37g | Lipides : 18g", tip: "Le basilic est une herbe calmante pour votre système." },
+            { t: "Paprika & Olives Éco", m: ["sale", "prix", "eco"], r: ["1. Saupoudrer le poulet de paprika fumé de qualité bio.", "2. Mijoter avec des olives vertes et du boulghour blanc.", "3. Ajouter un peu de concentré de tomate pour le jus fini.", "4. Finir la cuisson à couvert durant environ cinq minutes.", "5. Servir avec une tranche de citron pour le peps acide.", "6. Un repas méditerranéen savoureux et très économique."], ntr: "Protéines : 33g | Glucides : 41g | Lipides : 12g", tip: "Le paprika est très riche en vitamine C protectrice." }
+        ]
+    },
+    { 
+        n: "Dahl de Lentilles 🍲", cat: "midi",
+        variantes: [
+            { t: "Corail & Curcuma", m: ["veg", "sale", "prix", "eco"], r: ["1. Rincer les lentilles corail sous l'eau claire et froide.", "2. Faire revenir des oignons avec une dose de curcuma pur.", "3. Ajouter les lentilles et couvrir avec de l'eau filtrée.", "4. Laisser mijoter jusqu'à l'obtention d'une purée épaisse.", "5. Verser un filet de lait de coco pour l'onctuosité finale.", "6. Servir bien chaud avec des feuilles de coriandre fraîche."], ntr: "Protéines : 18g | Glucides : 45g | Lipides : 9g", tip: "Le curcuma est un puissant anti-inflammatoire naturel." },
+            { t: "Sport : Tofu Fumé", m: ["veg", "sale", "sport", "prix"], r: ["1. Découper du tofu fumé en dés et le griller à la poêle.", "2. Préparer le dahl avec des lentilles et beaucoup d'ail.", "3. Incorporer le tofu croquant au mélange fondant de dahl.", "4. Ajouter des épinards frais en toute fin de cuisson lente.", "5. Assaisonner avec du cumin pour faciliter la digestion.", "6. Un plat riche en protéines végétales pour le muscle."], ntr: "Protéines : 28g | Glucides : 42g | Lipides : 11g", tip: "Le tofu fumé apporte une saveur boisée sans viande." },
+            { t: "Luxe : Noix de Cajou", m: ["veg", "sale", "luxe", "eco"], r: ["1. Torréfier des noix de cajou entières au four doux.", "2. Cuisiner les lentilles avec du gingembre frais râpé.", "3. Ajouter des grains de cardamome pour un parfum subtil.", "4. Dresser le dahl dans un bol et parsemer les cajous.", "5. Verser un filet d'huile de noisette sur la préparation.", "6. Un plat raffiné, crémeux et extrêmement nutritif."], ntr: "Protéines : 20g | Glucides : 44g | Lipides : 18g", tip: "La cajou apporte du magnésium contre la fatigue." },
+            { t: "Sucré : Patate Douce", m: ["veg", "sucre", "eco", "prix"], r: ["1. Couper une patate douce en cubes et les faire bouillir.", "2. Mélanger la patate fondante aux lentilles en cuisson.", "3. Ajouter une pincée de cannelle et de la muscade fine.", "4. Verser un peu de sirop d'agave pour souligner le sucre.", "5. Mixer légèrement pour une texture veloutée et douce.", "6. Un dahl réconfortant, riche en bêta-carotène naturel."], ntr: "Protéines : 16g | Glucides : 55g | Lipides : 7g", tip: "La patate douce a un index glycémique bas et stable." },
+            { t: "Éco : Carottes Locales", m: ["veg", "sale", "eco", "prix"], r: ["1. Râper des carottes du marché et les faire revenir.", "2. Ajouter les lentilles blondes et un bouillon de légumes.", "3. Cuire à feu doux jusqu'à ce que les carottes fondent.", "4. Ajouter du persil du jardin haché au dernier moment.", "5. Utiliser uniquement des produits locaux et de saison.", "6. Un plat durable, très économique et plein de goût."], ntr: "Protéines : 17g | Glucides : 48g | Lipides : 6g", tip: "Les carottes cuites libèrent plus d'antioxydants." },
+            { t: "Luxe : Lait de Coco Bio", m: ["veg", "sale", "luxe"], r: ["1. Utiliser un lait de coco très riche en extraits gras.", "2. Infuser des bâtons de citronnelle dans les lentilles.", "3. Filtrer et mélanger le lait de coco à la préparation.", "4. Ajouter des morceaux de mangue verte pour l'acidité.", "5. Servir dans une noix de coco vide pour le visuel.", "6. Une expérience gastronomique végétale et exotique."], ntr: "Protéines : 18g | Glucides : 38g | Lipides : 22g", tip: "La citronnelle aide à purifier le système digestif." },
+            { t: "Sport : Pois Chiches", m: ["veg", "sale", "sport", "prix"], r: ["1. Mélanger lentilles et pois chiches pour les acides.", "2. Cuire avec du piment rouge pour booster le tonus.", "3. Ajouter du quinoa cuit pour un profil complet en acides.", "4. Verser un jus de citron vert pour fixer le fer végétal.", "5. Saupoudrer de graines de chanvre hautement protéinées.", "6. Le combo gagnant pour les sportifs végétariens."], ntr: "Protéines : 32g | Glucides : 50g | Lipides : 10g", tip: "L'association légumineuse/céréale offre des protéines complètes." },
+            { t: "Tomates & Basilic Sucre", m: ["veg", "sucre", "sale", "prix"], r: ["1. Utiliser des tomates très mûres réduites en compotée.", "2. Cuire les lentilles dans ce jus de tomate sucré naturel.", "3. Ajouter du basilic frais ciselé en grande quantité.", "4. Verser une goutte de vinaigre balsamique de Modène.", "5. Servir tiède avec des petits croûtons de pain aillés.", "6. Une variante italienne du dahl, fraîche et sucrée."], ntr: "Protéines : 18g | Glucides : 42g | Lipides : 8g", tip: "Le lycopène de la tomate est mieux absorbé cuit." },
+            { t: "Éco : Restes de Légumes", m: ["veg", "sale", "eco", "prix"], r: ["1. Récupérer tous vos bouts de légumes oubliés au frais.", "2. Les mixer grossièrement et les ajouter aux lentilles.", "3. Cuire le tout avec un cube de bouillon bio déshydraté.", "4. Assaisonner avec du poivre noir et du gros sel marin.", "5. Finir avec un reste de yaourt pour le côté crémeux.", "6. La recette parfaite pour vider le frigo sans gâcher."], ntr: "Protéines : 16g | Glucides : 40g | Lipides : 7g", tip: "Le dahl est la base idéale pour recycler les légumes." },
+            { t: "Citronnelle & Gingembre", m: ["veg", "sale", "luxe", "sport"], r: ["1. Râper une racine de gingembre frais dans la marmite.", "2. Ajouter de la citronnelle ciselée très finement.", "3. Cuire les lentilles avec une touche de sauce tamari.", "4. Verser un filet d'huile de sésame grillé à la fin.", "5. Ajouter des pousses de bambou pour le croquant frais.", "6. Un dahl tonique, parfait pour repartir après le midi."], ntr: "Protéines : 19g | Glucides : 44g | Lipides : 10g", tip: "Le gingembre stimule la circulation et l'immunité." }
+        ]
+    },
+    { 
+        n: "Pasta Al Dente 🍝", cat: "midi",
+        variantes: [
+            { t: "Bolognaise Végé", m: ["veg", "sale", "prix", "eco"], r: ["1. Faire revenir des protéines de soja avec de l'oignon.", "2. Ajouter une sauce tomate maison et du thym frais.", "3. Cuire les pâtes complètes dans une eau bien salée.", "4. Mélanger les pâtes à la sauce pour qu'elles s'imbibent.", "5. Saupoudrer de levure maltée pour le goût fromager.", "6. Servir chaud avec quelques feuilles de basilic frais."], ntr: "Protéines : 24g | Glucides : 55g | Lipides : 8g", tip: "Les pâtes complètes évitent le coup de barre de 14h." },
+            { t: "Thon & Citron Sport", m: ["sale", "sport", "prix"], r: ["1. Égoutter une boîte de thon au naturel de qualité.", "2. Mélanger avec du jus de citron et des câpres acides.", "3. Cuire les pâtes al dente pour un index glycémique bas.", "4. Verser un filet d'huile d'olive sur les pâtes chaudes.", "5. Ajouter le thon et mélanger énergiquement à la fourchette.", "6. Un repas express, riche en protéines et très digeste."], ntr: "Protéines : 32g | Glucides : 50g | Lipides : 10g", tip: "Le thon est une source de protéines maigres idéale." },
+            { t: "Luxe : Homard & Safran", m: ["sale", "luxe"], r: ["1. Faire infuser des filaments de safran dans de la crème.", "2. Sauter des morceaux de homard au beurre demi-sel.", "3. Cuire des linguines fraîches dans une eau parfumée.", "4. Lier les pâtes avec la crème safranée bien onctueuse.", "5. Déposer le homard sur le dessus avec délicatesse.", "6. Un plat de fête luxueux aux arômes envoûtants."], ntr: "Protéines : 28g | Glucides : 48g | Lipides : 18g", tip: "Le safran est l'épice la plus riche en antioxydants." },
+            { t: "Courgettes & Menthe Éco", m: ["veg", "sale", "eco", "prix"], r: ["1. Tailler les courgettes en rubans avec un économe.", "2. Faire revenir brièvement avec de l'ail et de l'huile.", "3. Cuire les pâtes et garder un peu d'eau de cuisson.", "4. Mélanger le tout avec des feuilles de menthe fraîche.", "5. Ajouter un filet de jus de citron pour la fraîcheur.", "6. Simple, local et très rafraîchissant pour l'été."], ntr: "Protéines : 12g | Glucides : 52g | Lipides : 9g", tip: "L'eau de cuisson des pâtes aide à lier les sauces." },
+            { t: "Pesto Maison & Noix", m: ["veg", "sale", "luxe", "eco"], r: ["1. Mixer du basilic, de l'ail et des noix de Grenoble.", "2. Ajouter de l'huile d'olive jusqu'à obtenir une pâte.", "3. Cuire les pâtes et les napper de ce pesto frais.", "4. Ajouter des cerneaux de noix entiers pour le croquant.", "5. Râper un peu de pecorino romano sur le plat fini.", "6. Un délice italien riche en bons acides gras."], ntr: "Protéines : 15g | Glucides : 50g | Lipides : 22g", tip: "Les noix remplacent les pignons pour un côté local." },
+            { t: "Poulet & Crème Sport", m: ["sale", "sport", "luxe"], r: ["1. Griller des lamelles de poulet avec du poivre noir.", "2. Préparer une sauce légère au fromage blanc et ail.", "3. Cuire les pâtes et ajouter le poulet bien doré.", "4. Verser la sauce et parsemer de persil plat haché.", "5. Ajouter quelques champignons de Paris frais émincés.", "6. Un plat complet pour la récupération après l'effort."], ntr: "Protéines : 38g | Glucides : 52g | Lipides : 12g", tip: "Le fromage blanc remplace la crème pour moins de gras." },
+            { t: "Arabiata Pimentée", m: ["veg", "sale", "prix", "eco"], r: ["1. Faire revenir beaucoup d'ail et de piment oiseau.", "2. Ajouter de la pulpe de tomate et laisser réduire.", "3. Cuire les penne al dente dans une eau très salée.", "4. Sauter les pâtes dans la sauce piquante une minute.", "5. Finir avec un filet d'huile d'olive extra vierge.", "6. Un classique qui booste le métabolisme de base."], ntr: "Protéines : 13g | Glucides : 58g | Lipides : 9g", tip: "La capsaïcine du piment aide à brûler des calories." },
+            { t: "Saumon & Aneth Luxe", m: ["sale", "luxe", "sport"], r: ["1. Couper le saumon frais en gros dés réguliers.", "2. Les poêler rapidement pour garder un cœur nacré.", "3. Mélanger aux pâtes avec une touche de crème liquide.", "4. Ajouter beaucoup d'aneth ciselée pour le parfum.", "5. Finir avec quelques œufs de saumon pour le luxe.", "6. Riche en protéines et en oméga-3 de haute qualité."], ntr: "Protéines : 30g | Glucides : 48g | Lipides : 16g", tip: "Le saumon ne doit pas être surcuit pour rester tendre." },
+            { t: "Légumes Grillés Éco", m: ["veg", "sale", "eco", "prix"], r: ["1. Griller au four des poivrons, aubergines et oignons.", "2. Mixer une partie des légumes pour faire une crème.", "3. Cuire les pâtes et mélanger avec la crème de légumes.", "4. Ajouter les morceaux de légumes restants sur le dessus.", "5. Parsemer d'origan séché pour le goût ensoleillé.", "6. Une assiette colorée qui utilise les légumes du jardin."], ntr: "Protéines : 12g | Glucides : 55g | Lipides : 8g", tip: "Griller les légumes concentre leurs sucres naturels." },
+            { t: "Crevettes & Ail Luxe", m: ["sale", "luxe", "sport"], r: ["1. Sauter des crevettes royales avec de l'ail et du persil.", "2. Déglacer au jus de citron jaune et vin blanc sec.", "3. Cuire des spaghetti et les jeter dans la poêle.", "4. Bien enrober les pâtes du jus de cuisson parfumé.", "5. Ajouter une pincée de piment d'Espelette doux.", "6. Un plat iodé, léger et très élégant pour le midi."], ntr: "Protéines : 26g | Glucides : 50g | Lipides : 11g", tip: "Les crevettes sont très peu caloriques et protéinées." }
+        ]
+    },
+
+    // ==========================================
+    // SOIR (3 RECETTES x 10 VARIANTES)
+    // ==========================================
+    { 
+        n: "Poisson & Quinoa 🐟", cat: "soir",
+        variantes: [
+            { t: "Cabillaud Vapeur Éco", m: ["sale", "eco", "prix"], r: ["1. Cuire le dos de cabillaud à la vapeur douce six minutes.", "2. Rincer le quinoa et le cuire dans deux fois son volume.", "3. Tailler des courgettes en rubans et les cuire avec le poisson.", "4. Disposer le quinoa au fond de l'assiette creuse et chaude.", "5. Poser le poisson délicatement et verser un filet de colza.", "6. Saler légèrement et poivrer avec un moulin à cinq baies."], ntr: "Protéines : 30g | Glucides : 35g | Lipides : 8g", tip: "Le cabillaud est le poisson le plus digeste pour le soir." },
+            { t: "Saumon Sport & Asperges", m: ["sale", "sport", "luxe"], r: ["1. Saisir le pavé de saumon côté peau pour qu'il croustille.", "2. Cuire le quinoa rouge al dente avec un peu de sel fin.", "3. Faire rôtir des asperges vertes à la poêle sans gras.", "4. Dresser le saumon sur le lit de quinoa rouge bien chaud.", "5. Ajouter des baies roses pour parfumer sans agresser.", "6. Idéal pour une récupération musculaire nocturne optimale."], ntr: "Protéines : 35g | Glucides : 30g | Lipides : 18g", tip: "Les protéines le soir aident à la réparation des tissus." },
+            { t: "Quinoa Sucré Mangue", m: ["sucre", "sale", "luxe"], r: ["1. Pocher le poisson blanc dans un lait de coco parfumé.", "2. Mélanger le quinoa cuit avec des dés de mangue fraîche.", "3. Ajouter quelques zestes de citron vert pour l'exotisme.", "4. Dresser le poisson sur le mélange quinoa et fruits mûrs.", "5. Verser un trait de jus de mangue réduit sur l'ensemble.", "6. Un dîner léger aux saveurs sucrées-salées très fines."], ntr: "Protéines : 28g | Glucides : 45g | Lipides : 10g", tip: "La mangue apporte de la vitamine A pour la vision." },
+            { t: "Sardines Éco & Tomates", m: ["sale", "prix", "eco"], r: ["1. Utiliser des sardines à l'huile d'olive en boîte bio.", "2. Cuire le quinoa blanc avec des dés de tomates fraîches.", "3. Ajouter un oignon rouge émincé pour le croquant vif.", "4. Écraser grossièrement les sardines sur le quinoa tiède.", "5. Verser l'huile parfumée de la boîte sur la préparation.", "6. Un repas de placard, riche en calcium et très rapide."], ntr: "Protéines : 25g | Glucides : 32g | Lipides : 14g", tip: "Les sardines sont riches en calcium grâce à leurs arêtes." },
+            { t: "Bar de Ligne & Aneth Luxe", m: ["sale", "luxe", "eco"], r: ["1. Griller le filet de bar sur la peau avec précaution.", "2. Cuire le quinoa avec un bouillon de légumes maison.", "3. Préparer une sauce vierge à l'aneth et huile d'olive.", "4. Dresser le bar sur le quinoa et napper de sauce verte.", "5. Ajouter quelques fleurs de sel sur la chair du poisson.", "6. Un dîner gastronomique, léger et respectueux de la mer."], ntr: "Protéines : 32g | Glucides : 28g | Lipides : 12g", tip: "Le bar est un poisson noble à la chair très fine." },
+            { t: "Pomme & Noix Sport", m: ["sucre", "sale", "sport", "prix"], r: ["1. Cuire le poisson blanc à la vapeur avec des herbes.", "2. Mélanger le quinoa avec des quartiers de pomme verte.", "3. Ajouter des noix concassées pour le magnésium du soir.", "4. Verser un filet de vinaigre de cidre pour le tonus.", "5. Dresser l'ensemble de façon harmonieuse dans l'assiette.", "6. Un plat équilibré qui favorise l'endormissement calme."], ntr: "Protéines : 29g | Glucides : 40g | Lipides : 9g", tip: "La pomme verte apporte une acidité qui aide à digérer." },
+            { t: "Pesto & Haricots Sport", m: ["sale", "luxe", "sport"], r: ["1. Mixer un pesto maison avec basilic et pignons de pin.", "2. Cuire le quinoa et des haricots verts extra-fins vapeur.", "3. Mélanger les légumes au quinoa avec le pesto onctueux.", "4. Déposer le poisson vapeur par-dessus la garniture verte.", "5. Ajouter un tour de moulin à poivre noir de Sarawak.", "6. Riche en magnésium et protéines pour le repos sportif."], ntr: "Protéines : 31g | Glucides : 30g | Lipides : 15g", tip: "Le magnésium du basilic aide à la relaxation nocturne." },
+            { t: "Bowl Soir Éco & Carottes", m: ["sale", "eco", "prix"], r: ["1. Utiliser vos restes de poisson cuit de la veille midi.", "2. Râper des carottes locales et les mélanger au quinoa.", "3. Préparer une sauce au yaourt grec et fines herbes bio.", "4. Disposer le quinoa, les carottes et le poisson en bowl.", "5. Ajouter une poignée de graines de tournesol dessus.", "6. Une solution anti-gaspi savoureuse et très économique."], ntr: "Protéines : 24g | Glucides : 38g | Lipides : 7g", tip: "Le yaourt grec apporte une texture crémeuse sans gras." },
+            { t: "Miel & Soja Sucre", m: ["sucre", "sale", "prix"], r: ["1. Laisser mariner le poisson dans du soja et du miel.", "2. Cuire le quinoa et y ajouter des graines de sésame.", "3. Poêler rapidement le poisson pour caraméliser le miel.", "4. Dresser sur le lit de quinoa parfumé au sésame noir.", "5. Verser le reste de marinade chaude sur l'ensemble.", "6. Une recette asiatique douce, parfaite pour finir la journée."], ntr: "Protéines : 28g | Glucides : 42g | Lipides : 9g", tip: "Le miel facilite l'absorption du tryptophane pour dormir." },
+            { t: "Agrumes & Olive Luxe", m: ["sale", "luxe", "eco"], r: ["1. Lever les suprêmes d'une orange et d'un pamplemousse.", "2. Cuire le quinoa et y incorporer les quartiers de fruits.", "3. Griller le poisson et le disposer sur le quinoa fruité.", "4. Verser un filet d'huile d'olive de première pression bio.", "5. Ajouter quelques feuilles de menthe pour la fraîcheur.", "6. Un plat frais, riche en vitamines et très digeste."], ntr: "Protéines : 30g | Glucides : 33g | Lipides : 11g", tip: "Les agrumes apportent une touche de vitalité au dîner." }
+        ]
+    },
+    { 
+        n: "Salade de Tofu 🥗", cat: "soir",
+        variantes: [
+            { t: "Tofu Fumé & Lentilles", m: ["veg", "sale", "sport", "prix", "eco"], r: ["1. Couper le tofu fumé en dés et le griller à la poêle.", "2. Mélanger avec des lentilles vertes cuites al dente.", "3. Ajouter des noix concassées pour un apport en lipides.", "4. Verser une sauce soja allégée pour le sel et le goût.", "5. Incorporer de la mâche fraîche pour la base de salade.", "6. Un dîner complet, riche en fer et très rassasiant."], ntr: "Protéines : 28g | Glucides : 20g | Lipides : 12g", tip: "Les lentilles et le tofu forment un duo protéiné parfait." },
+            { t: "Teriyaki & Avocat Luxe", m: ["veg", "sale", "luxe"], r: ["1. Presser le tofu pour enlever l'eau et le dorer fort.", "2. Napper de sauce Teriyaki maison et laisser laquer.", "3. Couper un avocat mûr en lamelles et le disposer ainsi.", "4. Ajouter des graines de courge pour le côté croquant.", "5. Servir sur un lit de pousses d'épinards bien fraîches.", "6. Un plat zen, riche en saveurs umami et très onctueux."], ntr: "Protéines : 22g | Glucides : 25g | Lipides : 18g", tip: "L'avocat aide à absorber les nutriments du tofu." },
+            { t: "Ananas & Poivrons Sucre", m: ["veg", "sucre", "eco", "prix"], r: ["1. Faire dorer le tofu avec des dés d'ananas bien frais.", "2. Ajouter des poivrons rouges pour la couleur et la douceur.", "3. Cuire un peu de riz complet froid pour la base salade.", "4. Mélanger le tout avec une vinaigrette au jus d'ananas.", "5. Saupoudrer de coriandre ciselée au dernier moment.", "6. Favorise un sommeil profond grâce aux sucres lents."], ntr: "Protéines : 20g | Glucides : 45g | Lipides : 7g", tip: "L'ananas aide à la décomposition des protéines du tofu." },
+            { t: "Herbes de Provence Éco", m: ["veg", "sale", "eco", "prix"], r: ["1. Mariner le tofu nature avec des herbes de Provence.", "2. Le griller simplement sans trop de matière grasse.", "3. Préparer une grande salade verte avec une vinaigrette.", "4. Ajouter des croûtons de pain rassis frottés à l'ail.", "5. Disposer le tofu chaud sur la salade bien croquante.", "6. Un repas minimaliste, écologique et très économique."], ntr: "Protéines : 21g | Glucides : 10g | Lipides : 9g", tip: "L'ail est un excellent antiseptique pour le système." },
+            { t: "Quinoa & Citron Sport", m: ["veg", "sale", "sport", "eco"], r: ["1. Mélanger le quinoa cuit avec le tofu ferme en dés.", "2. Ajouter des pois chiches pour augmenter les protéines.", "3. Verser beaucoup de jus de citron pour la vitamine C.", "4. Incorporer du persil plat pour le fer et le goût frais.", "5. Dresser dans un grand bol pour une portion généreuse.", "6. Idéal pour recharger les stocks de glycogène le soir."], ntr: "Protéines : 29g | Glucides : 35g | Lipides : 8g", tip: "Le citron permet de fixer le fer présent dans le quinoa." },
+            { t: "Miso & Algues Luxe", m: ["veg", "sale", "luxe", "eco"], r: ["1. Préparer une sauce à base de pâte miso blanche bio.", "2. Utiliser du tofu soyeux coupé en cubes délicats.", "3. Réhydrater des algues wakamé pour la base marine.", "4. Ajouter des champignons shiitake sautés rapidement.", "5. Verser la sauce miso sur l'ensemble de la salade tiède.", "6. Un dîner probiotique, sain et très raffiné."], ntr: "Protéines : 24g | Glucides : 15g | Lipides : 6g", tip: "Le miso est excellent pour l'équilibre de la flore." },
+            { t: "Pomme & Noisettes Sucre", m: ["veg", "sucre", "sale", "prix"], r: ["1. Couper des pommes en fines lamelles avec la peau.", "2. Émietter le tofu et le poêler avec un peu de miel.", "3. Ajouter des noisettes entières pour le croquant fini.", "4. Mélanger à une salade de jeunes pousses variées.", "5. Verser un filet de vinaigre balsamique de qualité.", "6. Un mélange doux qui apporte du magnésium relaxant."], ntr: "Protéines : 19g | Glucides : 30g | Lipides : 13g", tip: "Les noisettes sont riches en vitamine E protectrice." },
+            { t: "Sésame & Carottes Éco", m: ["veg", "sale", "eco", "prix"], r: ["1. Râper des carottes et les mélanger au tofu émietté.", "2. Ajouter des graines de sésame grillées pour le goût.", "3. Utiliser une huile de sésame pour l'assaisonnement.", "4. Incorporer des oignons nouveaux ciselés très fins.", "5. Servir frais avec une tranche de pain complet bio.", "6. Riche en bêta-carotène et vitamine E pour la peau."], ntr: "Protéines : 22g | Glucides : 18g | Lipides : 15g", tip: "Le sésame est une source de calcium végétal majeure." },
+            { t: "Style Grec & Olives", m: ["veg", "sale", "prix"], r: ["1. Utiliser du tofu mariné façon féta avec du thym.", "2. Ajouter du concombre, des tomates et des olives noires.", "3. Mélanger avec une huile d'olive extra vierge de Grèce.", "4. Saupoudrer d'origan séché pour le parfum du sud.", "5. Servir avec des quartiers de citron pour l'acidité.", "6. Une version végétale de la salade grecque classique."], ntr: "Protéines : 20g | Glucides : 12g | Lipides : 14g", tip: "Le concombre apporte une hydratation nécessaire le soir." },
+            { t: "Truffe & Pignons Luxe", m: ["veg", "sale", "luxe", "sport"], r: ["1. Utiliser une huile de truffe noire pour le tofu sauté.", "2. Ajouter des pignons de pin torréfiés à sec à la poêle.", "3. Disposer sur un lit d'épinards frais et de roquette.", "4. Râper quelques copeaux de parmesan végétal dessus.", "5. Saler à la fleur de sel pour une finition parfaite.", "6. Un dîner d'exception, luxueux et très riche en goût."], ntr: "Protéines : 25g | Glucides : 10g | Lipides : 20g", tip: "La truffe sublime le goût neutre du tofu nature." }
+        ]
+    },
+    { 
+        n: "Soupe Veloutée 🥣", cat: "soir",
+        variantes: [
+            { t: "Potiron & Châtaigne Éco", m: ["veg", "sucre", "eco", "prix"], r: ["1. Cuire le potiron avec des oignons dans un grand bouillon.", "2. Ajouter des châtaignes cuites pour l'onctuosité finale.", "3. Mixer longuement pour obtenir un velouté sans morceaux.", "4. Verser une touche de crème de soja pour la douceur.", "5. Saupoudrer de muscade râpée pour le parfum d'hiver.", "6. Servir bien chaud avec des croûtons de pain complet."], ntr: "Protéines : 8g | Glucides : 42g | Lipides : 6g", tip: "La châtaigne donne une texture crémeuse sans lait." },
+            { t: "Lentilles & Bacon Sport", m: ["sale", "sport", "prix"], r: ["1. Cuire des lentilles corail avec beaucoup de carottes.", "2. Mixer le tout pour une texture épaisse et protéinée.", "3. Faire griller des fines lanières de bacon croustillant.", "4. Déposer le bacon sur la soupe au moment de servir.", "5. Ajouter une cuillère de fromage blanc pour le liant.", "6. Un dîner reconstructeur après une séance de sport."], ntr: "Protéines : 26g | Glucides : 38g | Lipides : 9g", tip: "Les lentilles corail cuisent très vite sans trempage." },
+            { t: "Luxe : Asperges & Truffe", m: ["veg", "sale", "luxe"], r: ["1. Cuire les pointes d'asperges blanches à la vapeur.", "2. Mixer les tiges avec une pomme de terre fondante.", "3. Ajouter un filet d'huile de truffe noire de qualité.", "4. Disposer les pointes entières sur le velouté blanc.", "5. Décorer avec quelques feuilles de cerfeuil frais.", "6. Un raffinement absolu pour un dîner léger et chic."], ntr: "Protéines : 10g | Glucides : 22g | Lipides : 12g", tip: "L'asperge blanche est plus douce que la verte." },
+            { t: "Tomate & Basilic Éco", m: ["veg", "sucre", "eco", "prix"], r: ["1. Utiliser des tomates bien rouges et mûres du jardin.", "2. Les cuire avec de l'ail et un peu de sucre roux.", "3. Mixer finement et passer au chinois pour la peau.", "4. Ajouter beaucoup de basilic frais mixé à l'huile.", "5. Servir avec une lichette de crème fraîche épaisse.", "6. Un classique indémodable qui plaît à tout le monde."], ntr: "Protéines : 6g | Glucides : 28g | Lipides : 7g", tip: "Le sucre équilibre l'acidité naturelle de la tomate." },
+            { t: "Courgettes & Vache-Qui-Rit", m: ["veg", "sale", "prix"], r: ["1. Cuire les courgettes avec leur peau pour les vitamines.", "2. Ajouter deux portions de fromage fondu avant de mixer.", "3. Mixer à haute vitesse pour une mousse très légère.", "4. Ajouter un peu de poivre blanc pour relever le goût.", "5. Servir tiède pour une digestion facilitée le soir.", "6. Le fromage apporte du crémeux et un goût d'enfance."], ntr: "Protéines : 9g | Glucides : 15g | Lipides : 11g", tip: "La courgette est le légume le plus léger pour le soir." },
+            { t: "Pois Cassés & Jambon", m: ["sale", "sport", "eco"], r: ["1. Faire mijoter les pois cassés durant une heure entière.", "2. Mixer pour obtenir une purée fluide et très verte.", "3. Ajouter des dés de jambon supérieur sur le dessus.", "4. Verser un filet d'huile de noix pour les oméga-3.", "5. Saler au sel de céleri pour une touche originale.", "6. Très riche en protéines végétales et fibres douces."], ntr: "Protéines : 24g | Glucides : 35g | Lipides : 8g", tip: "Les pois cassés sont excellents pour la satiété." },
+            { t: "Luxe : Champignons & Or", m: ["veg", "sale", "luxe", "eco"], r: ["1. Sauter des cèpes et des bolets avec une échalote.", "2. Mixer avec un bouillon de volaille très concentré.", "3. Ajouter une touche de crème double pour le soyeux.", "4. Décorer avec des éclats de noisettes torréfiées.", "5. Ajouter une goutte de cognac pour la profondeur.", "6. Un velouté boisé digne des plus grandes tables."], ntr: "Protéines : 12g | Glucides : 18g | Lipides : 15g", tip: "Le cèpe apporte une saveur de noisette incomparable." },
+            { t: "Carottes & Gingembre Sucre", m: ["veg", "sucre", "eco", "prix"], r: ["1. Cuire les carottes avec une racine de gingembre.", "2. Mixer le tout avec un jus d'orange pressée frais.", "3. Ajouter une pincée de curcuma pour la couleur vive.", "4. Servir avec une feuille de menthe pour la fraîcheur.", "5. Un velouté tonique qui booste les défenses du corps.", "6. La saveur sucrée de la carotte est ici sublimée."], ntr: "Protéines : 5g | Glucides : 32g | Lipides : 4g", tip: "Le gingembre réchauffe le corps pendant l'hiver." },
+            { t: "Brocolis & Amandes Sport", m: ["veg", "sale", "sport", "luxe"], r: ["1. Cuire les têtes de brocolis à la vapeur vive cinq min.", "2. Mixer avec une purée d'amandes blanches pour le liant.", "3. Ajouter des éclats d'amandes grillées pour le croquant.", "4. Assaisonner avec de la levure maltée pour le goût.", "5. Un apport massif en vitamines et minéraux du soir.", "6. Idéal pour les sportifs cherchant de la légèreté."], ntr: "Protéines : 15g | Glucides : 18g | Lipides : 12g", tip: "L'amande remplace le beurre pour des graisses saines." },
+            { t: "Poireaux & Pomme de Terre", m: ["veg", "sale", "eco", "prix"], r: ["1. Faire revenir les blancs de poireaux avec du beurre.", "2. Ajouter des pommes de terre et couvrir d'eau salée.", "3. Mixer finement pour une soupe onctueuse et liée.", "4. Finir avec un peu de ciboulette ciselée sur le bol.", "5. Servir avec une tartine de pain beurrée à côté.", "6. La soupe traditionnelle française par excellence."], ntr: "Protéines : 7g | Glucides : 35g | Lipides : 9g", tip: "Le poireau est un excellent diurétique naturel." }
+        ]
+    }
+];
+
+function genererMenu() {
+    const age = parseInt(document.getElementById('age').value);
+    const res = document.getElementById('resultat');
+    // ON RÉCUPÈRE LA DURÉE (Semaine, Mois...)
+    const duree = parseInt(document.getElementById('duree-programme').value) || 1;
+    const selectedModes = Array.from(document.querySelectorAll('.filter-mode:checked')).map(cb => cb.value);
+    
+    if (!age) { alert("Veuillez entrer votre âge !"); return; }
+
+    // On affiche le loader (si tu as l'élément dans ton HTML)
+    const loader = document.getElementById('loader-overlay');
+    if(loader) loader.style.display = 'flex';
+
+    setTimeout(() => {
+        // --- PALIER 1 : Nourrissons ---
+        if (age >= 1 && age <= 2) {
+            res.innerHTML = `<div class="error-msg">👶 À 1 ou 2 ans, l'alimentation est gérée par le pédiatre.</div>`;
+            if(loader) loader.style.display = 'none';
+            return;
+        }
+
+        let htmlGlobal = "";
+        const moments = ['matin', 'midi', 'soir'];
+
+        // --- LA BOUCLE DE DURÉE (Semaine, Mois, An) ---
+        for (let jour = 1; jour <= duree; jour++) {
+            let htmlJour = "";
+            
+            // On ajoute le titre du jour si plus de 1 jour sélectionné
+            if (duree > 1) {
+                htmlJour += `<h2 style="width:100%; text-align:center; color:var(--primary); margin-top:40px; border-top: 2px solid #ccc; padding-top:20px;">JOUR ${jour}</h2>`;
+            }
+
+// --- PALIER 2 : Enfants (3 à 6 ans) ---
+if (age >= 3 && age <= 6) {
+    moments.forEach(m => {
+        // On filtre par moment ET par âge minimum
+        let options = db_kids.filter(r => r.cat === m && age >= r.ageMin);
+        
+        if (options.length > 0) {
+            const choice = options[Math.floor(Math.random() * options.length)];
+            
+            // --- CORRECTION DYNAMIQUE DU CONSEIL ---
+            let conseilAdapte = choice.tip;
+            if (age >= 4 && conseilAdapte.toLowerCase().includes("lait de croissance")) {
+                conseilAdapte = "Privilégiez des portions adaptées à son activité et encouragez l'autonomie à table.";
+            }
+            if (age >= 5 && conseilAdapte.toLowerCase().includes("purée")) {
+                conseilAdapte = "L'enfant peut maintenant manger presque comme un adulte, mais en quantités réduites.";
+            }
+
+            // On crée une copie de l'objet pour ne pas modifier la DB originale
+            const choiceAdapte = { ...choice, tip: conseilAdapte };
+            
+            htmlJour += buildCardHTML(m, choiceAdapte, true, age, options);
+        }
+    });
+}
+            // --- PALIER 3 : Adultes (7 ans et plus) ---
+            else {
+                let possible = true;
+                moments.forEach(m => {
+                    let options = [];
+                    db.forEach(recette => {
+                        if(recette.cat === m) {
+                            recette.variantes.forEach(v => {
+                                const match = selectedModes.every(mode => v.m.includes(mode));
+                                if(match) options.push({ nomRecette: recette.n, ...v });
+                            });
+                        }
+                    });
+
+                    if (options.length > 0) {
+                        const choice = options[Math.floor(Math.random() * options.length)];
+                        const optionsJSON = JSON.stringify(options).replace(/"/g, '&quot;');
+                        htmlJour += buildCardHTML(m, choice, false, age, optionsJSON);
+                    } else { possible = false; }
+                });
+
+                if (!possible && jour === 1) {
+                    htmlGlobal = `<div class="error-msg">❌ Aucun repas trouvé pour vos filtres (${selectedModes.join(', ')}).</div>`;
+                    break;
+                }
+            }
+            htmlGlobal += htmlJour;
+        }
+
+        res.innerHTML = htmlGlobal;
+        if(loader) loader.style.display = 'none';
+        sauvegarderProfil(); 
+    }, 500);
+}
+
+// Fonction utilitaire pour construire le HTML d'une carte (pour éviter les erreurs d'ID en double)
+function buildCardHTML(moment, choice, isKid, age, optionsJSON) {
+    const border = isKid ? 'style="border-left: 8px solid #ffcb05;"' : '';
+    const badgeColor = isKid ? '#ffcb05' : 'var(--accent)';
+    const title = isKid ? choice.n : choice.nomRecette;
+
+    return `
+        <div class="recipe-card" ${border}>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <div style="background:${badgeColor}; color:white; padding:4px 10px; border-radius:4px; font-size:12px; font-weight:bold;">${moment.toUpperCase()}</div>
+                <button class="change-btn" onclick="changerVar(null, ${optionsJSON}, this)" style="width:auto; margin:0; padding:5px 10px; font-size:11px; background:var(--text); color:white; border:none; border-radius:5px; cursor:pointer;">🔄 AUTRES VARIANTES</button>
+            </div>
+            <h3 class="card-title">${title}</h3>
+            ${!isKid ? `<p><strong>Variante :</strong> <span class="card-vt">${choice.t}</span></p>` : ''}
+            <div class="card-steps">${choice.r.map(s => `<p>• ${s}</p>`).join('')}</div>
+            ${choice.ntr ? `<div class="ntr-box">📊 ${choice.ntr}</div>` : ''}
+            <div class="tip-box">💡 ${choice.tip}</div>
+        </div>`;
+}
+
+    function sauvegarderProfil() {
+        const modes = Array.from(document.querySelectorAll('.filter-mode:checked')).map(cb => cb.value);
+        const p = { 
+            age: document.getElementById('age').value, 
+            poids: document.getElementById('poids').value, 
+            taille: document.getElementById('taille').value, 
+            sexe: document.getElementById('sexe').value,
+            modes: modes
+        };
+        localStorage.setItem('NutriGenius_Premium_Save', JSON.stringify(p));
+    }
+
+    window.onload = () => {
+        const s = localStorage.getItem('NutriGenius_Premium_Save');
+        if (s) {
+            const d = JSON.parse(s);
+            document.getElementById('age').value = d.age || "";
+            document.getElementById('poids').value = d.poids || "";
+            document.getElementById('taille').value = d.taille || "";
+            document.getElementById('sexe').value = d.sexe || "H";
+            if(d.modes) {
+                document.querySelectorAll('.filter-mode').forEach(cb => {
+                    if(d.modes.includes(cb.value)) cb.checked = true;
+                });
+            }
+        }
+    };
+
+    function enregistrerSurPC() {
+        const text = document.getElementById('resultat').innerText;
+        if (!text) return;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.download = "Mon_Menu_NutriGenius.txt";
+        a.href = window.URL.createObjectURL(blob);
+        a.click();
+    }
+
+    function changerVar(idIgnored, listeOptions, btn) {
+        // 1. On choisit une nouvelle variante au hasard
+        const v = listeOptions[Math.floor(Math.random() * listeOptions.length)];
+    
+        // 2. On trouve la carte parente du bouton sur lequel on a cliqué
+        const card = btn.closest('.recipe-card');
+    
+        // 3. On met à jour les éléments à l'intérieur de CETTE carte précise
+        // Mise à jour du Titre
+        const titleElem = card.querySelector('.card-title');
+        if (titleElem) titleElem.innerText = v.nomRecette || v.n;
+
+        // Mise à jour de la Variante (si adulte)
+        const vtElem = card.querySelector('.card-vt');
+        if (vtElem) vtElem.innerText = v.t || "";
+
+        // Mise à jour des Étapes
+        const stepsElem = card.querySelector('.card-steps');
+        if (stepsElem) {
+        stepsElem.innerHTML = v.r.map(s => `<p>• ${s}</p>`).join('');
+        }
+
+        // Mise à jour de la Nutrition
+        const ntrElem = card.querySelector('.ntr-box');
+        if (ntrElem) {
+            ntrElem.innerText = v.ntr ? "📊 " + v.ntr : "";
+        }
+
+        // Mise à jour du conseil
+        const tipElem = card.querySelector('.tip-box');
+        if (tipElem) {
+            tipElem.innerText = "💡 " + v.tip;
+        }
+    }
+
+</script>
+</body>
+</html>

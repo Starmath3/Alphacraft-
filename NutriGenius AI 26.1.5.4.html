@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.5.4 - Pro Kitchen Edition (Corrected)</title>
+    <style>
+        :root { --bg: #f0f4f8; --card: white; --text: #2c3e50; --primary: #009245; --accent: #e67e22; }
+        .dark-mode { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f4f8; --primary: #27ae60; --accent: #d35400; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); text-align: center; padding: 20px; transition: 0.3s; margin: 0; }
+        .container { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 900px; text-align: left; }
+        
+        #loader-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .spinner {
+            width: 60px; height: 60px;
+            border: 6px solid rgba(255,255,255,0.2);
+            border-top: 6px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .header-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .dark-toggle { cursor: pointer; background: var(--primary); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        
+        h1 { margin: 0; color: var(--primary); }
+        .input-group { margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-field, .select-box { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; background: var(--card); color: var(--text); }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-weight: bold; color: var(--primary); cursor: pointer; margin: 15px 0; }
+        
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: var(--primary); font-size: 1.1em; transition: 0.2s; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        
+        .btn-sm { padding: 8px 12px; font-size: 0.75em; margin: 4px 2px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-replace { background: var(--accent); }
+        .btn-recipe { background: #3498db; }
+        .btn-variant { background: #8e44ad; }
+
+        .day-box { background: var(--card); padding: 20px; margin-bottom: 25px; border-radius: 15px; border-left: 12px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .meal-section { margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(127, 140, 141, 0.3); }
+        .details-content { display: none; font-size: 0.95em; margin-top: 12px; background: rgba(0,0,0,0.04); padding: 20px; border-radius: 10px; line-height: 1.6; border-left: 4px solid #3498db; }
+        
+        .shopping-list { background: #e8f5e9; border: 2px dashed var(--primary); padding: 20px; border-radius: 15px; margin: 25px 0; color: #1b5e20; }
+        .shopping-item { display: inline-block; background: white; padding: 6px 14px; margin: 5px; border-radius: 20px; font-size: 0.85em; font-weight: bold; border: 1px solid #c3e6cb; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
+        .ing-label { display: block; font-size: 0.85em; color: #7f8c8d; font-style: italic; margin-top: 6px; }
+        .cal-float { float: right; background: var(--primary); color: white; padding: 5px 15px; border-radius: 12px; font-size: 0.95em; font-weight: bold; }
+
+        @media print { .no-print, .btn-sm { display: none !important; } .details-content { display: block !important; border: none; background: none; } }
+    </style>
+</head>
+<body onload="chargerProfil()">
+
+<div id="loader-overlay">
+    <div class="spinner"></div>
+    <div style="font-size: 1.3em;">Extraction des données nutritionnelles...</div>
+</div>
+
+<div class="container">
+    <div class="header-ui">
+        <h1>NutriGenius AI 🥗</h1>
+        <div class="dark-toggle no-print" onclick="toggleDark()">🌓 Mode Sombre</div>
+    </div>
+
+    <div class="no-print">
+        <div class="input-group">
+            <div class="row">
+                <input type="number" id="age" class="input-field" placeholder="Age" oninput="sauvegarderProfil()">
+                <select id="sexe" class="input-field" onchange="sauvegarderProfil()">
+                    <option value="H">Homme</option>
+                    <option value="F">Femme</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="number" id="poids" class="input-field" placeholder="Poids (kg)" oninput="sauvegarderProfil()">
+                <input type="number" id="taille" class="input-field" placeholder="Taille (cm)" oninput="sauvegarderProfil()">
+            </div>
+        </div>
+        <select id="select-duree" class="select-box">
+            <option value="1">🥗 Menu du Jour</option>
+            <option value="7">📅 Menu de la Semaine</option>
+            <option value="30">📊 Menu du Mois</option>
+        </select>
+        <label class="checkbox-group">
+            <input type="checkbox" id="check-veg" onchange="sauvegarderProfil()"> 🥗 Mode Végétarien
+        </label>
+        <button class="btn" onclick="lancer()">GÉNÉRER LE PLAN MASTER KITCHEN</button>
+    </div>
+
+    <div id="resultat"><div id="content-area"></div></div>
+</div>
+
+<script>
+    const db = {
+        petitDej: [
+            { 
+                n: "Omelette Soufflée", c: 380, v: true,
+                i: ["4 Oeufs frais", "2 Oignons verts", "1 c.à.c Curcuma", "20g Beurre demi-sel", "Poivre du moulin", "Sel fin"],
+                variantes: [
+                    { t: "Classique Aérienne", r: ["1. Clarifiez les oeufs.", "2. Montez les blancs en neige avec une pincée de sel.", "3. Fouettez les jaunes avec le curcuma et le poivre.", "4. Incorporez délicatement les blancs aux jaunes.", "5. Cuisez à couvert 8 min à feu doux sans retourner."], ntr: "P:22g G:4g L:24g", tip: "Servez immédiatement pour garder le volume." },
+                    { t: "Brouillée Créole", r: ["1. Battez les oeufs entiers vigoureusement.", "2. Faites revenir les oignons émincés dans le beurre.", "3. Versez les oeufs et remuez constamment à feu moyen.", "4. Arrêtez la cuisson quand c'est encore brillant."], ntr: "P:21g G:3g L:23g", tip: "Ajoutez un filet de crème pour plus d'onctuosité." },
+                    { t: "Muffins au Four", r: ["1. Préchauffez le four à 180°C.", "2. Battez les oeufs avec les ingrédients.", "3. Versez dans des moules à muffins huilés.", "4. Enfournez 15-20 min jusqu'à ce que ce soit doré."], ntr: "P:24g G:5g L:18g", tip: "Parfait pour préparer à l'avance (Meal Prep)." },
+                    { t: "Roulée Japonaise", r: ["1. Filtrez le mélange d'oeufs.", "2. Versez une fine couche dans une poêle carrée.", "3. Roulez et rajoutez une couche.", "4. Répétez 3 fois."], ntr: "P:20g G:6g L:20g", tip: "Texture ferme et élégante." },
+                    { t: "Version Fromage", r: ["1. Même base que l'omelette.", "2. Ajoutez 30g de gruyère râpé au milieu.", "3. Pliez en deux en fin de cuisson."], ntr: "P:28g G:4g L:32g", tip: "Très riche en protéines." }
+                ]
+            }
+        ],
+        dejeuner: [
+            { 
+                n: "Carry Poulet Grand-Mère", c: 620, v: false,
+                i: ["500g Poulet", "4 Tomates bien mûres", "2 Gros Oignons", "4 Gousses d'Ail", "30g Gingembre frais", "Thym frais", "Safran/Curcuma"],
+                variantes: [
+                    { t: "Traditionnel", r: ["1. Coupez le poulet en morceaux.", "2. Faites dorer la viande dans l'huile chaude.", "3. Ajoutez oignons, ail et gingembre pilés.", "4. Mettez le curcuma, le thym et les tomates concassées.", "5. Laissez réduire 40 min à feu moyen."], ntr: "P:52g G:12g L:22g", tip: "Le secret : ne rajoutez jamais d'eau !" },
+                    { t: "Express Wok", r: ["1. Émincez le poulet finement.", "2. Faites sauter à feu vif 5 min avec les épices.", "3. Rajoutez les tomates en dés à la fin.", "4. Servez avec un riz blanc parfumé."], ntr: "P:48g G:10g L:15g", tip: "Conserve le croquant des aromates." },
+                    { t: "Onctueux Coco", r: ["1. Suivez la recette traditionnelle.", "2. Ajoutez 20cl de lait de coco en fin de cuisson.", "3. Laissez épaissir 5 min sans bouillir."], ntr: "P:46g G:18g L:35g", tip: "Idéal pour adoucir le piment." },
+                    { t: "Grillé Light", r: ["1. Marinez le poulet dans les épices 2h.", "2. Enfournez 45 min sur une grille.", "3. Réalisez une sauce tomate à part sans gras."], ntr: "P:55g G:8g L:12g", tip: "Version sport et santé." },
+                    { t: "Façon Ragoût", r: ["1. Ajoutez des pommes de terre au début de la cuisson.", "2. Couvrez d'un peu de bouillon.", "3. Laissez mijoter jusqu'à ce que la sauce soit liée."], ntr: "P:42g G:45g L:20g", tip: "Plat complet très rassasiant." }
+                ]
+            },
+            { 
+                n: "Carry de Tofu & Zucchini 🍛", c: 480, v: true,
+                i: ["400g Tofu ferme", "2 Courgettes moyennes", "3 Tomates", "1 Oignon", "Curcuma", "Coriandre fraîche", "Huile d'olive"],
+                variantes: [
+                    { t: "Tofu Roussi", r: ["1. Pressez le tofu pour enlever l'eau.", "2. Coupez en dés et faites dorer dans l'huile.", "3. Ajoutez les épices et les courgettes.", "4. Cuisez 15 min à couvert."], ntr: "P:28g G:15g L:18g", tip: "Le tofu doit être croustillant." },
+                    { t: "Mijoté Fondant", r: ["1. Ne faites pas dorer le tofu.", "2. Mettez tout dans la marmite en même temps.", "3. Cuisez 25 min à feu très doux."], ntr: "P:26g G:18g L:12g", tip: "Le tofu absorbe mieux les saveurs." },
+                    { t: "Bowl Fraîcheur", r: ["1. Marinez le tofu à froid.", "2. Sautez les courgettes al dente.", "3. Mélangez le tout avec la coriandre ciselée."], ntr: "P:25g G:22g L:10g", tip: "Parfait pour l'été." },
+                    { t: "Version Curry Noir", r: ["1. Ajoutez du poivre noir moulu et de la cannelle.", "2. Laissez les tomates caraméliser avant de mettre le tofu."], ntr: "P:27g G:20g L:15g", tip: "Goût très intense." },
+                    { t: "Gratiné Végé", r: ["1. Préparez la base.", "2. Mettez en plat à gratin.", "3. Ajoutez un peu de levure maltée sur le dessus."], ntr: "P:32g G:18g L:20g", tip: "Apporte un petit goût fromager." }
+                ]
+            }
+        ],
+        diner: [
+            { 
+                n: "Dahl de Lentilles Corail Master 🍛", c: 510, v: true,
+                i: ["250g Lentilles corail", "40cl Lait de coco", "1 Oignon", "2 Gousses d'ail", "Cumin", "Graines de moutarde", "Citron vert"],
+                variantes: [
+                    { t: "Onctueux Velouté", r: ["1. Rincez les lentilles.", "2. Cuisez-les 15 min dans 3x leur volume d'eau.", "3. Ajoutez le lait de coco et mixez à moitié.", "4. Assaisonnez et ajoutez le citron."], ntr: "P:26g G:58g L:18g", tip: "Un vrai réconfort." },
+                    { t: "Style Indien Grain", r: ["1. Ne mixez pas.", "2. Faites frire les graines de moutarde dans un peu d'huile (Tarka).", "3. Versez l'huile parfumée sur les lentilles cuites."], ntr: "P:24g G:55g L:22g", tip: "Explosion de saveurs garantie." },
+                    { t: "Soupe Détox", r: ["1. Plus de bouillon, moins de coco.", "2. Ajoutez beaucoup de gingembre et de curcuma frais."], ntr: "P:20g G:45g L:8g", tip: "Idéal après un excès." },
+                    { t: "Dahl aux Brèdes", r: ["1. Ajoutez 200g d'épinards frais en fin de cuisson.", "2. Laissez fondre 2 min seulement."], ntr: "P:28g G:52g L:15g", tip: "Richesse maximale en fer." },
+                    { t: "Version Royale", r: ["1. Ajoutez des noix de cajou grillées sur le dessus.", "2. Servez avec une cuillère de yaourt grec."], ntr: "P:30g G:62g L:25g", tip: "Texture croquante et crémeuse." }
+                ]
+            }
+        ]
+    };
+
+    let planningGlobal = [];
+
+    function toggleDark() { document.body.classList.toggle('dark-mode'); }
+
+    function lancer() {
+        if (!document.getElementById('age').value) return alert("Veuillez entrer votre Age !");
+        document.getElementById('loader-overlay').style.display = "flex";
+        setTimeout(() => { 
+            genererPlanning(); 
+            document.getElementById('loader-overlay').style.display = "none";
+        }, 1500);
+    }
+
+    function genererPlanning() {
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+        const poolP = isVeg ? db.petitDej.filter(x => x.v) : db.petitDej;
+        const poolM = isVeg ? db.dejeuner.filter(x => x.v) : db.dejeuner;
+        const poolD = isVeg ? db.diner.filter(x => x.v) : db.diner;
+
+        planningGlobal = [];
+        for (let i = 0; i < jours; i++) {
+            planningGlobal.push({
+                p: JSON.parse(JSON.stringify(poolP[Math.floor(Math.random() * poolP.length)])),
+                m: JSON.parse(JSON.stringify(poolM[Math.floor(Math.random() * poolM.length)])),
+                d: JSON.parse(JSON.stringify(poolD[Math.floor(Math.random() * poolD.length)])),
+                vP: 0, vM: 0, vD: 0
+            });
+        }
+        afficherMenu();
+    }
+
+    function remplacerRepas(jIdx, type) {
+        const isVeg = document.getElementById('check-veg').checked;
+        const categorie = type === 'p' ? db.petitDej : (type === 'm' ? db.dejeuner : db.diner);
+        const pool = isVeg ? categorie.filter(x => x.v) : categorie;
+        
+        if (pool.length === 0) return;
+
+        let nouveauPlat;
+        const platActuel = planningGlobal[jIdx][type].n;
+
+        if (pool.length > 1) {
+            do {
+                nouveauPlat = pool[Math.floor(Math.random() * pool.length)];
+            } while (nouveauPlat.n === platActuel);
+        } else {
+            nouveauPlat = pool[0];
+        }
+
+        planningGlobal[jIdx][type] = JSON.parse(JSON.stringify(nouveauPlat));
+        planningGlobal[jIdx]['v' + type.toUpperCase()] = 0; 
+        afficherMenu();
+    }
+
+    function changerVariante(jIdx, type) {
+        let key = 'v' + type.toUpperCase();
+        let plat = planningGlobal[jIdx][type];
+        planningGlobal[jIdx][key] = (planningGlobal[jIdx][key] + 1) % plat.variantes.length;
+        afficherMenu();
+    }
+
+    function toggleDetails(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function afficherMenu() {
+        let html = "";
+        planningGlobal.forEach((jour, idx) => {
+            if (idx % 7 === 0) {
+                let listIng = new Set();
+                let fin = Math.min(idx + 7, planningGlobal.length);
+                for(let k=idx; k<fin; k++) {
+                    [planningGlobal[k].p, planningGlobal[k].m, planningGlobal[k].d].forEach(r => r.i.forEach(ing => listIng.add(ing)));
+                }
+                html += `<div class="shopping-list"><b>🛒 LISTE DE COURSES (Semaine ${Math.floor(idx/7)+1})</b><br>${Array.from(listIng).map(n => `<span class="shopping-item">${n}</span>`).join('')}</div>`;
+            }
+
+            html += `
+            <div class="day-box">
+                <span class="cal-float">${jour.p.c + jour.m.c + jour.d.c} kcal</span>
+                <h3>JOUR ${idx + 1}</h3>
+                ${renderMeal(idx, 'p', '☀️ Matin', jour.p, jour.vP)}
+                ${renderMeal(idx, 'm', '🥗 Midi', jour.m, jour.vM)}
+                ${renderMeal(idx, 'd', '🌙 Soir', jour.d, jour.vD)}
+            </div>`;
+        });
+        document.getElementById('content-area').innerHTML = html;
+    }
+
+    function renderMeal(jIdx, type, label, meal, vIdx) {
+        const id = `det-${jIdx}-${type}`;
+        const v = meal.variantes[vIdx];
+        return `
+        <div class="meal-section">
+            <b>${label} :</b> ${meal.n} <small>(${v.t})</small>
+            <span class="ing-label">🛒 Ingrédients : ${meal.i.join(', ')}</span>
+            <div class="no-print">
+                <button class="btn-sm btn-replace" onclick="remplacerRepas(${jIdx}, '${type}')">🔄 Changer Plat</button>
+                <button class="btn-sm btn-variant" onclick="changerVariante(${jIdx}, '${type}')">✨ Variante (${vIdx+1}/${meal.variantes.length})</button>
+                <button class="btn-sm btn-recipe" onclick="toggleDetails('${id}')">📖 Recette & Étapes</button>
+            </div>
+            <div id="${id}" class="details-content">
+                <b>👨‍🍳 ÉTAPES DE PRÉPARATION :</b><br>
+                ${v.r.map((step, i) => `<b>${i+1}.</b> ${step}`).join('<br>')}<br>
+                <hr style="border:0; border-top:1px solid #ddd; margin:10px 0;">
+                <small>📊 <b>Macro :</b> ${v.ntr} | 💡 <b>Astuce :</b> ${v.tip}</small>
+            </div>
+        </div>`;
+    }
+
+    function sauvegarderProfil() {
+        const p = { age: document.getElementById('age').value, poids: document.getElementById('poids').value, taille: document.getElementById('taille').value, sexe: document.getElementById('sexe').value, veg: document.getElementById('check-veg').checked };
+        localStorage.setItem('NutriGenius_V9_PRO', JSON.stringify(p));
+    }
+
+    function chargerProfil() {
+        const s = localStorage.getItem('NutriGenius_V9_PRO');
+        if (s) {
+            const d = JSON.parse(s);
+            document.getElementById('age').value = d.age || "";
+            document.getElementById('poids').value = d.poids || "";
+            document.getElementById('taille').value = d.taille || "";
+            document.getElementById('sexe').value = d.sexe || "H";
+            document.getElementById('check-veg').checked = d.veg || false;
+        }
+    }
+</script>
+</body>
+</html>

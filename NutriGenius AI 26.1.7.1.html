@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.7.1 - PRO KITCHEN EDITION</title>
+    <style>
+        :root { --bg: #f0f4f8; --card: white; --text: #2c3e50; --primary: #009245; --accent: #e67e22; }
+        .dark-mode { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f4f8; --primary: #27ae60; --accent: #d35400; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); text-align: center; padding: 20px; transition: 0.3s; margin: 0; }
+        .container { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 900px; text-align: left; }
+        
+        #loader-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); z-index: 9999;
+            flex-direction: column; justify-content: center; align-items: center; color: white;
+        }
+        .spinner { width: 60px; height: 60px; border: 6px solid rgba(255,255,255,0.2); border-top: 6px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #loading-percentage { font-size: 2em; font-weight: bold; color: white; margin-bottom: 10px; }
+
+        .header-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
+        .dark-toggle { cursor: pointer; background: var(--primary); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        
+        h1 { margin: 0; color: var(--primary); }
+        .input-group { margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-field, .select-box { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; background: var(--card); color: var(--text); }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-weight: bold; color: var(--primary); cursor: pointer; margin: 15px 0; }
+        
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: var(--primary); font-size: 1.1em; transition: 0.2s; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        
+        .btn-sm { padding: 8px 12px; font-size: 0.75em; margin: 4px 2px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-replace { background: var(--accent); }
+        .btn-recipe { background: #3498db; }
+        .btn-variant { background: #8e44ad; }
+
+        .day-box { background: var(--card); padding: 20px; margin-bottom: 25px; border-radius: 15px; border-left: 12px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .meal-section { margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(127, 140, 141, 0.3); }
+        .details-content { display: none; font-size: 0.95em; margin-top: 12px; background: rgba(0,0,0,0.04); padding: 20px; border-radius: 10px; line-height: 1.6; border-left: 4px solid #3498db; }
+        
+        .macro-box { background: var(--primary); color: white; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.9em; }
+
+        .shopping-list { background: #e8f5e9; border: 2px dashed var(--primary); padding: 20px; border-radius: 15px; margin: 25px 0; color: #1b5e20; }
+        .shopping-item { display: inline-block; background: white; padding: 6px 14px; margin: 5px; border-radius: 20px; font-size: 0.85em; font-weight: bold; border: 1px solid #c3e6cb; }
+        .cal-float { float: right; background: var(--primary); color: white; padding: 5px 15px; border-radius: 12px; font-size: 0.95em; font-weight: bold; }
+
+        .goog-te-gadget-simple { border-radius: 10px !important; padding: 5px !important; border: 1px solid #ccc !important; background: var(--card) !important; }
+        .goog-te-banner-frame.skiptranslate { display: none !important; } 
+        body { top: 0px !important; }
+
+        @media print { .no-print, .btn-sm { display: none !important; } .details-content { display: block !important; border: none; background: none; } }
+    </style>
+</head>
+<body onload="chargerProfil()">
+
+<div id="loader-overlay">
+    <div class="spinner"></div>
+    <div id="loading-percentage">0%</div>
+    <div style="font-size: 1.3em;">Génération de votre menu... 👨‍🍳</div>
+</div>
+
+<div class="container">
+    <div class="header-ui">
+        <h1>NutriGenius AI 🥗</h1>
+        <div id="google_translate_element"></div>
+        <div class="dark-toggle no-print" onclick="toggleDark()">🌓 Mode Sombre</div>
+    </div>
+
+    <div class="no-print">
+        <div class="input-group">
+            <div class="row">
+                <input type="number" id="age" class="input-field" placeholder="Age" oninput="sauvegarderProfil()">
+                <select id="sexe" class="input-field" onchange="sauvegarderProfil()">
+                    <option value="H">Homme</option>
+                    <option value="F">Femme</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="number" id="poids" class="input-field" placeholder="Poids (kg)" oninput="sauvegarderProfil()">
+                <input type="number" id="taille" class="input-field" placeholder="Taille (cm)" oninput="sauvegarderProfil()">
+            </div>
+        </div>
+        <select id="select-duree" class="select-box">
+            <option value="1">🥗 Menu du Jour</option>
+            <option value="7">📅 Menu de la Semaine</option>
+            <option value="30">📊 Menu du Mois</option>
+            <option value="365">🗓️ Menu de l'année</option>
+        </select>
+        <label class="checkbox-group">
+            <input type="checkbox" id="check-veg" onchange="sauvegarderProfil()"> 🥦 Mode Végétarien
+        </label>
+        <button class="btn" onclick="lancer()">GÉNÉRER MON PLAN NUTRITIONNEL</button>
+    </div>
+
+    <div id="resultat"><div id="content-area"></div></div>
+</div>
+
+<script>
+    // Liste étendue des langues (Top 50)
+    const supportedLangs = "en,fr,es,it,de,pt,zh-CN,hi,ar,bn,ru,ja,pa,mr,te,tr,ko,vi,ta,ur,id,pl,uk,th,gu,kn,ml,my,sw,yo,ha,fa,ro,nl,am,az,ig,zu,ceb,tl,mg,ny,sn,st,xh,ht,qu,ay,gn,wuu,ko,yue,mai,om,uz,jv,pnb,su,mwr";
+
+    const db = {
+        petitDej: [
+            { n: "Omelette Soufflée Master 🍳", c: 380, v: true, i: ["4 Oeufs", "Oignons verts", "Curcuma", "Beurre"],
+                variantes: [
+                    { t: "Classique Aérienne", r: ["1. Blancs en neige.", "2. Mélanger aux jaunes.", "3. Cuire 8min."], ntr: "P: 22g | G: 4g | L: 24g", tip: "Ne pas retourner pour garder le volume." },
+                    { t: "Brouillée Créole", r: ["1. Battre les oeufs.", "2. Frire oignons.", "3. Remuer."], ntr: "P: 21g | G: 3g | L: 23g", tip: "Garder baveux pour plus de saveur." },
+                    { t: "Muffins au Four", r: ["1. Moules huilés.", "2. Enfourner 15min."], ntr: "P: 24g | G: 5g | L: 18g", tip: "Pratique pour le batch-cooking." },
+                    { t: "Roulée Japonaise", r: ["1. Fines couches.", "2. Rouler."], ntr: "P: 20g | G: 6g | L: 20g", tip: "Utilisez une poêle carrée." },
+                    { t: "Version Fromage", r: ["1. Ajouter emmental.", "2. Plier."], ntr: "P: 28g | G: 4g | L: 32g", tip: "Excellente source de calcium." }
+                ]
+            },
+{ 
+        n: "Porridge Express 🥣", c: 320, v: true, i: ["60g Flocons d'avoine", "200ml Lait végétal", "Graines de chia", "Miel"],
+        variantes: [
+            { t: "Classique Chaud", r: ["1. Mélanger.", "2. Micro-ondes 2min."], ntr: "P: 12g | G: 45g | L: 8g", tip: "Ajoutez un peu de cannelle." },
+            { t: "Overnight Oats", r: ["1. Frigo toute la nuit."], ntr: "P: 13g | G: 48g | L: 9g", tip: "Idéal pour les matins pressés." },
+            { t: "Version Chocolat", r: ["1. Ajouter cacao amer."], ntr: "P: 14g | G: 42g | L: 10g", tip: "Anti-oxydant naturel." },
+            { t: "Boost Protéiné", r: ["1. Ajouter whey/skyr."], ntr: "P: 25g | G: 44g | L: 7g", tip: "Pour la récupération musculaire." },
+            { t: "Aux Fruits Frais", r: ["1. Garnir de baies."], ntr: "P: 11g | G: 52g | L: 7g", tip: "Plein de vitamines C." }
+        ]
+    },
+    { 
+        n: "Avocado Toast Zen 🥑", c: 410, v: true, i: ["2 tranches Pain complet", "1 Avocat", "Citron", "Piment"],
+        variantes: [
+            { t: "L'Original", r: ["1. Écraser l'avocat.", "2. Tartiner."], ntr: "P: 10g | G: 35g | L: 22g", tip: "Le citron évite l'oxydation." },
+            { t: "Avec Oeuf Poché", r: ["1. Pocher l'oeuf.", "2. Poser dessus."], ntr: "P: 17g | G: 36g | L: 28g", tip: "Le jaune coulant fait la sauce." },
+            { t: "Style Méditerranéen", r: ["1. Feta miellée.", "2. Olives."], ntr: "P: 14g | G: 38g | L: 26g", tip: "Un goût de vacances." },
+            { t: "Saumon fumé", r: ["1. Tranches de saumon.", "2. Aneth."], ntr: "P: 22g | G: 34g | L: 25g", tip: "Riche en Oméga-3." },
+            { t: "Hummus Twist", r: ["1. Base de houmous.", "2. Avocat."], ntr: "P: 15g | G: 40g | L: 19g", tip: "Double dose de fibres." }
+        ]
+    },
+    { 
+        n: "Pancakes Banana 🍌", c: 350, v: true, i: ["1 Banane mûre", "2 Oeufs", "Poudre à lever", "Vanille"],
+        variantes: [
+            { t: "Fit 2-ingrédients", r: ["1. Écraser.", "2. Mélanger.", "3. Cuire."], ntr: "P: 14g | G: 28g | L: 12g", tip: "Sans farine et sans gluten." },
+            { t: "Gourmand Pépites", r: ["1. Ajouter chocolat."], ntr: "P: 15g | G: 35g | L: 15g", tip: "Laissez fondre doucement." },
+            { t: "Myrtilles", r: ["1. Insérer baies à la cuisson."], ntr: "P: 13g | G: 32g | L: 11g", tip: "Ne pas trop remuer la pâte." },
+            { t: "Beurre de Cacahuète", r: ["1. Napper généreusement."], ntr: "P: 19g | G: 30g | L: 20g", tip: "Énergie longue durée." },
+            { t: "Version Coco", r: ["1. Farine de coco."], ntr: "P: 16g | G: 22g | L: 14g", tip: "Très faible en glucides." }
+        ]
+    },
+    { 
+        n: "Bol de Skyr Islandais ❄️", c: 280, v: true, i: ["200g Skyr", "Granola maison", "Noix", "Sirop d'érable"],
+        variantes: [
+            { t: "Crunchy Classique", r: ["1. Verser granola.", "2. Mélanger."], ntr: "P: 24g | G: 30g | L: 10g", tip: "Texture parfaite." },
+            { t: "Tropical", r: ["1. Dés de mangue.", "2. Coco."], ntr: "P: 22g | G: 38g | L: 9g", tip: "Rafraîchissant en été." },
+            { t: "Pomme-Cannelle", r: ["1. Compotée minute."], ntr: "P: 21g | G: 35g | L: 8g", tip: "Réchauffez les pommes avant." },
+            { t: "Zéro Sucre", r: ["1. Beurre d'amande.", "2. Graines."], ntr: "P: 26g | G: 12g | L: 18g", tip: "Idéal pour le contrôle glycémique." },
+            { t: "Rose Framboise", r: ["1. Mixer baies et skyr."], ntr: "P: 23g | G: 28g | L: 7g", tip: "Couleur sublime." }
+        ]
+    },
+    { 
+        n: "Smoothie Bowl Power 🍓", c: 310, v: true, i: ["Fruits surgelés", "Lait d'amande", "Graines de chanvre"],
+        variantes: [
+            { t: "Antioxydant", r: ["1. Mixer baies.", "2. Topping baies."], ntr: "P: 8g | G: 42g | L: 6g", tip: "Texture crème glacée." },
+            { t: "Green Detox", r: ["1. Épinards.", "2. Pomme.", "3. Kiwi."], ntr: "P: 9g | G: 38g | L: 5g", tip: "On ne sent pas le goût des feuilles !" },
+            { t: "Beurre de Noix", r: ["1. Purée de cajou.", "2. Datte."], ntr: "P: 12g | G: 45g | L: 14g", tip: "Très rassasiant." },
+            { t: "Sunrise Orange", r: ["1. Carotte.", "2. Mangue."], ntr: "P: 7g | G: 50g | L: 4g", tip: "Effet bonne mine." },
+            { t: "Choco-Noisette", r: ["1. Cacao.", "2. Noisettes."], ntr: "P: 11g | G: 35g | L: 16g", tip: "Le Nutella version saine." }
+        ]
+    },
+    { 
+        n: "Pain Perdu Express 🍞", c: 390, v: true, i: ["2 tranches de pain", "1 Oeuf", "Lait", "Cannelle"],
+        variantes: [
+            { t: "Dodu Poêlé", r: ["1. Tremper.", "2. Dorer au beurre."], ntr: "P: 16g | G: 40g | L: 15g", tip: "Utilisez du pain rassis." },
+            { t: "Version Four", r: ["1. Enfourner 10min à 200°C."], ntr: "P: 15g | G: 38g | L: 10g", tip: "Moins de gras qu'à la poêle." },
+            { t: "Salé Bacon", r: ["1. Pas de sucre.", "2. Bacon."], ntr: "P: 22g | G: 35g | L: 18g", tip: "Équilibre sucré-salé." },
+            { t: "Amande Effilée", r: ["1. Croûte d'amandes."], ntr: "P: 18g | G: 42g | L: 18g", tip: "Ajoute du croquant." },
+            { t: "Roulés Confiture", r: ["1. Aplatir.", "2. Rouler."], ntr: "P: 14g | G: 48g | L: 12g", tip: "Amusant pour les enfants." }
+        ]
+    },
+    { 
+        n: "Wrap Matinal 🌯", c: 420, v: false, i: ["Tortilla blé entier", "Oeuf brouillé", "Haricots noirs"],
+        variantes: [
+            { t: "Burrito Breakfast", r: ["1. Garnir.", "2. Rouler.", "3. Griller."], ntr: "P: 20g | G: 45g | L: 18g", tip: "Ajoutez de la sauce salsa." },
+            { t: "Végé-Feta", r: ["1. Épinards.", "2. Feta."], ntr: "P: 18g | G: 42g | L: 20g", tip: "Un classique rapide." },
+            { t: "Saumon Cream Cheese", r: ["1. Froid.", "2. Tartiner."], ntr: "P: 24g | G: 38g | L: 16g", tip: "Élégant et frais." },
+            { t: "Poulet Reste", r: ["1. Effiloché de poulet."], ntr: "P: 28g | G: 40g | L: 14g", tip: "Parfait pour utiliser les restes." },
+            { t: "Façon Quesadilla", r: ["1. Fromage fondu."], ntr: "P: 21g | G: 41g | L: 22g", tip: "Bien croustillant." }
+        ]
+    },
+    { 
+        n: "Shakshuka Minute 🥘", c: 340, v: true, i: ["Sauce tomate", "2 Oeufs", "Épices", "Poivrons"],
+        variantes: [
+            { t: "Traditionnelle", r: ["1. Mijoter sauce.", "2. Casser oeufs."], ntr: "P: 18g | G: 20g | L: 18g", tip: "Trempez du pain dedans." },
+            { t: "Verte", r: ["1. Base épinards/pesto."], ntr: "P: 17g | G: 15g | L: 22g", tip: "Très riche en fer." },
+            { t: "Pois Chiches", r: ["1. Ajouter légumineuses."], ntr: "P: 22g | G: 35g | L: 16g", tip: "Plus de fibres et de satiété." },
+            { t: "Chèvre Frais", r: ["1. Parsemer de fromage."], ntr: "P: 20g | G: 21g | L: 24g", tip: "Adoucit l'acidité de la tomate." },
+            { t: "Relevée Harissa", r: ["1. Pimenter fort."], ntr: "P: 18g | G: 22g | L: 18g", tip: "Réveille les papilles." }
+        ]
+    },
+    { 
+        n: "Cottage Cheese Bowl 🧀", c: 260, v: true, i: ["200g Cottage cheese", "Concombre", "Graines de tournesol"],
+        variantes: [
+            { t: "Salé Fraîcheur", r: ["1. Dés de légumes.", "2. Poivre."], ntr: "P: 25g | G: 8g | L: 12g", tip: "Faible en calories." },
+            { t: "Sucré-Baies", r: ["1. Myrtilles.", "2. Miel."], ntr: "P: 24g | G: 20g | L: 10g", tip: "Alternative au yaourt." },
+            { t: "Crunchy Noix", r: ["1. Noix de Grenoble."], ntr: "P: 26g | G: 10g | L: 18g", tip: "Excellent pour le cerveau." },
+            { t: "Avocat-Tomate", r: ["1. Mélange coloré."], ntr: "P: 24g | G: 12g | L: 16g", tip: "Petit-déjeuner keto-friendly." },
+            { t: "Radis-Ciboulette", r: ["1. Ciseler fines herbes."], ntr: "P: 25g | G: 7g | L: 10g", tip: "Très piquant et frais." }
+        ]
+    },
+{ 
+                    n: "Avocado Toast & Oeuf 🥑", c: 380, v: true, i: ["Pain complet", "Avocat", "Oeuf poché", "Graines"],
+                    variantes: [
+                        { t: "L'Original", r: ["1. Toaster le pain.", "2. Écraser l'avocat.", "3. Poser l'oeuf."], ntr: "P: 18g | G: 35g | L: 20g", tip: "Ajoutez du piment d'Espelette." },
+                        { t: "Version Feta", r: ["1. Émietter du fromage."], ntr: "P: 20g | G: 34g | L: 24g", tip: "Le sel de la feta relève l'avocat." },
+                        { t: "Saumon Fumé", r: ["1. Ajouter une tranche."], ntr: "P: 24g | G: 36g | L: 22g", tip: "Le combo ultime du petit-déjeuner." },
+                        { t: "Houmous Style", r: ["1. Base de houmous."], ntr: "P: 19g | G: 42g | L: 18g", tip: "Encore plus de fibres." },
+                        { t: "Tomates Cerises", r: ["1. Tomates grillées."], ntr: "P: 17g | G: 38g | L: 19g", tip: "Apporte de l'acidité et du jus." }
+                    ]
+                },
+                { 
+                    n: "Pancakes Banane Protéinés 🥞", c: 320, v: true, i: ["1 Banane", "2 Oeufs", "Flocons d'avoine", "Vanille"],
+                    variantes: [
+                        { t: "Express 2 Ingrédients", r: ["1. Mixer banane/oeufs.", "2. Poêler."], ntr: "P: 16g | G: 28g | L: 12g", tip: "Idéal pour une cuisson rapide sans farine." },
+                        { t: "Aux Myrtilles", r: ["1. Ajouter baies fraîches."], ntr: "P: 15g | G: 32g | L: 11g", tip: "Les baies explosent à la cuisson." },
+                        { t: "Beurre de Cacahuète", r: ["1. Napper d'une cuillère."], ntr: "P: 20g | G: 30g | L: 18g", tip: "Un boost d'énergie le matin." },
+                        { t: "Pépites Chocolat", r: ["1. Chocolat noir 85%."], ntr: "P: 15g | G: 35g | L: 16g", tip: "Pour un matin gourmand." },
+                        { t: "Whey Protein", r: ["1. Ajouter 1 dose."], ntr: "P: 35g | G: 26g | L: 10g", tip: "Parfait après le sport." }
+                    ]
+                },
+                { 
+                    n: "Oeufs Brouillés à la Dinde 🍳", c: 340, v: false, i: ["3 Oeufs", "Bacon de dinde", "Ciboulette", "Pain"],
+                    variantes: [
+                        { t: "Le Sportif", r: ["1. Griller la dinde.", "2. Brouiller les oeufs."], ntr: "P: 28g | G: 25g | L: 16g", tip: "Utilisez une poêle anti-adhésive." },
+                        { t: "Version Fromage", r: ["1. Cheddar râpé."], ntr: "P: 30g | G: 26g | L: 22g", tip: "Pour un résultat ultra onctueux." },
+                        { t: "Aux Épinards", r: ["1. Tomber les feuilles."], ntr: "P: 27g | G: 27g | L: 15g", tip: "Ajoute du volume sans calories." },
+                        { t: "Style Mexicain", r: ["1. Salsa tomate.", "2. Piment."], ntr: "P: 26g | G: 30g | L: 17g", tip: "Réveille le métabolisme." },
+                        { t: "Truffe Style", r: ["1. Huile de truffe."], ntr: "P: 26g | G: 24g | L: 20g", tip: "Un goût de luxe au réveil." }
+                    ]
+                },
+                { 
+                    n: "Porridge Avoine & Pomme 🥣", c: 310, v: true, i: ["Avoine", "Lait végétal", "Pomme", "Cannelle"],
+                    variantes: [
+                        { t: "Réconfortant", r: ["1. Cuire avoine/lait.", "2. Râper la pomme."], ntr: "P: 12g | G: 52g | L: 6g", tip: "La cannelle coupe les envies de sucre." },
+                        { t: "Beurre d'Amande", r: ["1. Une grosse cuillère."], ntr: "P: 15g | G: 50g | L: 14g", tip: "Apporte de l'onctuosité." },
+                        { t: "Version Noix", r: ["1. Noix concassées."], ntr: "P: 14g | G: 48g | L: 16g", tip: "Excellent pour la concentration." },
+                        { t: "Choco-Banane", r: ["1. Cacao pur.", "2. Banane."], ntr: "P: 13g | G: 58g | L: 8g", tip: "Le duo gagnant." },
+                        { t: "Overnight Oats", r: ["1. Sans cuisson.", "2. Frigo nuit."], ntr: "P: 14g | G: 50g | L: 7g", tip: "Prêt dès le saut du lit." }
+                    ]
+                },
+                { 
+                    n: "Shakshuka Express 🍅", c: 330, v: true, i: ["2 Oeufs", "Sauce tomate", "Poivrons", "Feta"],
+                    variantes: [
+                        { t: "Orientale", r: ["1. Mijoter sauce.", "2. Casser oeufs.", "3. Couvrir."], ntr: "P: 20g | G: 18g | L: 22g", tip: "Servez avec un morceau de pain pita." },
+                        { t: "Avec Pois Chiches", r: ["1. Ajouter une poignée."], ntr: "P: 22g | G: 35g | L: 20g", tip: "Augmente la satiété." },
+                        { t: "Version Verte", r: ["1. Pesto.", "2. Courgettes."], ntr: "P: 19g | G: 15g | L: 26g", tip: "Original et plein de légumes." },
+                        { t: "Épicée Harissa", r: ["1. Pointe de piment."], ntr: "P: 19g | G: 19g | L: 21g", tip: "Pour ceux qui aiment le chaud." },
+                        { t: "Aux Oignons", r: ["1. Oignons caramélisés."], ntr: "P: 18g | G: 25g | L: 19g", tip: "Douceur en bouche." }
+                    ]
+                },
+                { 
+                    n: "Yogourt Grec & Granola 🍦", c: 290, v: true, i: ["Yogourt grec", "Granola maison", "Miel", "Fruits rouges"],
+                    variantes: [
+                        { t: "Le Classique", r: ["1. Verser yogourt.", "2. Saupoudrer granola."], ntr: "P: 18g | G: 35g | L: 10g", tip: "Choisissez un granola sans sucre ajouté." },
+                        { t: "Version Tropicale", r: ["1. Mangue.", "2. Coco râpée."], ntr: "P: 16g | G: 42g | L: 12g", tip: "Un goût d'évasion." },
+                        { t: "Graines de Chia", r: ["1. Mélanger la veille."], ntr: "P: 20g | G: 32g | L: 14g", tip: "Texture pudding garantie." },
+                        { t: "Protéine Max", r: ["1. Ajouter amandes."], ntr: "P: 22g | G: 30g | L: 16g", tip: "Tient au corps jusqu'au déjeuner." },
+                        { t: "Zeste de Citron", r: ["1. Pour la fraîcheur."], ntr: "P: 17g | G: 36g | L: 9g", tip: "Un réveil tonique." }
+                    ]
+                },
+                { 
+                    n: "Wrap de Petit-Déjeuner 🌯", c: 410, v: false, i: ["Tortilla", "Oeufs", "Haricots", "Poulet"],
+                    variantes: [
+                        { t: "Breakfast Burrito", r: ["1. Brouiller oeufs.", "2. Garnir galette.", "3. Toaster."], ntr: "P: 32g | G: 42g | L: 15g", tip: "Utilisez des haricots noirs." },
+                        { t: "Version Veggie", r: ["1. Avocat.", "2. Fromage."], ntr: "P: 22g | G: 40g | L: 20g", tip: "Moins carné, plus crémeux." },
+                        { t: "Poulet Curry", r: ["1. Reste de poulet."], ntr: "P: 34g | G: 41g | L: 14g", tip: "Recyclage gourmand du dîner." },
+                        { t: "Style Quesadilla", r: ["1. Beaucoup de fromage."], ntr: "P: 28g | G: 38g | L: 22g", tip: "Fondant et croustillant." },
+                        { t: "Pimenté Jalapeño", r: ["1. Quelques rondelles."], ntr: "P: 29g | G: 39g | L: 16g", tip: "Accélère le métabolisme." }
+                    ]
+                },
+                { 
+                    n: "Smoothie Bowl Énergie 🍓", c: 350, v: true, i: ["Banane surgelée", "Baies", "Lait d'amande", "Toppings"],
+                    variantes: [
+                        { t: "Antioxydant", r: ["1. Mixer les fruits.", "2. Décorer le bol."], ntr: "P: 10g | G: 65g | L: 8g", tip: "Mangez avec une cuillère, ne buvez pas." },
+                        { t: "Vert Détox", r: ["1. Ajouter épinards."], ntr: "P: 12g | G: 58g | L: 7g", tip: "On ne sent pas le goût du vert !" },
+                        { t: "Beurre de Noix", r: ["1. Cajou ou Amande."], ntr: "P: 14g | G: 55g | L: 18g", tip: "Satiété plus longue." },
+                        { t: "Acai Style", r: ["1. Poudre d'acai."], ntr: "P: 9g | G: 62g | L: 10g", tip: "Riche en polyphénols." },
+                        { t: "Protéine Whey", r: ["1. 1 scoop vanille."], ntr: "P: 30g | G: 45g | L: 7g", tip: "Transforme le smoothie en repas complet." }
+                    ]
+                },
+                { 
+                    n: "Oeufs au Plat & Saucisses 🌭", c: 390, v: false, i: ["2 Oeufs", "2 Saucisses poulet", "Pain", "Champignons"],
+                    variantes: [
+                        { t: "English Breakfast Fit", r: ["1. Griller saucisses.", "2. Cuire oeufs.", "3. Tomates."], ntr: "P: 32g | G: 25g | L: 22g", tip: "Choisissez des saucisses de volaille 100%." },
+                        { t: "Version Toast", r: ["1. Tout sur le pain."], ntr: "P: 30g | G: 42g | L: 24g", tip: "Plus pratique à manger." },
+                        { t: "Sans Glucides", r: ["1. Pas de pain.", "2. Plus légumes."], ntr: "P: 28g | G: 8g | L: 22g", tip: "Idéal pour un régime Keto." },
+                        { t: "Sauce Tomate", r: ["1. Baked beans maison."], ntr: "P: 29g | G: 45g | L: 20g", tip: "Le vrai style londonien." },
+                        { t: "Épicé Paprika", r: ["1. Sur les oeufs."], ntr: "P: 28g | G: 24g | L: 21g", tip: "Une touche fumée." }
+                    ]
+                },
+                { 
+                    n: "Gaufres à l'Avoine 🧇", c: 330, v: true, i: ["Avoine mixée", "Oeuf", "Compote", "Levure"],
+                    variantes: [
+                        { t: "Sans Farine", r: ["1. Mixer avoine.", "2. Mélanger.", "3. Gaufrier."], ntr: "P: 14g | G: 45g | L: 10g", tip: "La compote remplace le beurre." },
+                        { t: "Salées Fromage", r: ["1. Cheddar.", "2. Oignon."], ntr: "P: 20g | G: 40g | L: 18g", tip: "Délicieux avec un oeuf dessus." },
+                        { t: "Au Chocolat", r: ["1. Cacao dans la pâte."], ntr: "P: 13g | G: 48g | L: 12g", tip: "Gourmandise saine." },
+                        { t: "Beurre de Cacahuète", r: ["1. À l'intérieur."], ntr: "P: 18g | G: 42g | L: 18g", tip: "Texture dense et riche." },
+                        { t: "Version Fruitée", r: ["1. Framboises."], ntr: "P: 13g | G: 46g | L: 9g", tip: "Légèreté absolue." }
+                    ]
+                },
+                { 
+                    n: "Pain Perdu Santé 🍞", c: 360, v: true, i: ["Pain rassis", "Lait", "Oeuf", "Sirop d'érable"],
+                    variantes: [
+                        { t: "Le Traditionnel", r: ["1. Tremper pain.", "2. Poêler.", "3. Verser sirop."], ntr: "P: 15g | G: 55g | L: 10g", tip: "Pain complet ou de seigle recommandé." },
+                        { t: "Version Banane", r: ["1. Écraser banane dans lait."], ntr: "P: 16g | G: 62g | L: 11g", tip: "Sucre naturellement le pain." },
+                        { t: "Aux Baies", r: ["1. Coulis de fruits."], ntr: "P: 14g | G: 58g | L: 9g", tip: "Apporte de l'acidité." },
+                        { t: "Protéiné", r: ["1. Plus d'oeufs (blancs)."], ntr: "P: 25g | G: 50g | L: 12g", tip: "Plus consistant." },
+                        { t: "Cannelle & Noix", r: ["1. Croquant."], ntr: "P: 14g | G: 54g | L: 16g", tip: "Saveurs d'automne." }
+                    ]
+                },
+                { 
+                    n: "Muffins aux Oeufs 🧁", c: 280, v: false, i: ["4 Oeufs", "Dinde", "Légumes", "Fromage"],
+                    variantes: [
+                        { t: "Batch Cooking", r: ["1. Fouetter oeufs.", "2. Moules à muffins.", "3. Four."], ntr: "P: 24g | G: 5g | L: 18g", tip: "Se conserve 3 jours au frigo." },
+                        { t: "Poivron-Feta", r: ["1. Dés de légumes."], ntr: "P: 22g | G: 7g | L: 20g", tip: "Goût très méditerranéen." },
+                        { t: "Tout Poulet", r: ["1. Dés de blanc poulet."], ntr: "P: 32g | G: 4g | L: 15g", tip: "Concentré de protéines." },
+                        { t: "Épinards-Chèvre", r: ["1. Duo classique."], ntr: "P: 21g | G: 6g | L: 22g", tip: "Très doux et fondant." },
+                        { t: "Mexicain", r: ["1. Maïs.", "2. Chili."], ntr: "P: 20g | G: 12g | L: 16g", tip: "Un réveil qui bouge." }
+                    ]
+                },
+                { 
+                    n: "Breakfast Quesadilla 🧀", c: 420, v: false, i: ["Tortilla", "Oeufs brouillés", "Fromage", "Dinde fumée"],
+                    variantes: [
+                        { t: "La Fondante", r: ["1. Garnir tortilla.", "2. Plier.", "3. Toaster."], ntr: "P: 28g | G: 38g | L: 20g", tip: "Le fromage lie les ingrédients." },
+                        { t: "Avocat-Piment", r: ["1. Écrasé avocat dedans."], ntr: "P: 26g | G: 40g | L: 24g", tip: "Texture plus crémeuse." },
+                        { t: "Version Champis", r: ["1. Champignons sautés."], ntr: "P: 25g | G: 36g | L: 19g", tip: "Un goût terreux délicieux." },
+                        { t: "Pesto Style", r: ["1. Tartiner pesto."], ntr: "P: 24g | G: 35g | L: 22g", tip: "Saveur italienne au matin." },
+                        { t: "Double Fromage", r: ["1. Mozza + Cheddar."], ntr: "P: 30g | G: 37g | L: 26g", tip: "Pour les gourmands." }
+                    ]
+                },
+                { 
+                    n: "Pudding de Chia Coco 🥥", c: 310, v: true, i: ["Graines chia", "Lait coco", "Vanille", "Amandes"],
+                    variantes: [
+                        { t: "Zéro Sucre", r: ["1. Mélanger.", "2. Reposer nuit."], ntr: "P: 10g | G: 12g | L: 25g", tip: "Utilisez de la stévia si besoin." },
+                        { t: "Ananas Frais", r: ["1. Cubes ananas."], ntr: "P: 9g | G: 25g | L: 24g", tip: "Esprit Pina Colada saine." },
+                        { t: "Cacao-Amande", r: ["1. Chocolaté."], ntr: "P: 12g | G: 18g | L: 28g", tip: "Riche en magnésium." },
+                        { t: "Fraise-Basilic", r: ["1. Mélange osé."], ntr: "P: 9g | G: 22g | L: 23g", tip: "Surprenant et frais." },
+                        { t: "Beurre de noix", r: ["1. Topping généreux."], ntr: "P: 13g | G: 15g | L: 30g", tip: "Énergie durable." }
+                    ]
+                },
+                { 
+                    n: "Tofu Brouillé (Végé) 🥗", c: 290, v: true, i: ["Tofu ferme", "Curcuma", "Légumes", "Levure diététique"],
+                    variantes: [
+                        { t: "Alternative Oeufs", r: ["1. Émietter tofu.", "2. Sauter avec épices."], ntr: "P: 22g | G: 10g | L: 14g", tip: "Le curcuma donne la couleur jaune." },
+                        { t: "Noir de Sel (Kala Namak)", r: ["1. Goût de l'oeuf."], ntr: "P: 21g | G: 9g | L: 14g", tip: "Ce sel donne le vrai goût de l'oeuf." },
+                        { t: "Oignons & Poivrons", r: ["1. Base croquante."], ntr: "P: 19g | G: 15g | L: 13g", tip: "Plus de saveurs." },
+                        { t: "Version Kale", r: ["1. Superfood."], ntr: "P: 20g | G: 12g | L: 14g", tip: "Riche en vitamines K." },
+                        { t: "Sur Toast", r: ["1. Tartiner sur pain."], ntr: "P: 20g | G: 35g | L: 16g", tip: "Repas complet." }
+                    ]
+                },
+                { 
+                    n: "Burrito de Patate Douce 🍠", c: 380, v: true, i: ["Tortilla", "Patate douce", "Haricots", "Oeufs"],
+                    variantes: [
+                        { t: "Le Rassasiant", r: ["1. Purée patate.", "2. Garnir tortilla."], ntr: "P: 18g | G: 55g | L: 12g", tip: "Glucides lents pour tenir longtemps." },
+                        { t: "Épicé Cajun", r: ["1. Épices fortes."], ntr: "P: 17g | G: 53g | L: 13g", tip: "Très parfumé." },
+                        { t: "Avec Poulet", r: ["1. Dés de poulet."], ntr: "P: 32g | G: 50g | L: 14g", tip: "Version haute protéine." },
+                        { t: "Chèvre Frais", r: ["1. Touche acide."], ntr: "P: 19g | G: 52g | L: 18g", tip: "Se marie bien avec la patate." },
+                        { t: "Épinards sautés", r: ["1. Plus de fer."], ntr: "P: 18g | G: 54g | L: 11g", tip: "Parfait pour la santé." }
+                    ]
+                },
+                { 
+                    n: "Pizza de Petit-Déjeuner 🍕", c: 430, v: false, i: ["Pâte fine", "Oeuf", "Dinde", "Fromage"],
+                    variantes: [
+                        { t: "Morning Pizza", r: ["1. Garnir pâte.", "2. Casser oeuf au centre.", "3. Four."], ntr: "P: 30g | G: 45g | L: 18g", tip: "Utilisez une base de yogourt au lieu de crème." },
+                        { t: "Saumon & Aneth", r: ["1. Après cuisson."], ntr: "P: 32g | G: 42g | L: 20g", tip: "Frais et chic." },
+                        { t: "Blanche aux Champis", r: ["1. Sauce fromage frais."], ntr: "P: 28g | G: 44g | L: 19g", tip: "Très onctueux." },
+                        { t: "Végé-Tomate", r: ["1. Plein de légumes."], ntr: "P: 18g | G: 48g | L: 16g", tip: "Plus léger." },
+                        { t: "Pesto & Mozza", r: ["1. Style italien."], ntr: "P: 22g | G: 46g | L: 22g", tip: "Un classique indémodable." }
+                    ]
+                },
+                { 
+                    n: "Smoothie Protéiné Express 🥤", c: 270, v: true, i: ["Lait", "Banane", "Beurre de noix", "Cacao"],
+                    variantes: [
+                        { t: "Post-Entraînement", r: ["1. Tout mixer.", "2. Boire frais."], ntr: "P: 25g | G: 35g | L: 8g", tip: "La banane aide à la récupération." },
+                        { t: "Café Frappé", r: ["1. Ajouter un expresso."], ntr: "P: 15g | G: 32g | L: 7g", tip: "Caféine + Protéines." },
+                        { t: "Vanille-Fraise", r: ["1. Douceur."], ntr: "P: 24g | G: 30g | L: 6g", tip: "Goût milkshake." },
+                        { t: "Dattes & Noix", r: ["1. Énergie pure."], ntr: "P: 14g | G: 45g | L: 15g", tip: "Riche en fibres et minéraux." },
+                        { t: "Vert Pomme", r: ["1. Épinards.", "2. Pomme."], ntr: "P: 12g | G: 40g | L: 5g", tip: "Très rafraîchissant." }
+                    ]
+                },
+                { 
+                    n: "Oeufs Cocotte au Four 🍲", c: 310, v: false, i: ["2 Oeufs", "Crème légère", "Dinde fumée", "Mouillettes"],
+                    variantes: [
+                        { t: "Le Traditionnel", r: ["1. Ramequin.", "2. Cuire au bain-marie."], ntr: "P: 22g | G: 20g | L: 18g", tip: "Le blanc doit être pris, le jaune coulant." },
+                        { t: "Au Gorgonzola", r: ["1. Fromage fort."], ntr: "P: 24g | G: 19g | L: 24g", tip: "Pour les amateurs de fromage." },
+                        { t: "Tomates & Basilic", r: ["1. Frais."], ntr: "P: 19g | G: 22g | L: 16g", tip: "Goût d'été." },
+                        { t: "Version Truffée", r: ["1. Sel de truffe."], ntr: "P: 20g | G: 18g | L: 19g", tip: "Très élégant." },
+                        { t: "Aux Herbes", r: ["1. Ciboulette.", "2. Persil."], ntr: "P: 20g | G: 19g | L: 17g", tip: "Simple et efficace." }
+                    ]
+                },
+                { 
+                    n: "Tartines Ricotta & Miel 🍯", c: 320, v: true, i: ["Pain de seigle", "Ricotta", "Miel", "Noix"],
+                    variantes: [
+                        { t: "Douceur Matinale", r: ["1. Tartiner fromage.", "2. Verser miel.", "3. Noix."], ntr: "P: 14g | G: 45g | L: 12g", tip: "La ricotta est très légère en gras." },
+                        { t: "Figues Fraîches", r: ["1. Tranches de figues."], ntr: "P: 13g | G: 48g | L: 11g", tip: "Alliance parfaite." },
+                        { t: "Poire & Cannelle", r: ["1. Poire pochée."], ntr: "P: 12g | G: 50g | L: 11g", tip: "Très automnal." },
+                        { t: "Version Citron", r: ["1. Zestes."], ntr: "P: 11g | G: 42g | L: 10g", tip: "Plus frais." },
+                        { t: "Graines de Pavot", r: ["1. Pour le visuel."], ntr: "P: 12g | G: 43g | L: 12g", tip: "Petit croquant sympa." }
+                    ]
+                },
+    { 
+        n: "Chia Pudding Royal 🍮", c: 290, v: true, i: ["30g Graines de chia", "150ml Lait coco", "Vanille"],
+        variantes: [
+            { t: "Nuit Paisible", r: ["1. Mélanger.", "2. Frigo 4h+."], ntr: "P: 8g | G: 15g | L: 20g", tip: "Préparez le soir." },
+            { t: "Mangue Passion", r: ["1. Coulis de fruits."], ntr: "P: 9g | G: 25g | L: 20g", tip: "Un goût exotique." },
+            { t: "Moka", r: ["1. Ajouter espresso."], ntr: "P: 8g | G: 16g | L: 20g", tip: "Caféine et fibres." },
+            { t: "Beurre d'Amande", r: ["1. Napper le fond."], ntr: "P: 11g | G: 18g | L: 26g", tip: "Plus de protéines végétales." },
+            { t: "Zeste de Citron", r: ["1. Râper la peau."], ntr: "P: 8g | G: 14g | L: 20g", tip: "Très digeste." }
+        ]
+    },
+            { n: "Bowl Skyr & Fruits Péi 🥭", c: 310, v: true, i: ["200g Skyr", "Mangue", "Graines de lin", "Miel"],
+                variantes: [
+                    { t: "Énergie Matinale", r: ["1. Mixez mangue.", "2. Mélanger Skyr."], ntr: "P: 25g | G: 35g | L: 5g", tip: "Riche en probiotiques naturels." },
+                    { t: "Crunchy Noisettes", r: ["1. Noisettes concassées.", "2. Miel."], ntr: "P: 26g | G: 38g | L: 12g", tip: "Les noisettes boostent la concentration." },
+                    { t: "Smoothie Bowl", r: ["1. Tout mixer.", "2. Boire froid."], ntr: "P: 22g | G: 40g | L: 4g", tip: "Parfait pour les matins pressés." },
+                    { t: "Façon Trifle", r: ["1. Étages alternés.", "2. Frais."], ntr: "P: 24g | G: 36g | L: 6g", tip: "Alternez les couches pour le visuel." },
+                    { t: "Version Gingembre", r: ["1. Râper gingembre.", "2. Mélanger."], ntr: "P: 25g | G: 34g | L: 5g", tip: "Le gingembre renforce l'immunité." }
+                ]
+            },
+            { n: "Pancakes à la Banane 🥞", c: 350, v: true, i: ["2 Bananes", "2 Oeufs", "Avoine", "Cannelle"],
+                variantes: [
+                    { t: "Sans Farine", r: ["1. Écraser bananes.", "2. Mélanger.", "3. Poêler."], ntr: "P: 15g | G: 45g | L: 8g", tip: "Texture fondante et légère." },
+                    { t: "Protidiques", r: ["1. Ajouter 30g de whey."], ntr: "P: 35g | G: 40g | L: 9g", tip: "Le top après le sport." },
+                    { t: "Choco-Gourmand", r: ["1. Pépites chocolat noir."], ntr: "P: 14g | G: 52g | L: 15g", tip: "Utilisez du chocolat à 70% min." },
+                    { t: "Peanut Butter", r: ["1. Beurre cacahuète."], ntr: "P: 18g | G: 46g | L: 18g", tip: "Énergie longue durée." },
+                    { t: "Blueberry Mix", r: ["1. Myrtilles fraîches."], ntr: "P: 15g | G: 48g | L: 9g", tip: "Riche en antioxydants." }
+                ]
+            },
+            { n: "Avocado Toast & Œuf 🥑", c: 420, v: true, i: ["Pain complet", "Avocat", "Œuf", "Sésame"],
+                variantes: [
+                    { t: "Classique", r: ["1. Toaster.", "2. Écraser l'avocat.", "3. Œuf poché."], ntr: "P: 16g | G: 30g | L: 28g", tip: "Citronnez pour éviter l'oxydation." },
+                    { t: "Spicy", r: ["1. Piment chili.", "2. Huile piquante."], ntr: "P: 16g | G: 31g | L: 29g", tip: "Le piment réveille le métabolisme." },
+                    { t: "Saumon Fumé", r: ["1. Ajouter saumon.", "2. Aneth."], ntr: "P: 24g | G: 30g | L: 32g", tip: "Riche en Oméga-3.", v: false },
+                    { t: "Vegan", r: ["1. Remplacer œuf par tofu."], ntr: "P: 18g | G: 32g | L: 26g", tip: "Le tofu fumé est excellent ici." },
+                    { t: "Feta Crunch", r: ["1. Feta émiettée."], ntr: "P: 19g | G: 31g | L: 34g", tip: "Le sel de la feta relève le gras de l'avocat." }
+                ]
+            }
+        ],
+        dejeuner: [
+            { n: "Bowl de Quinoa Post-Workout 🥗", c: 520, v: true, i: ["Quinoa", "Pois chiches", "Patate douce", "Avocat"],
+                variantes: [
+                    { t: "Équilibre Veggie", r: ["1. Cuire quinoa.", "2. Rincer pois.", "3. Assembler."], ntr: "P: 18g | G: 65g | L: 20g", tip: "Riche en magnésium." },
+                    { t: "Protéine+", r: ["1. Ajouter 100g de tofu poêlé."], ntr: "P: 28g | G: 62g | L: 22g", tip: "Optimise la récupération musculaire." },
+                    { t: "Mexicain", r: ["1. Maïs et salsa.", "2. Citron vert."], ntr: "P: 17g | G: 70g | L: 19g", tip: "Le maïs apporte des fibres." },
+                    { t: "Automne", r: ["1. Noix et pommes.", "2. Vinaigre."], ntr: "P: 15g | G: 68g | L: 25g", tip: "Régule la glycémie." },
+                    { t: "Méditerranéen", r: ["1. Olives.", "2. Feta."], ntr: "P: 19g | G: 60g | L: 24g", tip: "Option fraîche et croquante." }
+                ]
+            },
+{ 
+                    n: "Poulet Teriyaki Rapide 🍗", c: 450, v: false, i: ["150g Poulet", "Riz basmati", "Brocoli", "Sauce soja"],
+                    variantes: [
+                        { t: "Classique Poêlé", r: ["1. Cuire le poulet.", "2. Ajouter sauce.", "3. Servir."], ntr: "P: 35g | G: 42g | L: 8g", tip: "Parsemez de graines de sésame." },
+                        { t: "Version Bol (Poke)", r: ["1. Ingrédients froids.", "2. Riz tiède."], ntr: "P: 32g | G: 45g | L: 7g", tip: "Ajoutez des lamelles de concombre." },
+                        { t: "Végé au Tofu", r: ["1. Presser le tofu.", "2. Mariner.", "3. Frire."], ntr: "P: 24g | G: 40g | L: 12g", tip: "Utilisez du tofu fumé pour plus de goût." },
+                        { t: "Spicy Chili", r: ["1. Ajouter sriracha.", "2. Gingembre."], ntr: "P: 34g | G: 43g | L: 9g", tip: "Idéal pour booster le métabolisme." },
+                        { t: "En Papillote", r: ["1. Tout emballer.", "2. Four 20min."], ntr: "P: 33g | G: 38g | L: 6g", tip: "Conserve tous les jus de cuisson." }
+                    ]
+                },
+{ 
+                    n: "Bagel au Saumon & Avocat 🥯", c: 440, v: false, i: ["1 Pain Bagel", "Saumon fumé", "Avocat", "Fromage frais"],
+                    variantes: [
+                        { t: "Classique", r: ["1. Toaster le pain.", "2. Tartiner cream cheese.", "3. Garnir."], ntr: "P: 22g | G: 48g | L: 18g", tip: "Ajoutez quelques câpres pour le peps." },
+                        { t: "Version Oeuf", r: ["1. Ajouter un oeuf plat."], ntr: "P: 28g | G: 49g | L: 24g", tip: "Le jaune coulant lie le tout." },
+                        { t: "Style Nordique", r: ["1. Radis noir.", "2. Aneth."], ntr: "P: 21g | G: 46g | L: 17g", tip: "Apporte un croquant rafraîchissant." },
+                        { t: "Épicé Sriracha", r: ["1. Sauce piquante."], ntr: "P: 22g | G: 50g | L: 19g", tip: "Pour un réveil musculaire." },
+                        { t: "Sans Gluten", r: ["1. Pain sans gluten."], ntr: "P: 20g | G: 52g | L: 18g", tip: "Vérifiez la texture après toastage." }
+                    ]
+                },
+                { 
+                    n: "Poke Bowl Crevettes 🥭", c: 410, v: false, i: ["Riz vinaigré", "Crevettes", "Mangue", "Edamames"],
+                    variantes: [
+                        { t: "Tropical Bowl", r: ["1. Disposer riz.", "2. Garnir de fruits.", "3. Sauce soja."], ntr: "P: 24g | G: 55g | L: 7g", tip: "La mangue doit être bien mûre." },
+                        { t: "Mayo Spicy", r: ["1. Mayo légère.", "2. Piment."], ntr: "P: 23g | G: 56g | L: 14g", tip: "Mélangez la sauce à part." },
+                        { t: "Version Quinoa", r: ["1. Remplacer riz par quinoa."], ntr: "P: 26g | G: 45g | L: 9g", tip: "Index glycémique plus bas." },
+                        { t: "Full Green", r: ["1. Concombre.", "2. Chou vert."], ntr: "P: 22g | G: 50g | L: 8g", tip: "Un maximum de croquant." },
+                        { t: "Sésame Noir", r: ["1. Graines grillées."], ntr: "P: 24g | G: 54g | L: 10g", tip: "Un visuel très pro." }
+                    ]
+                },
+                { 
+                    n: "Escalope de Dinde à la Crème 🍄", c: 430, v: false, i: ["150g Dinde", "Champignons", "Crème 5%", "Riz"],
+                    variantes: [
+                        { t: "Classique", r: ["1. Cuire dinde.", "2. Saisir champignons.", "3. Crémer."], ntr: "P: 38g | G: 40g | L: 12g", tip: "Utilisez du persil plat frais." },
+                        { t: "Version Paprika", r: ["1. Épices hongroises."], ntr: "P: 37g | G: 42g | L: 13g", tip: "Donne une belle couleur ambrée." },
+                        { t: "Au Curry", r: ["1. Poudre de curry."], ntr: "P: 38g | G: 41g | L: 12g", tip: "Un classique indémodable." },
+                        { t: "Format Émincé", r: ["1. Couper en dés."], ntr: "P: 38g | G: 38g | L: 11g", tip: "Cuit plus rapidement." },
+                        { t: "Aux Échalotes", r: ["1. Échalotes fondues."], ntr: "P: 37g | G: 43g | L: 14g", tip: "Un goût plus subtil et sucré." }
+                    ]
+                },
+                { 
+                    n: "Salade de Pâtes au Poulet 🥗", c: 390, v: false, i: ["Pâtes froides", "Poulet grillé", "Tomates cerises", "Pesto"],
+                    variantes: [
+                        { t: "Pesto Rosso", r: ["1. Mélanger pâtes/pesto.", "2. Ajouter poulet."], ntr: "P: 32g | G: 45g | L: 14g", tip: "Mettez le poulet encore tiède." },
+                        { t: "Façon Italienne", r: ["1. Billes de mozza."], ntr: "P: 34g | G: 42g | L: 18g", tip: "Fraîcheur garantie." },
+                        { t: "Aux Noix", r: ["1. Cerneaux de noix."], ntr: "P: 31g | G: 44g | L: 19g", tip: "Pour le bon gras du cerveau." },
+                        { t: "Légumes d'Été", r: ["1. Courgettes grillées."], ntr: "P: 29g | G: 48g | L: 13g", tip: "Plus de volume, moins de calories." },
+                        { t: "Sauce Moutarde", r: ["1. Vinaigrette forte."], ntr: "P: 32g | G: 43g | L: 12g", tip: "Réveille le plat." }
+                    ]
+                },
+                { 
+                    n: "Wrap de Bœuf Tex-Mex 🌯", c: 450, v: false, i: ["Tortilla", "Bœuf haché 5%", "Haricots rouges", "Poivrons"],
+                    variantes: [
+                        { t: "Burrito Fit", r: ["1. Cuire viande.", "2. Garnir tortilla.", "3. Rouler."], ntr: "P: 30g | G: 42g | L: 16g", tip: "Ne surchargez pas pour pouvoir fermer." },
+                        { t: "Quesadilla", r: ["1. Plier en deux.", "2. Toaster poêle."], ntr: "P: 31g | G: 38g | L: 20g", tip: "Le fromage doit bien fondre." },
+                        { t: "Version Bol", r: ["1. Sans galette.", "2. Plus de riz."], ntr: "P: 28g | G: 45g | L: 14g", tip: "Option sans gluten." },
+                        { t: "Extra Spicy", r: ["1. Jalapenos."], ntr: "P: 30g | G: 43g | L: 16g", tip: "Pour les amateurs de sensations." },
+                        { t: "Sauce Blanche", r: ["1. Yaourt grec.", "2. Citron."], ntr: "P: 32g | G: 40g | L: 13g", tip: "Adoucit le piment." }
+                    ]
+                },
+                { 
+                    n: "Filet de Colin & Quinoa 🐟", c: 350, v: false, i: ["Colin", "Quinoa", "Épinards", "Citron"],
+                    variantes: [
+                        { t: "Zeste Citron", r: ["1. Vapeur poisson.", "2. Assaisonner quinoa."], ntr: "P: 32g | G: 35g | L: 9g", tip: "Le colin est très maigre, idéal pour sécher." },
+                        { t: "Sauce Tomate", r: ["1. Coulis maison."], ntr: "P: 31g | G: 38g | L: 8g", tip: "Évitez les sauces industrielles sucrées." },
+                        { t: "Aux Amandes", r: ["1. Amandes effilées."], ntr: "P: 33g | G: 34g | L: 15g", tip: "Un petit goût de fête." },
+                        { t: "Légumes Croquants", r: ["1. Carottes râpées."], ntr: "P: 30g | G: 40g | L: 8g", tip: "Mix de textures intéressant." },
+                        { t: "Curcuma Express", r: ["1. Colorer le quinoa."], ntr: "P: 31g | G: 37g | L: 9g", tip: "Anti-inflammatoire naturel." }
+                    ]
+                },
+                { 
+                    n: "Salade de Pois Chiches 🥙", c: 380, v: true, i: ["Pois chiches", "Concombre", "Feta", "Oignon rouge"],
+                    variantes: [
+                        { t: "Grecque", r: ["1. Rincer pois.", "2. Couper légumes.", "3. Mélanger."], ntr: "P: 18g | G: 42g | L: 16g", tip: "Laissez mariner 10min." },
+                        { t: "Avec Thon", r: ["1. Ajouter une boîte de thon."], ntr: "P: 32g | G: 40g | L: 17g", tip: "Boostez vos protéines facilement." },
+                        { t: "Version Falafel", r: ["1. Remplacer pois par falafels."], ntr: "P: 16g | G: 48g | L: 20g", tip: "Plus gourmand et croquant." },
+                        { t: "Sauce Tahini", r: ["1. Crème de sésame."], ntr: "P: 19g | G: 40g | L: 22g", tip: "Un goût oriental authentique." },
+                        { t: "Menthe Fraîche", r: ["1. Ciseler les herbes."], ntr: "P: 17g | G: 43g | L: 15g", tip: "Extrêmement rafraîchissant." }
+                    ]
+                },
+                { 
+                    n: "Nuggets de Poulet Maison 🍗", c: 410, v: false, i: ["Poulet", "Corn-flakes", "Oeuf", "Brocoli"],
+                    variantes: [
+                        { t: "Panure Corn-flakes", r: ["1. Mixer céréales.", "2. Paner poulet.", "3. Four."], ntr: "P: 35g | G: 35g | L: 12g", tip: "Sans sucre ajouté, les corn-flakes sont top." },
+                        { t: "Version Parmesan", r: ["1. Chapelure au fromage."], ntr: "P: 38g | G: 20g | L: 18g", tip: "Plus riche en saveurs." },
+                        { t: "Accompagné de Riz", r: ["1. Riz basmati."], ntr: "P: 34g | G: 50g | L: 11g", tip: "Pour un déjeuner très complet." },
+                        { t: "Format Fingers", r: ["1. Couper en lamelles."], ntr: "P: 35g | G: 25g | L: 10g", tip: "Plus facile à tremper en sauce." },
+                        { t: "Paprika & Ail", r: ["1. Épices dans la panure."], ntr: "P: 35g | G: 28g | L: 11g", tip: "Goût fumé délicieux." }
+                    ]
+                },
+                { 
+                    n: "Risotto de Boulghour au Potiron 🎃", c: 370, v: true, i: ["Boulghour", "Potiron", "Oignon", "Chèvre"],
+                    variantes: [
+                        { t: "Automnal", r: ["1. Cuire potiron.", "2. Mélanger boulghour.", "3. Lier au fromage."], ntr: "P: 14g | G: 52g | L: 12g", tip: "Utilisez du bouillon de légumes." },
+                        { t: "Avec Émincé Dinde", r: ["1. Ajouter dinde grillée."], ntr: "P: 32g | G: 50g | L: 14g", tip: "Le sucré du potiron va bien avec la dinde." },
+                        { t: "Graines de Courge", r: ["1. Parsemer à la fin."], ntr: "P: 15g | G: 53g | L: 16g", tip: "Pour le croquant et le magnésium." },
+                        { t: "Épicé Muscade", r: ["1. Râper noix de muscade."], ntr: "P: 14g | G: 54g | L: 12g", tip: "Souligne le goût du potiron." },
+                        { t: "Version Lait Coco", r: ["1. Plus onctueux."], ntr: "P: 13g | G: 50g | L: 18g", tip: "Rendu très crémeux." }
+                    ]
+                },
+                { 
+                    n: "Tartelette Tortilla Poulet 🍕", c: 420, v: false, i: ["1 Tortilla", "Blanc de poulet", "Poivron", "Moza"],
+                    variantes: [
+                        { t: "Pizza Tortilla", r: ["1. Base tomate sur galette.", "2. Garnir.", "3. Four 10min."], ntr: "P: 34g | G: 32g | L: 18g", tip: "La pâte est ultra-fine, c'est le secret." },
+                        { t: "BBQ Style", r: ["1. Sauce BBQ légère."], ntr: "P: 33g | G: 38g | L: 18g", tip: "Attention aux sucres de la sauce." },
+                        { t: "Blanche Champignons", r: ["1. Base crème.", "2. Champis."], ntr: "P: 30g | G: 34g | L: 20g", tip: "Très doux au palais." },
+                        { t: "Version Salade", r: ["1. Roquette sur le dessus."], ntr: "P: 31g | G: 35g | L: 17g", tip: "Apporte de la fraîcheur." },
+                        { t: "Végé-Feta", r: ["1. Remplacer poulet par feta."], ntr: "P: 18g | G: 35g | L: 22g", tip: "Option rapide et salée." }
+                    ]
+                },
+                { 
+                    n: "Bœuf Strogonoff Light 🥩", c: 460, v: false, i: ["150g Bœuf", "Champignons", "Yaourt grec", "Pâtes"],
+                    variantes: [
+                        { t: "Classique Santé", r: ["1. Cuire viande.", "2. Mijoter légumes.", "3. Lier yaourt."], ntr: "P: 36g | G: 45g | L: 14g", tip: "Le yaourt remplace la crème grasse." },
+                        { t: "Extra Oignons", r: ["1. Oignons rouges fondus."], ntr: "P: 35g | G: 48g | L: 13g", tip: "Apporte une note sucrée." },
+                        { t: "Version Riz", r: ["1. Remplacer pâtes par riz."], ntr: "P: 34g | G: 50g | L: 12g", tip: "Aussi bon et sans gluten." },
+                        { t: "Piment de la Jamaïque", r: ["1. Épices boisées."], ntr: "P: 35g | G: 44g | L: 14g", tip: "Goût très profond." },
+                        { t: "Légumes d'Hiver", r: ["1. Ajouter panais."], ntr: "P: 33g | G: 52g | L: 12g", tip: "Plus de fibres." }
+                    ]
+                },
+                { 
+                    n: "Salade de Lentilles & Oeuf 🥗", c: 360, v: true, i: ["Lentilles", "1 Oeuf poché", "Tomates", "Épinards"],
+                    variantes: [
+                        { t: "L'Équilibre", r: ["1. Mélanger lentilles/tomates.", "2. Poser l'oeuf."], ntr: "P: 22g | G: 38g | L: 12g", tip: "Le jaune d'oeuf sert de sauce." },
+                        { t: "Saumon fumé", r: ["1. Ajouter tranches saumon."], ntr: "P: 34g | G: 35g | L: 18g", tip: "Alliance terre-mer parfaite." },
+                        { t: "Version Chaude", r: ["1. Réchauffer lentilles."], ntr: "P: 21g | G: 40g | L: 11g", tip: "Plus réconfortant l'hiver." },
+                        { t: "Vinaigrette Balsamique", r: ["1. Sauce aigre-douce."], ntr: "P: 20g | G: 42g | L: 11g", tip: "Rehausse le goût des lentilles." },
+                        { t: "Noix de cajou", r: ["1. Pour le croquant."], ntr: "P: 22g | G: 39g | L: 18g", tip: "Riche en minéraux." }
+                    ]
+                },
+                { 
+                    n: "Wok de Dinde aux Ananas 🍍", c: 390, v: false, i: ["150g Dinde", "Ananas frais", "Poivron", "Nouilles"],
+                    variantes: [
+                        { t: "Aigre-Doux", r: ["1. Sauter dinde.", "2. Ajouter ananas.", "3. Soja."], ntr: "P: 34g | G: 52g | L: 7g", tip: "L'ananas aide à la digestion des protéines." },
+                        { t: "Version Spicy", r: ["1. Piment oiseau."], ntr: "P: 33g | G: 53g | L: 8g", tip: "Le piment sublime le sucre." },
+                        { t: "Riz Cantonais", r: ["1. Riz.", "2. Petits pois."], ntr: "P: 35g | G: 55g | L: 9g", tip: "Un classique revisité sans porc." },
+                        { t: "Lait de Coco", r: ["1. Sauce onctueuse."], ntr: "P: 32g | G: 50g | L: 16g", tip: "Plus gourmand." },
+                        { t: "Gingembre Frais", r: ["1. Râper gingembre."], ntr: "P: 34g | G: 51g | L: 7g", tip: "Un goût frais et piquant." }
+                    ]
+                },
+                { 
+                    n: "Gratin de Chou-Fleur au Poulet 🥘", c: 380, v: false, i: ["Chou-fleur", "Poulet", "Béchamel légère", "Parmesan"],
+                    variantes: [
+                        { t: "Le Fondant", r: ["1. Cuire chou.", "2. Étager avec poulet.", "3. Gratiner."], ntr: "P: 40g | G: 18g | L: 16g", tip: "Remplacez le beurre par la maïzena." },
+                        { t: "Version Curry", r: ["1. Curry dans la sauce."], ntr: "P: 39g | G: 20g | L: 15g", tip: "Le chou-fleur adore le curry." },
+                        { t: "Piment d'Espelette", r: ["1. Note basque."], ntr: "P: 38g | G: 19g | L: 16g", tip: "Un piquant très doux." },
+                        { t: "Sans Laitage", r: ["1. Crème de soja."], ntr: "P: 34g | G: 22g | L: 14g", tip: "Plus digeste." },
+                        { t: "Extra Protéines", r: ["1. Double ration poulet."], ntr: "P: 52g | G: 15g | L: 18g", tip: "Idéal après une séance intense." }
+                    ]
+                },
+                { 
+                    n: "Quesadilla aux Crevettes 🦐", c: 420, v: false, i: ["Tortilla", "Crevettes", "Avocat", "Fromage"],
+                    variantes: [
+                        { t: "La Grillée", r: ["1. Garnir galette.", "2. Poêler 2min/face."], ntr: "P: 28g | G: 38g | L: 18g", tip: "Pressez bien avec une spatule." },
+                        { t: "Salsa de Tomates", r: ["1. Tremper dans sauce."], ntr: "P: 26g | G: 42g | L: 17g", tip: "Plus de vitamines." },
+                        { t: "Version Épinards", r: ["1. Ajouter feuilles fraîches."], ntr: "P: 27g | G: 40g | L: 17g", tip: "Fond à la cuisson." },
+                        { t: "Ail & Persillade", r: ["1. Faire revenir crevettes."], ntr: "P: 29g | G: 37g | L: 19g", tip: "Parfum irrésistible." },
+                        { t: "Light Cheese", r: ["1. Mozzarella légère."], ntr: "P: 30g | G: 38g | L: 12g", tip: "Réduit les graisses saturées." }
+                    ]
+                },
+                { 
+                    n: "Salade de Boulghour & Poulet 🥗", c: 400, v: false, i: ["Boulghour", "Poulet", "Pommes", "Amandes"],
+                    variantes: [
+                        { t: "Croquante", r: ["1. Mélanger céréale froids.", "2. Ajouter dés de fruits."], ntr: "P: 32g | G: 48g | L: 12g", tip: "La pomme évite la sécheresse." },
+                        { t: "Version Raisins", r: ["1. Raisins secs."], ntr: "P: 30g | G: 55g | L: 11g", tip: "Un goût plus oriental." },
+                        { t: "Sauce Miel-Moutarde", r: ["1. Équilibre parfait."], ntr: "P: 31g | G: 52g | L: 12g", tip: "Le classique des salades." },
+                        { t: "Menthe & Citron", r: ["1. Fraîcheur taboulé."], ntr: "P: 29g | G: 46g | L: 11g", tip: "Très digeste." },
+                        { t: "Cajou Grillées", r: ["1. Remplacer amandes."], ntr: "P: 32g | G: 47g | L: 16g", tip: "Plus de rondeur en bouche." }
+                    ]
+                },
+                { 
+                    n: "Poisson Pané & Purée de Pois 🐟", c: 370, v: false, i: ["Cabillaud", "Petits pois", "Menthe", "Chapelure"],
+                    variantes: [
+                        { t: "British Fit", r: ["1. Paner poisson.", "2. Mixer pois.", "3. Servir."], ntr: "P: 34g | G: 35g | L: 10g", tip: "La purée de pois est riche en fibres." },
+                        { t: "Version Four", r: ["1. Sans friture."], ntr: "P: 33g | G: 32g | L: 6g", tip: "Beaucoup plus léger." },
+                        { t: "Purée de Carottes", r: ["1. Remplacer pois."], ntr: "P: 30g | G: 42g | L: 7g", tip: "Pour le béta-carotène." },
+                        { t: "Citronnelle", r: ["1. Infuser la purée."], ntr: "P: 31g | G: 33g | L: 9g", tip: "Goût très original." },
+                        { t: "Croûte de Noisettes", r: ["1. Panure luxe."], ntr: "P: 35g | G: 30g | L: 18g", tip: "Un délice de texture." }
+                    ]
+                },
+                { 
+                    n: "Bowl Méditerranéen au Thon 🥗", c: 380, v: false, i: ["Thon", "Olives", "Tomates", "Concombre"],
+                    variantes: [
+                        { t: "Salade de Thon", r: ["1. Assembler le bol.", "2. Huile d'olive."], ntr: "P: 32g | G: 15g | L: 22g", tip: "Prenez du thon au naturel." },
+                        { t: "Avec Riz", r: ["1. Ajouter une base riz."], ntr: "P: 34g | G: 45g | L: 20g", tip: "Pour les faims de loup." },
+                        { t: "Style Niçois", r: ["1. Ajouter un oeuf."], ntr: "P: 38g | G: 18g | L: 26g", tip: "Le grand classique." },
+                        { t: "Vinaigre de cidre", r: ["1. Aide à la glycémie."], ntr: "P: 31g | G: 16g | L: 22g", tip: "Bon pour le métabolisme." },
+                        { t: "Version Capres", r: ["1. Goût iodé."], ntr: "P: 31g | G: 14g | L: 22g", tip: "Très peu calorique." }
+                    ]
+                },
+                { 
+                    n: "Brochettes de Bœuf Teriyaki 🥩", c: 440, v: false, i: ["Bœuf", "Poivrons", "Sauce soja", "Riz"],
+                    variantes: [
+                        { t: "Yakisoba Style", r: ["1. Griller brochettes.", "2. Sauce laquée."], ntr: "P: 36g | G: 45g | L: 15g", tip: "Coupez le bœuf en cubes égaux." },
+                        { t: "Graines de Sésame", r: ["1. Saupoudrer."], ntr: "P: 35g | G: 47g | L: 17g", tip: "Pour le calcium végétal." },
+                        { t: "Version Légumes", r: ["1. Plus de poivrons."], ntr: "P: 34g | G: 38g | L: 14g", tip: "Plus coloré et léger." },
+                        { t: "Marinade Gingembre", r: ["1. Laisser reposer 1h."], ntr: "P: 36g | G: 42g | L: 14g", tip: "Tendreté incroyable." },
+                        { t: "Accompagné de Chou", r: ["1. Salade de chou."], ntr: "P: 33g | G: 40g | L: 14g", tip: "Équilibre parfait." }
+                    ]
+                },
+                { 
+                    n: "Pâtes au Thon & Citron 🍝", c: 410, v: false, i: ["Pâtes", "Thon", "Citron", "Persillade"],
+                    variantes: [
+                        { t: "L'Express", r: ["1. Cuire pâtes.", "2. Ajouter thon/citron.", "3. Mélanger."], ntr: "P: 30g | G: 55g | L: 10g", tip: "Prêt en moins de 10 minutes." },
+                        { t: "Version Olives", r: ["1. Ajouter olives noires."], ntr: "P: 29g | G: 52g | L: 14g", tip: "Goût plus méditerranéen." },
+                        { t: "Parmesan râpé", r: ["1. Note italienne."], ntr: "P: 32g | G: 50g | L: 16g", tip: "Le fromage lie les saveurs." },
+                        { t: "Épicé au Chili", r: ["1. Flocons de piment."], ntr: "P: 29g | G: 54g | L: 11g", tip: "Pour booster le cœur." },
+                        { t: "Courgettes râpées", r: ["1. Fondent dans les pâtes."], ntr: "P: 28g | G: 58g | L: 10g", tip: "Volume doublé, calories stables." }
+                    ]
+                },
+                { 
+                    n: "Pasta à la Norma 🍝", c: 480, v: true, i: ["100g Pâtes", "Aubergine", "Tomate", "Ricotta salée"],
+                    variantes: [
+                        { t: "Traditionnelle", r: ["1. Frire aubergine.", "2. Sauce tomate.", "3. Mélanger."], ntr: "P: 14g | G: 65g | L: 18g", tip: "L'aubergine doit être bien fondante." },
+                        { t: "Version Light", r: ["1. Aubergine au four.", "2. Pâtes complètes."], ntr: "P: 16g | G: 60g | L: 8g", tip: "Moins d'huile, plus de fibres." },
+                        { t: "Protéine +", r: ["1. Ajouter poulet grillé."], ntr: "P: 38g | G: 62g | L: 15g", tip: "Un repas complet pour sportifs." },
+                        { t: "Zucchini Twist", r: ["1. Remplacer par courgettes."], ntr: "P: 12g | G: 58g | L: 16g", tip: "Plus léger pour le soir." },
+                        { t: "Gratinée", r: ["1. Mozzarella.", "2. Passer sous le grill."], ntr: "P: 20g | G: 64g | L: 22g", tip: "Le fromage filant change tout." }
+                    ]
+                },
+                { 
+                    n: "Saumon au Pesto 🐟", c: 520, v: false, i: ["Pavé de saumon", "Pesto basilic", "Quinoa", "Asperges"],
+                    variantes: [
+                        { t: "Croûte de Pesto", r: ["1. Tartiner le saumon.", "2. Four 12min."], ntr: "P: 30g | G: 25g | L: 34g", tip: "Ne surcuisez pas le saumon." },
+                        { t: "Salade Froide", r: ["1. Émietter saumon.", "2. Mélanger quinoa."], ntr: "P: 28g | G: 28g | L: 30g", tip: "Parfait pour une lunchbox." },
+                        { t: "Version Citronnée", r: ["1. Jus de citron.", "2. Aneth."], ntr: "P: 31g | G: 22g | L: 28g", tip: "Plus frais et acide." },
+                        { t: "Pasta-Pesto", r: ["1. Remplacer quinoa par pâtes."], ntr: "P: 32g | G: 55g | L: 32g", tip: "Très énergétique." },
+                        { t: "Bowl Keto", r: ["1. Sans féculents.", "2. Double légumes."], ntr: "P: 29g | G: 8g | L: 38g", tip: "Idéal pour limiter les glucides." }
+                    ]
+                },
+                { 
+                    n: "Curry de Lentilles 🍛", c: 390, v: true, i: ["Lentilles corail", "Lait de coco", "Curry", "Épinards"],
+                    variantes: [
+                        { t: "Dahl Onctueux", r: ["1. Mijoter lentilles.", "2. Ajouter coco."], ntr: "P: 18g | G: 45g | L: 14g", tip: "Servez avec un pain Naan." },
+                        { t: "Soupe Épaisse", r: ["1. Plus de bouillon.", "2. Mixer."], ntr: "P: 16g | G: 40g | L: 12g", tip: "Réconfortant en hiver." },
+                        { t: "Avec Crevettes", r: ["1. Ajouter en fin de cuisson."], ntr: "P: 28g | G: 42g | L: 15g", tip: "Alliance terre-mer réussie." },
+                        { t: "Version Express", r: ["1. Lentilles en conserve."], ntr: "P: 17g | G: 44g | L: 13g", tip: "Prêt en moins de 10 minutes." },
+                        { t: "Power Bowl", r: ["1. Servir sur riz sauvage."], ntr: "P: 20g | G: 58g | L: 15g", tip: "Un maximum de protéines végétales." }
+                    ]
+                },
+                { 
+                    n: "Bowl Mexicain 🥗", c: 460, v: true, i: ["Maïs", "Haricots rouges", "Riz", "Guacamole"],
+                    variantes: [
+                        { t: "Végé Classic", r: ["1. Assembler les couches.", "2. Citronner."], ntr: "P: 15g | G: 60g | L: 16g", tip: "Ajoutez de la coriandre fraîche." },
+                        { t: "Beefy Bowl", r: ["1. Ajouter bœuf haché."], ntr: "P: 32g | G: 58g | L: 22g", tip: "Épicez la viande avec du cumin." },
+                        { t: "Façon Nachos", r: ["1. Chips de maïs.", "2. Fromage fondu."], ntr: "P: 18g | G: 65g | L: 28g", tip: "Plus gourmand, moins 'diet'." },
+                        { t: "Salade Légère", r: ["1. Sans riz.", "2. Plus de salade."], ntr: "P: 12g | G: 30g | L: 14g", tip: "Très faible en calories." },
+                        { t: "Burrito Grillé", r: ["1. Tout mettre en tortilla."], ntr: "P: 16g | G: 62g | L: 18g", tip: "Pratique à manger à la main." }
+                    ]
+                },
+                { 
+                    n: "Salade César Fit 🥗", c: 380, v: false, i: ["Laitue romaine", "Poulet", "Parmesan", "Sauce yaourt"],
+                    variantes: [
+                        { t: "Version Allégée", r: ["1. Sauce au skyr.", "2. Poulet grillé."], ntr: "P: 35g | G: 10g | L: 12g", tip: "Le goût sans le gras." },
+                        { t: "Avec Croutons", r: ["1. Pain d'épice grillé."], ntr: "P: 33g | G: 25g | L: 14g", tip: "Ajoute un petit goût sucré-salé." },
+                        { t: "Saumon fumé", r: ["1. Remplacer le poulet."], ntr: "P: 28g | G: 12g | L: 18g", tip: "Riche en bons lipides." },
+                        { t: "Vegan-Style", r: ["1. Pois chiches grillés.", "2. Levure bière."], ntr: "P: 18g | G: 35g | L: 10g", tip: "Une alternative bluffante." },
+                        { t: "Wrap César", r: ["1. Rouler en tortilla."], ntr: "P: 22g | G: 45g | L: 15g", tip: "Idéal pour le déjeuner au bureau." }
+                    ]
+                },
+                { 
+                    n: "Wok de Crevettes 🦐", c: 340, v: false, i: ["Crevettes", "Nouilles de riz", "Poivrons", "Gingembre"],
+                    variantes: [
+                        { t: "Express Wok", r: ["1. Saisir légumes.", "2. Sauter nouilles."], ntr: "P: 22g | G: 48g | L: 6g", tip: "Feu très vif pour le croquant." },
+                        { t: "Sauce Cacahuète", r: ["1. Ajouter beurre cacahuète."], ntr: "P: 25g | G: 50g | L: 16g", tip: "Un goût thaï irrésistible." },
+                        { t: "Version Keto", r: ["1. Nouilles de konjac."], ntr: "P: 20g | G: 8g | L: 7g", tip: "Quasiment zéro glucides." },
+                        { t: "Aigre-Doux", r: ["1. Ananas.", "2. Vinaigre de riz."], ntr: "P: 21g | G: 55g | L: 5g", tip: "Un mélange classique." },
+                        { t: "Full Garlic", r: ["1. Triple dose d'ail."], ntr: "P: 22g | G: 46g | L: 6g", tip: "Excellent pour l'immunité." }
+                    ]
+                },
+                { 
+                    n: "Pizza Tortilla 🍕", c: 410, v: true, i: ["1 Tortilla", "Coulis tomate", "Mozzarella", "Champignons"],
+                    variantes: [
+                        { t: "Margherita", r: ["1. Tartiner.", "2. Garnir.", "3. Four 8min."], ntr: "P: 18g | G: 32g | L: 15g", tip: "La pâte est ultra fine et croustillante." },
+                        { t: "Calzone", r: ["1. Plier en deux.", "2. Toaster."], ntr: "P: 19g | G: 34g | L: 16g", tip: "Plus rapide qu'au four." },
+                        { t: "Version Carnivore", r: ["1. Ajouter jambon cru."], ntr: "P: 25g | G: 33g | L: 18g", tip: "Mettre le jambon après cuisson." },
+                        { t: "Blanche Coco", r: ["1. Base crème coco.", "2. Oignons."], ntr: "P: 14g | G: 35g | L: 20g", tip: "Une alternative sans tomate." },
+                        { t: "Verte Pesto", r: ["1. Base pesto.", "2. Courgettes."], ntr: "P: 15g | G: 30g | L: 22g", tip: "Riche en saveurs provençales." }
+                    ]
+                },
+                { 
+                    n: "Burger Portobello 🍔", c: 320, v: true, i: ["2 Champignons larges", "Steak haché 5%", "Tomate", "Oignons"],
+                    variantes: [
+                        { t: "Le Low-Carb", r: ["1. Champignons = pain.", "2. Griller."], ntr: "P: 28g | G: 10g | L: 18g", tip: "On remplace le pain par le champignon." },
+                        { t: "Veggie-Burger", r: ["1. Galette de pois chiches."], ntr: "P: 18g | G: 25g | L: 14g", tip: "Une option 100% végétale." },
+                        { t: "Style Italien", r: ["1. Mozzarella.", "2. Roquette."], ntr: "P: 30g | G: 12g | L: 22g", tip: "Utilisez du vinaigre balsamique." },
+                        { t: "Breakfast Burger", r: ["1. Ajouter un oeuf au plat."], ntr: "P: 34g | G: 11g | L: 24g", tip: "Très protéiné pour le midi." },
+                        { t: "Blue Cheese", r: ["1. Roquefort.", "2. Noix."], ntr: "P: 29g | G: 13g | L: 26g", tip: "Pour les amateurs de fromage fort." }
+                    ]
+                },
+                { 
+                    n: "Risotto de Chou-fleur 🍚", c: 290, v: true, i: ["Chou-fleur râpé", "Bouillon", "Parmesan", "Vin blanc"],
+                    variantes: [
+                        { t: "Le Faux-Risotto", r: ["1. Râper chou.", "2. Cuire comme riz."], ntr: "P: 12g | G: 15g | L: 14g", tip: "Texture bluffante et légère." },
+                        { t: "Aux Champignons", r: ["1. Poêlée forestière."], ntr: "P: 13g | G: 18g | L: 15g", tip: "Utilisez des cèpes pour le luxe." },
+                        { t: "Crevettes-Citron", r: ["1. Ajouter zestes.", "2. Scampi."], ntr: "P: 24g | G: 16g | L: 16g", tip: "Très raffiné et frais." },
+                        { t: "Version Safran", r: ["1. Une pincée de safran."], ntr: "P: 12g | G: 17g | L: 14g", tip: "Couleur jaune d'or magnifique." },
+                        { t: "Truffe d'été", r: ["1. Huile de truffe en fin."], ntr: "P: 11g | G: 16g | L: 18g", tip: "Une seule goutte suffit !" }
+                    ]
+                },
+            { n: "Poulet Croustillant & Purée 🍗", c: 580, v: false, i: ["Poulet", "Cornflakes", "Pommes de terre"],
+                variantes: [
+                    { t: "Cornflakes", r: ["1. Écraser céréales.", "2. Paner.", "3. Cuire."], ntr: "P: 45g | G: 50g | L: 18g", tip: "Croustillant sans friture." },
+                    { t: "Parmesan", r: ["1. Panure fromage/chapelure."], ntr: "P: 48g | G: 45g | L: 22g", tip: "Croûte dorée intense." },
+                    { t: "Patate Douce", r: ["1. Purée orange."], ntr: "P: 44g | G: 55g | L: 17g", tip: "Plus de vitamine A." },
+                    { t: "Aux Herbes", r: ["1. Romarin dans la panure."], ntr: "P: 45g | G: 48g | L: 18g", tip: "Parfume la chair." },
+                    { t: "Spicy", r: ["1. Paprika et piment."], ntr: "P: 45g | G: 49g | L: 19g", tip: "Ambiance Tex-Mex." }
+                ]
+            },
+            { n: "Rougail Saucisses 🥘", c: 710, v: false, i: ["Saucisses", "Tomates", "Oignons", "Gingembre"],
+                variantes: [
+                    { t: "Authentique", r: ["1. Bouillir.", "2. Frire.", "3. Tomates."], ntr: "P: 40g | G: 15g | L: 45g", tip: "Bien roussir les oignons." },
+                    { t: "Léger", r: ["1. Saucisses de poulet."], ntr: "P: 38g | G: 14g | L: 22g", tip: "Moins de graisses saturées." },
+                    { t: "Zembrocal", r: ["1. Riz curcuma.", "2. Haricots rouges."], ntr: "P: 42g | G: 60g | L: 46g", tip: "Le riz doit être jaune vif." },
+                    { t: "Piment Oiseau", r: ["1. Piment écrasé."], ntr: "P: 40g | G: 15g | L: 45g", tip: "Caractère péi." },
+                    { t: "Express", r: ["1. Pulpe tomate.", "2. 15min."], ntr: "P: 35g | G: 18g | L: 40g", tip: "Rapide et efficace." }
+                ]
+            },
+            { n: "Pavé de Saumon & Riz 🐟", c: 540, v: false, i: ["Saumon", "Riz", "Citron", "Aneth"],
+                variantes: [
+                    { t: "Vapeur", r: ["1. Pocher le poisson."], ntr: "P: 35g | G: 45g | L: 22g", tip: "Digestion légère." },
+                    { t: "Laqué Soja", r: ["1. Soja/miel.", "2. Griller."], ntr: "P: 36g | G: 50g | L: 21g", tip: "Caramélise la peau." },
+                    { t: "Papillote", r: ["1. Tomates cerises.", "2. Four."], ntr: "P: 34g | G: 42g | L: 24g", tip: "Garde le jus." },
+                    { t: "Sésame", r: ["1. Croûte de graines."], ntr: "P: 37g | G: 46g | L: 28g", tip: "Goût de noisette." },
+                    { t: "Riz Épinards", r: ["1. Riz vert aux feuilles."], ntr: "P: 36g | G: 48g | L: 23g", tip: "Fibres cachées." }
+                ]
+            },
+            { n: "Carry Poulet Tradition 🍛", c: 620, v: false, i: ["Poulet", "Tomates", "Oignons", "Curcuma"],
+                variantes: [
+                    { t: "Grand-Mère", r: ["1. Roussir.", "2. Mijoter."], ntr: "P: 50g | G: 10g | L: 22g", tip: "La sauce doit bien réduire." },
+                    { t: "Express", r: ["1. Blancs en dés.", "2. Feu vif."], ntr: "P: 48g | G: 12g | L: 18g", tip: "En 20 minutes." },
+                    { t: "Combava", r: ["1. Zestes fins."], ntr: "P: 50g | G: 11g | L: 21g", tip: "Parfum agrume unique." },
+                    { t: "Zéro Huile", r: ["1. Saisir à sec.", "2. Bouillon."], ntr: "P: 52g | G: 9g | L: 10g", tip: "Poêle antiadhésive obligatoire." },
+                    { t: "Massalé", r: ["1. Poudre massalé.", "2. Caloupilé."], ntr: "P: 50g | G: 15g | L: 23g", tip: "Influence indienne." }
+                ]
+            },
+            { n: "Salade de Lentilles & Feta 🥗", c: 410, v: true, i: ["Lentilles", "Feta", "Concombre", "Noix"],
+                variantes: [
+                    { t: "Classique", r: ["1. Mélanger le tout froid."], ntr: "P: 22g | G: 45g | L: 18g", tip: "Riche en fer végétal." },
+                    { t: "Menthe Fraîche", r: ["1. Ajouter menthe ciselée."], ntr: "P: 21g | G: 44g | L: 17g", tip: "Ultra rafraîchissant." },
+                    { t: "Version Tiède", r: ["1. Servir lentilles chaudes."], ntr: "P: 22g | G: 46g | L: 19g", tip: "Confortable en hiver." },
+                    { t: "Pommes/Cerneaux", r: ["1. Dés de pomme verte."], ntr: "P: 19g | G: 52g | L: 21g", tip: "Sucré-salé croquant." },
+                    { t: "Vinaigrette Miel", r: ["1. Moutarde et miel."], ntr: "P: 20g | G: 48g | L: 19g", tip: "Relève le goût terreux des lentilles." }
+                ]
+            },
+            { n: "Pâtes au Pesto & Tofu 🍝", c: 490, v: true, i: ["Pâtes complètes", "Pesto", "Tofu", "Pignons"],
+                variantes: [
+                    { t: "Genovese", r: ["1. Cuire pâtes.", "2. Tofu cubes.", "3. Pesto."], ntr: "P: 25g | G: 55g | L: 22g", tip: "Ne chauffez pas le pesto, mélangez-le à la fin." },
+                    { t: "Pesto Rouge", r: ["1. Tomates séchées mixées."], ntr: "P: 24g | G: 58g | L: 24g", tip: "Goût plus intense et sucré." },
+                    { t: "Tofu Mariné", r: ["1. Tofu à l'ail avant cuisson."], ntr: "P: 27g | G: 54g | L: 20g", tip: "Améliore la texture du tofu." },
+                    { t: "Zucchini Pasta", r: ["1. 50% pâtes / 50% courgettes."], ntr: "P: 20g | G: 35g | L: 21g", tip: "Réduit les calories de moitié." },
+                    { t: "Crunchy", r: ["1. Pignons torréfiés."], ntr: "P: 26g | G: 56g | L: 25g", tip: "La torréfaction change tout." }
+                ]
+            }
+        ],
+        diner: [
+            { n: "Dahl de Lentilles Corail 🍛", c: 510, v: true, i: ["Lentilles Corail", "Lait coco", "Cumin", "Citron"],
+                variantes: [
+                    { t: "Onctueux", r: ["1. Mixer.", "2. Coco."], ntr: "P: 26g | G: 58g | L: 18g", tip: "Réconfortant pour le soir." },
+                    { t: "Épicé", r: ["1. Curry rouge.", "2. Piment."], ntr: "P: 25g | G: 60g | L: 19g", tip: "Stimule la digestion." },
+                    { t: "Épinards", r: ["1. Feuilles fraîches."], ntr: "P: 27g | G: 59g | L: 18g", tip: "Boost de fer." },
+                    { t: "Soupe", r: ["1. Plus de bouillon.", "2. Lisser."], ntr: "P: 24g | G: 55g | L: 15g", tip: "Léger pour l'été." },
+                    { t: "Cajou", r: ["1. Noix entières."], ntr: "P: 28g | G: 62g | L: 25g", tip: "Touche finale croquante." }
+                ]
+            },
+{ 
+                    n: "Tacos de Crevettes Flash 🌮", c: 380, v: false, i: ["Petites tortillas", "Crevettes", "Chou rouge", "Citron vert"],
+                    variantes: [
+                        { t: "Style Baja", r: ["1. Griller crevettes.", "2. Émincer chou.", "3. Sauce yaourt."], ntr: "P: 24g | G: 35g | L: 12g", tip: "Ajoutez de la coriandre fraîche." },
+                        { t: "Version Mangue", r: ["1. Salsa de mangue.", "2. Piment."], ntr: "P: 22g | G: 42g | L: 10g", tip: "Le sucré-salé fonctionne à merveille." },
+                        { t: "Avocat-Crevettes", r: ["1. Écraser avocat.", "2. Garnir."], ntr: "P: 25g | G: 32g | L: 20g", tip: "Riche en bons lipides." },
+                        { t: "Spicy Cajun", r: ["1. Épices cajun.", "2. Maïs."], ntr: "P: 24g | G: 38g | L: 11g", tip: "Pour un goût plus relevé." },
+                        { t: "Bowl sans Tortilla", r: ["1. Base de quinoa.", "2. Crevettes."], ntr: "P: 28g | G: 40g | L: 14g", tip: "Option sans gluten et plus riche en fibres." }
+                    ]
+                },
+                { 
+                    n: "Gratin de Courgettes Fit 🥘", c: 310, v: true, i: ["3 Courgettes", "2 Oeufs", "Chèvre frais", "Chapelure"],
+                    variantes: [
+                        { t: "Fondant Chèvre", r: ["1. Trancher fin.", "2. Mélanger oeuf/fromage.", "3. Gratiner."], ntr: "P: 18g | G: 12g | L: 20g", tip: "Pré-cuisez les courgettes à la vapeur." },
+                        { t: "Version Jambon", r: ["1. Dés de jambon.", "2. Gruyère."], ntr: "P: 28g | G: 14g | L: 22g", tip: "Un classique familial." },
+                        { t: "Provençal", r: ["1. Herbes de Provence.", "2. Tomates."], ntr: "P: 16g | G: 18g | L: 18g", tip: "L'odeur du sud dans la cuisine." },
+                        { t: "Base Saumon", r: ["1. Saumon frais cubes.", "2. Aneth."], ntr: "P: 32g | G: 11g | L: 24g", tip: "Alliance parfaite avec la courgette." },
+                        { t: "Vegan Style", r: ["1. Crème soja.", "2. Levure nutritionnelle."], ntr: "P: 14g | G: 15g | L: 16g", tip: "Aussi crémeux que l'original." }
+                    ]
+                },
+                { 
+                    n: "Steak de Thon Grillé 🍣", c: 420, v: false, i: ["Thon frais", "Sésame", "Haricots verts", "Citron"],
+                    variantes: [
+                        { t: "Mi-cuit Sésame", r: ["1. Enrober de graines.", "2. Saisir 1min/face."], ntr: "P: 42g | G: 8g | L: 18g", tip: "Le cœur doit rester bien rouge." },
+                        { t: "Sauce Soja-Miel", r: ["1. Laquer le thon.", "2. Griller."], ntr: "P: 40g | G: 15g | L: 16g", tip: "Caramélisation délicieuse." },
+                        { t: "Accompagné de Riz", r: ["1. Riz basmati.", "2. Thon poivré."], ntr: "P: 44g | G: 45g | L: 17g", tip: "Pour un repas plus complet." },
+                        { t: "Version Salade", r: ["1. Effilocher le thon.", "2. Crudités."], ntr: "P: 38g | G: 12g | L: 15g", tip: "Très frais pour l'été." },
+                        { t: "Huile d'Olive-Ail", r: ["1. Ail haché.", "2. Persillade."], ntr: "P: 41g | G: 7g | L: 22g", tip: "Simple et efficace." }
+                    ]
+                },
+                { 
+                    n: "Boulettes de Poulet 🍡", c: 390, v: false, i: ["Haché de poulet", "Curry", "Coriandre", "Yaourt"],
+                    variantes: [
+                        { t: "Curry-Coco", r: ["1. Former boulettes.", "2. Cuire en sauce coco."], ntr: "P: 32g | G: 12g | L: 20g", tip: "Moelleux garanti." },
+                        { t: "Au Four Light", r: ["1. 20min à 200°C.", "2. Sauce yaourt."], ntr: "P: 30g | G: 10g | L: 12g", tip: "Évite l'ajout de matières grasses." },
+                        { t: "Cœur Mozzarella", r: ["1. Insérer fromage au centre."], ntr: "P: 35g | G: 11g | L: 24g", tip: "Surprise fondante à la découpe." },
+                        { t: "Style Méditerranéen", r: ["1. Feta.", "2. Olives hachées."], ntr: "P: 31g | G: 13g | L: 22g", tip: "Goût très parfumé." },
+                        { t: "Version Burger", r: ["1. Aplatir.", "2. Griller en galette."], ntr: "P: 30g | G: 12g | L: 14g", tip: "Parfait pour un sandwich sain." }
+                    ]
+                },
+                { 
+                    n: "Chili Sin Carne 🌶️", c: 350, v: true, i: ["Haricots rouges", "Maïs", "Sauce tomate", "Quinoa"],
+                    variantes: [
+                        { t: "Le Classique Végé", r: ["1. Mijoter légumes.", "2. Épices chili.", "3. Servir."], ntr: "P: 16g | G: 55g | L: 6g", tip: "Laissez mijoter longtemps." },
+                        { t: "Avec Patate Douce", r: ["1. Dés de patate.", "2. Moins de riz."], ntr: "P: 14g | G: 62g | L: 5g", tip: "Apporte une douceur sucrée." },
+                        { t: "Version Protéines", r: ["1. Ajouter soja texturé."], ntr: "P: 26g | G: 50g | L: 7g", tip: "Texture proche de la viande." },
+                        { t: "Bowl Gourmand", r: ["1. Cheddar râpé.", "2. Crème sure."], ntr: "P: 18g | G: 52g | L: 16g", tip: "Le vrai confort mexicain." },
+                        { t: "Soupe Épicée", r: ["1. Allonger au bouillon."], ntr: "P: 15g | G: 48g | L: 5g", tip: "Idéal pour réchauffer les soirées." }
+                    ]
+                },
+                { 
+                    n: "Brochettes de Dinde 🍢", c: 330, v: false, i: ["Filet de dinde", "Poivrons", "Oignons rouges", "Paprika"],
+                    variantes: [
+                        { t: "Paprika Fumé", r: ["1. Mariner dinde.", "2. Alterner légumes.", "3. Griller."], ntr: "P: 38g | G: 10g | L: 8g", tip: "Utilisez des piques en bois mouillées." },
+                        { t: "Sauce Moutarde", r: ["1. Badigeonner moutarde."], ntr: "P: 37g | G: 8g | L: 10g", tip: "Relève le goût neutre de la dinde." },
+                        { t: "Hawaïen", r: ["1. Morceaux d'ananas."], ntr: "P: 35g | G: 20g | L: 7g", tip: "Sucré, acide et délicieux." },
+                        { t: "Version Yakitori", r: ["1. Sauce soja sucrée."], ntr: "P: 36g | G: 18g | L: 7g", tip: "Le classique japonais." },
+                        { t: "Herbes Fraîches", r: ["1. Thym.", "2. Romarin.", "3. Huile."], ntr: "P: 38g | G: 7g | L: 12g", tip: "Parfait pour le barbecue." }
+                    ]
+                },
+                { 
+                    n: "Quiche Sans Pâte 🥧", c: 280, v: true, i: ["4 Oeufs", "Lait", "Épinards", "Ricotta"],
+                    variantes: [
+                        { t: "Popeye Style", r: ["1. Blanchir épinards.", "2. Mixer avec oeufs.", "3. Cuire."], ntr: "P: 22g | G: 8g | L: 18g", tip: "Très léger et riche en fer." },
+                        { t: "Saumon-Aneth", r: ["1. Saumon fumé.", "2. Ricotta."], ntr: "P: 26g | G: 7g | L: 20g", tip: "Élégant pour un dîner." },
+                        { t: "Lardons Fumés", r: ["1. Dinde fumée.", "2. Oignons."], ntr: "P: 25g | G: 9g | L: 16g", tip: "Une version lorraine allégée." },
+                        { t: "Légumes d'Été", r: ["1. Courgettes.", "2. Poivrons."], ntr: "P: 18g | G: 12g | L: 15g", tip: "Colore joliment votre assiette." },
+                        { t: "Champignons-Ail", r: ["1. Poêlée de Paris."], ntr: "P: 20g | G: 10g | L: 16g", tip: "Un goût boisé irrésistible." }
+                    ]
+                },
+                { 
+                    n: "Filet de Cabillaud 🐟", c: 310, v: false, i: ["Dos de cabillaud", "Tomates cerises", "Olives", "Citron"],
+                    variantes: [
+                        { t: "Vierge de Tomates", r: ["1. Cuire poisson vapeur.", "2. Sauce tomates/olives."], ntr: "P: 35g | G: 6g | L: 14g", tip: "Huile d'olive de qualité requise." },
+                        { t: "Croûte d'Herbes", r: ["1. Persil/Chapelure.", "2. Four 10min."], ntr: "P: 36g | G: 15g | L: 12g", tip: "Le poisson reste très juteux." },
+                        { t: "Lait de Coco", r: ["1. Pocher dans coco.", "2. Citronnelle."], ntr: "P: 34g | G: 10g | L: 22g", tip: "Inspiration thaïlandaise." },
+                        { t: "Accompagné de Purée", r: ["1. Écrasé de pommes de terre."], ntr: "P: 36g | G: 35g | L: 15g", tip: "Réconfortant et digeste." },
+                        { t: "En Papillote", r: ["1. Citron.", "2. Fenouil."], ntr: "P: 33g | G: 8g | L: 9g", tip: "Cuisson saine sans odeur." }
+                    ]
+                },
+                { 
+                    n: "Bowl de Falafels 🧆", c: 440, v: true, i: ["Falafels", "Houmous", "Taboulé de chou-fleur", "Concombre"],
+                    variantes: [
+                        { t: "Libanais Mix", r: ["1. Réchauffer falafels.", "2. Dresser le bol."], ntr: "P: 18g | G: 48g | L: 22g", tip: "Servez avec une sauce tahini." },
+                        { t: "Version Wrap", r: ["1. Tout mettre en pain pita."], ntr: "P: 16g | G: 58g | L: 18g", tip: "Le lunch nomade idéal." },
+                        { t: "Protéine Plus", r: ["1. Double ration falafels."], ntr: "P: 26g | G: 60g | L: 28g", tip: "Satiété longue durée garantie." },
+                        { t: "Salade Fraîche", r: ["1. Sans féculent.", "2. Menthe."], ntr: "P: 14g | G: 25g | L: 18g", tip: "Très peu calorique." },
+                        { t: "Falafels Maison", r: ["1. Mixer pois chiches.", "2. Frire."], ntr: "P: 17g | G: 45g | L: 20g", tip: "Bien meilleur que l'industriel." }
+                    ]
+                },
+                { 
+                    n: "Sauté de Boeuf Brocoli 🥩", c: 410, v: false, i: ["150g Boeuf", "Brocoli", "Ail", "Oignon"],
+                    variantes: [
+                        { t: "Wok Express", r: ["1. Émincer bœuf.", "2. Sauter vivement.", "3. Sauce soja."], ntr: "P: 38g | G: 12g | L: 16g", tip: "Ne pas trop cuire le brocoli." },
+                        { t: "Sauce Huître", r: ["1. Ajouter sauce huître."], ntr: "P: 37g | G: 18g | L: 15g", tip: "Saveur umami typique." },
+                        { t: "Avec Nouilles", r: ["1. Nouilles aux oeufs."], ntr: "P: 40g | G: 52g | L: 18g", tip: "Pour les gros appétits." },
+                        { t: "Pimenté", r: ["1. Piment oiseau.", "2. Poivre noir."], ntr: "P: 38g | G: 11g | L: 16g", tip: "Délicieux avec un filet d'huile de sésame." },
+                        { t: "Version Noix de Cajou", r: ["1. Ajouter cajou grillées."], ntr: "P: 39g | G: 16g | L: 25g", tip: "Ajoute un croquant parfait." }
+                    ]
+                },
+{ 
+                    n: "Omelette Norvégienne Salée 🍳", c: 390, v: false, i: ["3 Oeufs", "Saumon fumé", "Aneth", "Crème légère"],
+                    variantes: [
+                        { t: "Classique Nordique", r: ["1. Battre oeufs.", "2. Ajouter saumon.", "3. Cuire."], ntr: "P: 28g | G: 3g | L: 26g", tip: "Ne pas saler, le saumon l'est déjà." },
+                        { t: "Roulée Fromage", r: ["1. Ajouter cream cheese."], ntr: "P: 26g | G: 5g | L: 30g", tip: "Texture ultra fondante." },
+                        { t: "Aux Épinards", r: ["1. Lit de pousses."], ntr: "P: 27g | G: 4g | L: 24g", tip: "Apporte du fer et du volume." },
+                        { t: "Version Blinis", r: ["1. Servir sur pancake salé."], ntr: "P: 22g | G: 30g | L: 20g", tip: "Idéal pour un brunch tardif." },
+                        { t: "Ciboulette Fraîche", r: ["1. Abondance d'herbes."], ntr: "P: 25g | G: 4g | L: 24g", tip: "Un parfum très printanier." }
+                    ]
+                },
+                { 
+                    n: "Penne à l'Arrabbiata 🔥", c: 420, v: true, i: ["100g Pâtes", "Piment", "Ail", "Tomate"],
+                    variantes: [
+                        { t: "Traditionnelle", r: ["1. Frire l'ail.", "2. Mijoter tomate.", "3. Pimenter."], ntr: "P: 12g | G: 68g | L: 8g", tip: "Utilisez du piment frais si possible." },
+                        { t: "Avec Thon", r: ["1. Ajouter thon naturel."], ntr: "P: 28g | G: 65g | L: 10g", tip: "Transforme les pâtes en plat complet." },
+                        { t: "Version Burrata", r: ["1. Poser fromage au centre."], ntr: "P: 18g | G: 66g | L: 22g", tip: "Le froid du fromage contre le piment." },
+                        { t: "Légumes Grillés", r: ["1. Ajouter poivrons."], ntr: "P: 14g | G: 70g | L: 9g", tip: "Plus de fibres et de croquant." },
+                        { t: "Sans Gluten", r: ["1. Pâtes de maïs ou riz."], ntr: "P: 11g | G: 72g | L: 7g", tip: "Vérifiez bien la cuisson des pâtes." }
+                    ]
+                },
+                { 
+                    n: "Poulet au Citron Express 🍋", c: 360, v: false, i: ["150g Poulet", "Citron jaune", "Thym", "Haricots plats"],
+                    variantes: [
+                        { t: "Sauté Minute", r: ["1. Émincer.", "2. Poêler.", "3. Déglacer citron."], ntr: "P: 35g | G: 10g | L: 14g", tip: "Le jus de citron attendrit la viande." },
+                        { t: "Façon Tagine", r: ["1. Olives.", "2. Curcuma."], ntr: "P: 33g | G: 15g | L: 16g", tip: "Un goût oriental en 15 minutes." },
+                        { t: "Marinade Miel", r: ["1. Citron + Miel.", "2. Griller."], ntr: "P: 34g | G: 22g | L: 12g", tip: "Équilibre acide-sucré parfait." },
+                        { t: "Salade Tiède", r: ["1. Effilocher.", "2. Roquette."], ntr: "P: 32g | G: 8g | L: 18g", tip: "Dîner très léger." },
+                        { t: "Au Four", r: ["1. Cuisses entières.", "2. 40min."], ntr: "P: 30g | G: 12g | L: 22g", tip: "La peau devient croustillante." }
+                    ]
+                },
+                { 
+                    n: "Curry de Pois Chiches 🥘", c: 410, v: true, i: ["Pois chiches", "Lait coco", "Curry", "Riz sauvage"],
+                    variantes: [
+                        { t: "Végé Madras", r: ["1. Épices.", "2. Mijoter coco.", "3. Servir."], ntr: "P: 15g | G: 58g | L: 14g", tip: "Ajoutez des épinards en fin de cuisson." },
+                        { t: "Version Potiron", r: ["1. Cubes de courge."], ntr: "P: 13g | G: 62g | L: 12g", tip: "Très onctueux en automne." },
+                        { t: "Accompagné de Naan", r: ["1. Galette de pain."], ntr: "P: 16g | G: 75g | L: 16g", tip: "Le vrai festin indien." },
+                        { t: "Express Conserve", r: ["1. Rinçage rapide.", "2. Sauce."], ntr: "P: 14g | G: 55g | L: 13g", tip: "Prêt en 5 minutes chrono." },
+                        { t: "Façon Salade", r: ["1. Froid.", "2. Vinaigrette curry."], ntr: "P: 15g | G: 45g | L: 18g", tip: "Rafraîchissant et nutritif." }
+                    ]
+                },
+                { 
+                    n: "Pavé de Lieu à la Vapeur 🐟", c: 280, v: false, i: ["Lieu noir", "Pommes de terre", "Poireaux", "Baies roses"],
+                    variantes: [
+                        { t: "Santé Maximale", r: ["1. Vapeur 12min.", "2. Filet d'huile."], ntr: "P: 32g | G: 22g | L: 8g", tip: "Préserve toutes les vitamines." },
+                        { t: "Sauce Moutarde", r: ["1. Crème.", "2. Moutarde."], ntr: "P: 31g | G: 24g | L: 15g", tip: "Rehausse la saveur du poisson blanc." },
+                        { t: "En Écrasé", r: ["1. Mélanger poisson et purée."], ntr: "P: 30g | G: 35g | L: 12g", tip: "Idéal pour les enfants." },
+                        { t: "Version Papillote", r: ["1. Four.", "2. Vin blanc."], ntr: "P: 29g | G: 15g | L: 10g", tip: "Le poisson infuse dans son jus." },
+                        { t: "Asiatique", r: ["1. Gingembre.", "2. Soja."], ntr: "P: 33g | G: 18g | L: 7g", tip: "Un classique de la cuisine zen." }
+                    ]
+                },
+                { 
+                    n: "Risotto aux Champignons 🍄", c: 450, v: true, i: ["Riz Arborio", "Champignons de Paris", "Bouillon", "Parmesan"],
+                    variantes: [
+                        { t: "Le Classique", r: ["1. Nacier le riz.", "2. Ajouter bouillon peu à peu."], ntr: "P: 12g | G: 65g | L: 14g", tip: "Remuez constamment pour l'amidon." },
+                        { t: "Version Luxe", r: ["1. Huile de truffe."], ntr: "P: 11g | G: 63g | L: 18g", tip: "Une saveur incomparable." },
+                        { t: "Aux Cèpes", r: ["1. Champignons séchés réhydratés."], ntr: "P: 14g | G: 66g | L: 15g", tip: "Utilisez l'eau de trempage comme bouillon." },
+                        { t: "Gourmand Lardons", r: ["1. Dorer bacon.", "2. Ajouter au riz."], ntr: "P: 22g | G: 64g | L: 20g", tip: "Apporte un goût fumé." },
+                        { t: "Zéro Beurre", r: ["1. Lier au fromage frais."], ntr: "P: 15g | G: 60g | L: 10g", tip: "Plus léger mais toujours crémeux." }
+                    ]
+                },
+                { 
+                    n: "Bowl de Quinoa Protéiné 🥗", c: 390, v: true, i: ["Quinoa", "Oeuf dur", "Feta", "Graines de courge"],
+                    variantes: [
+                        { t: "L'Équilibre", r: ["1. Mélanger ingrédients froids.", "2. Assaisonner."], ntr: "P: 20g | G: 42g | L: 18g", tip: "Rincez bien le quinoa avant cuisson." },
+                        { t: "Version Falafels", r: ["1. Remplacer oeuf.", "2. Houmous."], ntr: "P: 18g | G: 55g | L: 22g", tip: "100% végétal et rassasiant." },
+                        { t: "Saumon-Avocat", r: ["1. Cru.", "2. Cubes."], ntr: "P: 24g | G: 40g | L: 24g", tip: "Riche en Oméga-3." },
+                        { t: "Chaud-Froid", r: ["1. Quinoa chaud.", "2. Crudités."], ntr: "P: 19g | G: 44g | L: 16g", tip: "Texture intéressante." },
+                        { t: "Pesto-Noix", r: ["1. Mélanger au pesto."], ntr: "P: 17g | G: 40g | L: 26g", tip: "Un boost d'énergie." }
+                    ]
+                },
+                { 
+                    n: "Ratatouille & Polenta 🥘", c: 340, v: true, i: ["Aubergine", "Courgette", "Poivron", "Polenta"],
+                    variantes: [
+                        { t: "Mijotée Maison", r: ["1. Cuire légumes.", "2. Préparer polenta."], ntr: "P: 10g | G: 45g | L: 12g", tip: "Meilleure réchauffée le lendemain." },
+                        { t: "Version Gratinée", r: ["1. Mozzarella au four."], ntr: "P: 18g | G: 48g | L: 20g", tip: "Le fromage lie les légumes." },
+                        { t: "Avec Saucisse", r: ["1. Dinde ou Poulet."], ntr: "P: 25g | G: 46g | L: 18g", tip: "Le classique rustique." },
+                        { t: "Polenta Grillée", r: ["1. Faire des palets.", "2. Poêler."], ntr: "P: 11g | G: 50g | L: 14g", tip: "Apporte du croustillant." },
+                        { t: "Épicée Harissa", r: ["1. Relever la sauce."], ntr: "P: 10g | G: 47g | L: 12g", tip: "Pour un dîner de caractère." }
+                    ]
+                },
+                { 
+                    n: "Salade de Lentilles Tiède 🥗", c: 370, v: true, i: ["Lentilles vertes", "Carottes", "Oignons rouges", "Persil"],
+                    variantes: [
+                        { t: "La Paysanne", r: ["1. Cuire lentilles.", "2. Vinaigrette moutarde."], ntr: "P: 18g | G: 40g | L: 12g", tip: "Gardez les lentilles un peu fermes." },
+                        { t: "Avec Fromage", r: ["1. Dés de Comté."], ntr: "P: 24g | G: 41g | L: 22g", tip: "Le fromage apporte du corps." },
+                        { t: "Version Marine", r: ["1. Maquereau fumé."], ntr: "P: 28g | G: 38g | L: 18g", tip: "Goût puissant et sain." },
+                        { t: "Bacon de Dinde", r: ["1. Croustillant."], ntr: "P: 25g | G: 40g | L: 15g", tip: "Ajoute du sel et du croquant." },
+                        { t: "Citron-Huile", r: ["1. Sans vinaigre."], ntr: "P: 17g | G: 38g | L: 14g", tip: "Plus doux pour l'estomac." }
+                    ]
+                },
+                { 
+                    n: "Wok de Boeuf aux Noix 🥩", c: 430, v: false, i: ["Boeuf émincé", "Noix de cajou", "Poivrons", "Sauce soja"],
+                    variantes: [
+                        { t: "Sauté Minute", r: ["1. Saisir bœuf.", "2. Ajouter noix.", "3. Soja."], ntr: "P: 35g | G: 15g | L: 22g", tip: "Faites griller les noix à sec avant." },
+                        { t: "Version Nouilles", r: ["1. Ajouter pâtes de riz."], ntr: "P: 33g | G: 45g | L: 20g", tip: "Plat complet très rapide." },
+                        { t: "Brocoli-Gingembre", r: ["1. Légumes croquants."], ntr: "P: 34g | G: 18g | L: 19g", tip: "Excellent pour la digestion." },
+                        { t: "Piquant Thaï", r: ["1. Basilic.", "2. Piment."], ntr: "P: 35g | G: 16g | L: 21g", tip: "Un voyage culinaire." },
+                        { t: "Oignons Caramélisés", r: ["1. Cuisson lente oignons."], ntr: "P: 34g | G: 25g | L: 18g", tip: "Apporte une douceur naturelle." }
+                    ]
+                },
+                { 
+                    n: "Gratin de Pâtes au Thon 🍝", c: 460, v: false, i: ["Pâtes", "Thon", "Béchamel légère", "Fromage râpé"],
+                    variantes: [
+                        { t: "L'Incontournable", r: ["1. Mélanger tout.", "2. Cuire 15min."], ntr: "P: 32g | G: 55g | L: 16g", tip: "Ajoutez du maïs pour le croquant." },
+                        { t: "Version Tomate", r: ["1. Sauce rouge.", "2. Pas de lait."], ntr: "P: 30g | G: 50g | L: 12g", tip: "Plus léger et acide." },
+                        { t: "Légumes Masqués", r: ["1. Purée de carottes."], ntr: "P: 28g | G: 52g | L: 14g", tip: "Parfait pour faire manger des légumes." },
+                        { t: "Herbes de Provence", r: ["1. Abondance aromates."], ntr: "P: 29g | G: 54g | L: 15g", tip: "Un goût de soleil." },
+                        { t: "Croustillant", r: ["1. Chapelure sur le dessus."], ntr: "P: 29g | G: 60g | L: 18g", tip: "La texture est la clé." }
+                    ]
+                },
+                { 
+                    n: "Filet de Poulet Pané Fit 🍗", c: 380, v: false, i: ["Poulet", "Flocons d'avoine", "Oeuf", "Épices"],
+                    variantes: [
+                        { t: "Panure Avoine", r: ["1. Tremper oeuf.", "2. Passer avoine.", "3. Four."], ntr: "P: 38g | G: 20g | L: 12g", tip: "Beaucoup plus sain que la chapelure blanche." },
+                        { t: "Parmesan Crust", r: ["1. Mélanger fromage/avoine."], ntr: "P: 42g | G: 15g | L: 18g", tip: "Très savoureux." },
+                        { t: "Version Nuggets", r: ["1. Petites bouchées."], ntr: "P: 35g | G: 18g | L: 10g", tip: "Plaît à toute la famille." },
+                        { t: "Sauce Barbecue", r: ["1. Napper légèrement."], ntr: "P: 34g | G: 28g | L: 11g", tip: "Un classique revisité." },
+                        { t: "Épices Tex-Mex", r: ["1. Chili.", "2. Paprika."], ntr: "P: 37g | G: 19g | L: 11g", tip: "Pour un poulet qui a du peps." }
+                    ]
+                },
+                { 
+                    n: "Salade de Riz complète 🥗", c: 350, v: true, i: ["Riz froid", "Maïs", "Tomates", "Thon ou Oeuf"],
+                    variantes: [
+                        { t: "Le Pique-Nique", r: ["1. Tout mélanger.", "2. Vinaigrette citron."], ntr: "P: 18g | G: 55g | L: 8g", tip: "Préparez à l'avance." },
+                        { t: "Façon Niçoise", r: ["1. Olives.", "2. Anchois."], ntr: "P: 22g | G: 50g | L: 14g", tip: "Très typé Méditerranée." },
+                        { t: "Riz Noir/Sauvage", r: ["1. Plus de fibres."], ntr: "P: 16g | G: 48g | L: 7g", tip: "Look original et goût noisette." },
+                        { t: "Version Curry", r: ["1. Sauce yaourt curry."], ntr: "P: 17g | G: 52g | L: 10g", tip: "Exotique et frais." },
+                        { t: "Aux Fruits", r: ["1. Pommes.", "2. Raisins."], ntr: "P: 14g | G: 62g | L: 8g", tip: "Un mélange sucré-salé étonnant." }
+                    ]
+                },
+                { 
+                    n: "Tofu Sauté aux Légumes 🥦", c: 320, v: true, i: ["Tofu ferme", "Brocoli", "Carottes", "Sauce soja"],
+                    variantes: [
+                        { t: "Croustillant", r: ["1. Presser tofu.", "2. Dorer poêle."], ntr: "P: 22g | G: 15g | L: 16g", tip: "La clé est d'enlever l'humidité du tofu." },
+                        { t: "Mariné Gingembre", r: ["1. Laisser reposer.", "2. Sauter."], ntr: "P: 21g | G: 18g | L: 14g", tip: "Donne beaucoup de caractère." },
+                        { t: "Miso-Style", r: ["1. Sauce miso."], ntr: "P: 20g | G: 20g | L: 12g", tip: "Très riche en probiotiques." },
+                        { t: "Aux Graines", r: ["1. Sésame.", "2. Courge."], ntr: "P: 23g | G: 14g | L: 20g", tip: "Apporte du bon gras." },
+                        { t: "Façon Brouillé", r: ["1. Émietter.", "2. Curcuma."], ntr: "P: 19g | G: 12g | L: 15g", tip: "Alternative aux oeufs brouillés." }
+                    ]
+                },
+                { 
+                    n: "Bouillon Ramen Rapide 🍜", c: 390, v: false, i: ["Nouilles", "Bouillon", "Oeuf mollet", "Légumes verts"],
+                    variantes: [
+                        { t: "Express Maison", r: ["1. Chauffer bouillon.", "2. Cuire nouilles.", "3. Garnir."], ntr: "P: 20g | G: 60g | L: 10g", tip: "L'oeuf doit cuire exactement 6 min." },
+                        { t: "Poulet Teriyaki", r: ["1. Ajouter restes poulet."], ntr: "P: 32g | G: 58g | L: 12g", tip: "Très complet." },
+                        { t: "Version Pimentée", r: ["1. Huile pimentée."], ntr: "P: 19g | G: 61g | L: 15g", tip: "Pour réchauffer l'hiver." },
+                        { t: "Champignons Shiitaké", r: ["1. Goût boisé."], ntr: "P: 18g | G: 55g | L: 9g", tip: "Très authentique." },
+                        { t: "Crevettes", r: ["1. Saisir à part."], ntr: "P: 25g | G: 54g | L: 10g", tip: "Léger et élégant." }
+                    ]
+                },
+                { 
+                    n: "Steak de Boeuf & Frites de Patate Douce 🍠", c: 480, v: false, i: ["Steak haché", "Patate douce", "Paprika", "Salade"],
+                    variantes: [
+                        { t: "Le Healthy", r: ["1. Frites au four.", "2. Viande grillée."], ntr: "P: 30g | G: 45g | L: 18g", tip: "Utilisez peu d'huile pour les frites." },
+                        { t: "Sauce Poivre", r: ["1. Crème légère.", "2. Poivre."], ntr: "P: 29g | G: 46g | L: 22g", tip: "Le classique de brasserie." },
+                        { t: "Version Burger", r: ["1. Sans pain.", "2. Fromage dessus."], ntr: "P: 32g | G: 40g | L: 25g", tip: "Gourmand mais contrôlé." },
+                        { t: "Herbes de Provence", r: ["1. Sur les frites."], ntr: "P: 28g | G: 47g | L: 17g", tip: "Parfume toute la cuisine." },
+                        { t: "Bleu Saignant", r: ["1. Cuisson très courte."], ntr: "P: 30g | G: 44g | L: 18g", tip: "Pour les amateurs de viande rouge." }
+                    ]
+                },
+                { 
+                    n: "Lasagnes de Courgettes 🥘", c: 360, v: true, i: ["Courgettes", "Ricotta", "Sauce tomate", "Parmesan"],
+                    variantes: [
+                        { t: "Sans Pâtes", r: ["1. Lamelles courgettes.", "2. Étager.", "3. Cuire."], ntr: "P: 20g | G: 15g | L: 24g", tip: "Dégorgez les courgettes au sel avant." },
+                        { t: "Bœuf Haché", r: ["1. Ajouter viande."], ntr: "P: 32g | G: 18g | L: 28g", tip: "Version bolognaise légère." },
+                        { t: "Pesto-Chèvre", r: ["1. Alterner les sauces."], ntr: "P: 22g | G: 16g | L: 30g", tip: "Goût très marqué." },
+                        { t: "Version Express", r: ["1. Tout mélanger en vrac."], ntr: "P: 18g | G: 20g | L: 22g", tip: "Moins beau, aussi bon." },
+                        { t: "Épinards-Ricotta", r: ["1. Mélange vert."], ntr: "P: 24g | G: 14g | L: 20g", tip: "Un classique italien." }
+                    ]
+                },
+                { 
+                    n: "Brochette de Poisson & Riz 🍢", c: 380, v: false, i: ["Poisson blanc", "Crevettes", "Tomates cerises", "Riz"],
+                    variantes: [
+                        { t: "Mix Grillé", r: ["1. Alterner.", "2. Plancha ou poêle."], ntr: "P: 35g | G: 40g | L: 10g", tip: "Le citron vert en marinade est un plus." },
+                        { t: "Curry-Lait de coco", r: ["1. Tremper avant."], ntr: "P: 33g | G: 42g | L: 15g", tip: "Très onctueux." },
+                        { t: "Version Méditerranée", r: ["1. Laurier.", "2. Olive."], ntr: "P: 34g | G: 38g | L: 12g", tip: "Un goût de vacances." },
+                        { t: "En Salade", r: ["1. Froide.", "2. Vinaigrette."], ntr: "P: 32g | G: 35g | L: 14g", tip: "Parfait pour l'été." },
+                        { t: "Paprika Fumé", r: ["1. Épices BBQ."], ntr: "P: 35g | G: 39g | L: 11g", tip: "Goût grillé même sans braise." }
+                    ]
+                },
+                { 
+                    n: "Taboulé de Quinoa Oriental 🥗", c: 330, v: true, i: ["Quinoa", "Persil plat", "Menthe", "Grenade"],
+                    variantes: [
+                        { t: "Le Frais", r: ["1. Hacher herbes.", "2. Mélanger quinoa froids."], ntr: "P: 12g | G: 48g | L: 10g", tip: "Soyez généreux sur le jus de citron." },
+                        { t: "Poulet Grillé", r: ["1. Ajouter morceaux."], ntr: "P: 28g | G: 45g | L: 12g", tip: "Devient un vrai repas complet." },
+                        { t: "Pois Chiches", r: ["1. Protéine végétale."], ntr: "P: 16g | G: 55g | L: 12g", tip: "Texture croquante." },
+                        { t: "Fruits Secs", r: ["1. Abricots.", "2. Amandes."], ntr: "P: 13g | G: 58g | L: 15g", tip: "Un goût authentique." },
+                        { t: "Feta & Concombre", r: ["1. Fraîcheur grecque."], ntr: "P: 18g | G: 46g | L: 16g", tip: "Idéal contre la chaleur." }
+                    ]
+                },
+                { 
+                    n: "Saucisse de Volaille & Purée 🌭", c: 420, v: false, i: ["2 Saucisses dinde", "Pommes de terre", "Lait", "Muscade"],
+                    variantes: [
+                        { t: "Le Classique", r: ["1. Cuire purée.", "2. Griller saucisses."], ntr: "P: 25g | G: 45g | L: 18g", tip: "Ne pas oublier la noix de muscade." },
+                        { t: "Purée Carotte", r: ["1. 50% Carottes."], ntr: "P: 23g | G: 40g | L: 15g", tip: "Plus léger et coloré." },
+                        { t: "Sauce Oignons", r: ["1. Confits doucement."], ntr: "P: 24g | G: 48g | L: 20g", tip: "Un régal traditionnel." },
+                        { t: "Version Moutarde", r: ["1. Moutarde à l'ancienne."], ntr: "P: 25g | G: 44g | L: 19g", tip: "Relève le goût de la purée." },
+                        { t: "Gratinée au Four", r: ["1. Passer sous grill."], ntr: "P: 28g | G: 46g | L: 24g", tip: "Le dessus croustille." }
+                    ]
+                },
+            { n: "Curry de Pois Chiches 🥣", c: 480, v: true, i: ["Pois chiches", "Tomates", "Curry", "Lait coco"],
+                variantes: [
+                    { t: "Classique", r: ["1. Mijoter.", "2. Pois."], ntr: "P: 18g | G: 55g | L: 15g", tip: "Protéines végétales complètes." },
+                    { t: "Vegan", r: ["1. Crème coco."], ntr: "P: 17g | G: 54g | L: 18g", tip: "Doux pour l'estomac." },
+                    { t: "Aubergines", r: ["1. Dés fondants."], ntr: "P: 19g | G: 58g | L: 16g", tip: "Absorbe les épices." },
+                    { t: "Potiron", r: ["1. Courge en dés."], ntr: "P: 18g | G: 62g | L: 14g", tip: "Vitamines hivernales." },
+                    { t: "Rapide", r: ["1. Conserve.", "2. 10min."], ntr: "P: 18g | G: 53g | L: 15g", tip: "Gain de temps." }
+                ]
+            },
+            { n: "Soupe de Poisson Légère 🐠", c: 320, v: false, i: ["Poisson", "Poireaux", "Carottes", "Fenouil"],
+                variantes: [
+                    { t: "Bouillabaisse", r: ["1. Pocher.", "2. Bouillon."], ntr: "P: 35g | G: 12g | L: 8g", tip: "Très peu calorique." },
+                    { t: "Thaï", r: ["1. Citronnelle."], ntr: "P: 34g | G: 15g | L: 10g", tip: "Fraîcheur intense." },
+                    { t: "Crevettes", r: ["1. Ajouter 5 pièces."], ntr: "P: 38g | G: 13g | L: 7g", tip: "Protéines maigres." },
+                    { t: "Velouté", r: ["1. Mixer.", "2. Crème."], ntr: "P: 30g | G: 20g | L: 12g", tip: "Texture douce." },
+                    { t: "Curry", r: ["1. Épices jaunes."], ntr: "P: 32g | G: 18g | L: 9g", tip: "Aide à la digestion." }
+                ]
+            },
+            { n: "Gratin de Courgettes 🥘", c: 390, v: true, i: ["Courgettes", "Ricotta", "Parmesan", "Œufs"],
+                variantes: [
+                    { t: "Traditionnel", r: ["1. Tranches.", "2. Gratiner."], ntr: "P: 22g | G: 15g | L: 24g", tip: "Faites dégorger au sel." },
+                    { t: "Chèvre", r: ["1. Fromage frais."], ntr: "P: 20g | G: 14g | L: 26g", tip: "Goût rustique." },
+                    { t: "Poulet", r: ["1. Ajouter haché."], ntr: "P: 35g | G: 16g | L: 22g", tip: "Plus rassasiant.", v: false },
+                    { t: "Sans Lactose", r: ["1. Crème soja."], ntr: "P: 18g | G: 18g | L: 20g", tip: "Utilisez de la levure maltée." },
+                    { t: "Curry", r: ["1. Épices dans l'appareil."], ntr: "P: 21g | G: 17g | L: 23g", tip: "L'alliance parfaite." }
+                ]
+            },
+            { n: "Chili Veggie 🍛", c: 420, v: true, i: ["Haricots rouges", "Maïs", "Poivrons", "Tomate"],
+                variantes: [
+                    { t: "Classique", r: ["1. Faire revenir poivrons.", "2. Mijoter légumes."], ntr: "P: 19g | G: 55g | L: 12g", tip: "Riche en fibres pour le transit." },
+                    { t: "Quinoa Chili", r: ["1. Ajouter quinoa cuit."], ntr: "P: 22g | G: 60g | L: 14g", tip: "Protéines complètes." },
+                    { t: "Spicy Cocoa", r: ["1. Une pointe de cacao amer."], ntr: "P: 18g | G: 54g | L: 15g", tip: "Le cacao donne une profondeur incroyable." },
+                    { t: "Avocado Side", r: ["1. Servir avec avocat frais."], ntr: "P: 20g | G: 58g | L: 22g", tip: "Bons lipides pour la satiété." },
+                    { t: "Coriandre", r: ["1. Bouquet frais à la fin."], ntr: "P: 18g | G: 53g | L: 13g", tip: "Détoxifie les métaux lourds." }
+                ]
+            }
+        ]
+    };
+
+    let planningGlobal = [];
+
+    function toggleDark() { document.body.classList.toggle('dark-mode'); }
+
+    function lancer() {
+        if (!document.getElementById('age').value) return alert("Veuillez entrer votre Age !");
+
+// --- BLOC DE SÉCURITÉ ÂGE ---
+        if (age === 1) {
+            res.innerHTML = `
+                <div style="background: #fff3cd; color: #856404; padding: 25px; border-radius: 15px; border: 2px solid #ffeeba; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <h3 style="margin-top:0;">🍼 Avis Nutritionnel Prioritaire</h3>
+                    <p style="font-size: 1.1em;">À l'âge de 1 an, ce nourrisson doit prendre du lait de préférence du lait maternel.</p>
+                    <p>Le générateur automatique est désactivé pour cet âge par mesure de sécurité nutritionnelle.</p>
+                </div>`;
+            return; // Arrêt immédiat
+        }
+
+        if (age >= 2 && age <= 6) {
+            res.innerHTML += `
+                <div style="background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 12px; border-left: 6px solid #17a2b8; margin-bottom: 20px; font-size: 0.95em; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <strong>👶 Note de sécurité (Enfant de ${age} ans) :</strong> 
+                    Pour prévenir les risques de fausse route, coupez tous les aliments en très petits morceaux (inférieurs à 1 cm) et surveillez attentivement l'enfant pendant toute la durée du repas.
+                </div>`;
+        }
+        // --- FIN DU BLOC DE SÉCURITÉ ---
+        
+        const overlay = document.getElementById('loader-overlay');
+        const percentTxt = document.getElementById('loading-percentage');
+        overlay.style.display = "flex";
+        
+        let progress = 0;
+        percentTxt.innerText = "0%";
+        
+        const interval = setInterval(() => {
+            progress += 5;
+            if(progress > 100) progress = 100;
+            percentTxt.innerText = progress + "%";
+            if(progress >= 100) clearInterval(interval);
+        }, 55);
+
+        setTimeout(() => { 
+            genererPlanning(); 
+            overlay.style.display = "none";
+        }, 1200);
+    }
+
+    function genererPlanning() {
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+
+        const poolP = isVeg ? db.petitDej.filter(x => x.v === true) : db.petitDej;
+        const poolM = isVeg ? db.dejeuner.filter(x => x.v === true) : db.dejeuner;
+        const poolD = isVeg ? db.diner.filter(x => x.v === true) : db.diner;
+
+        if(poolP.length === 0 || poolM.length === 0 || poolD.length === 0) {
+            alert("Erreur : Pas assez de plats végétariens dans la base de données !");
+            document.getElementById('loader-overlay').style.display = "none";
+            return;
+        }
+
+        planningGlobal = [];
+        for (let i = 0; i < jours; i++) {
+            planningGlobal.push({
+                p: JSON.parse(JSON.stringify(poolP[Math.floor(Math.random() * poolP.length)])),
+                m: JSON.parse(JSON.stringify(poolM[Math.floor(Math.random() * poolM.length)])),
+                d: JSON.parse(JSON.stringify(poolD[Math.floor(Math.random() * poolD.length)])),
+                vP: 0, vM: 0, vD: 0
+            });
+        }
+        afficherMenu();
+    }
+
+    function remplacerRepas(jIdx, type) {
+        const isVeg = document.getElementById('check-veg').checked;
+        const categorie = type === 'p' ? db.petitDej : (type === 'm' ? db.dejeuner : db.diner);
+        const pool = isVeg ? categorie.filter(x => x.v === true) : categorie;
+        if (pool.length <= 1) return;
+        let nouveauPlat;
+        const platActuelNom = planningGlobal[jIdx][type].n;
+        do { nouveauPlat = pool[Math.floor(Math.random() * pool.length)]; } while (nouveauPlat.n === platActuelNom);
+        planningGlobal[jIdx][type] = JSON.parse(JSON.stringify(nouveauPlat));
+        planningGlobal[jIdx]['v' + type.toUpperCase()] = 0; 
+        afficherMenu();
+    }
+
+    function changerVariante(jIdx, type) {
+        let key = 'v' + type.toUpperCase();
+        let plat = planningGlobal[jIdx][type];
+        planningGlobal[jIdx][key] = (planningGlobal[jIdx][key] + 1) % plat.variantes.length;
+        afficherMenu();
+    }
+
+    function toggleDetails(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function afficherMenu() {
+        let html = "";
+        planningGlobal.forEach((jour, idx) => {
+            if (idx % 7 === 0) {
+                let listIng = new Set();
+                let fin = Math.min(idx + 7, planningGlobal.length);
+                for(let k=idx; k<fin; k++) {
+                    [planningGlobal[k].p, planningGlobal[k].m, planningGlobal[k].d].forEach(r => r.i.forEach(ing => listIng.add(ing)));
+                }
+                html += `<div class="shopping-list"><b>🛒 LISTE DE COURSES (Semaine ${Math.floor(idx/7)+1})</b><br>${Array.from(listIng).map(n => `<span class="shopping-item">${n}</span>`).join('')}</div>`;
+            }
+            html += `<div class="day-box"><span class="cal-float">${jour.p.c + jour.m.c + jour.d.c} kcal</span><h3>JOUR ${idx + 1}</h3>${renderMeal(idx, 'p', '☀️ Petit-Déjeuner', jour.p, jour.vP)}${renderMeal(idx, 'm', '🥗 Déjeuner', jour.m, jour.vM)}${renderMeal(idx, 'd', '🌙 Dîner', jour.d, jour.vD)}</div>`;
+        });
+        document.getElementById('content-area').innerHTML = html;
+    }
+
+    function renderMeal(jIdx, type, label, meal, vIdx) {
+        const id = `det-${jIdx}-${type}`;
+        const v = meal.variantes[vIdx];
+        return `<div class="meal-section"><b>${label} :</b> ${meal.n} <small>(${v.t})</small><br>🛒 Ingrédients : ${meal.i.join(', ')}<div class="no-print"><button class="btn-sm btn-replace" onclick="remplacerRepas(${jIdx}, '${type}')">🔄 Changer</button><button class="btn-sm btn-variant" onclick="changerVariante(${jIdx}, '${type}')">✨ Variante</button><button class="btn-sm btn-recipe" onclick="toggleDetails('${id}')">📖 Recette</button></div><div id="${id}" class="details-content"><b>👨‍🍳 PRÉPARATION :</b><br>${v.r.map((step, i) => `<b>${i+1}.</b> ${step}`).join('<br>')}<div class="macro-box">📊 <b>Valeurs :</b><br>${v.ntr}</div></div></div>`;
+    }
+
+    function sauvegarderProfil() {
+        const p = { age: document.getElementById('age').value, poids: document.getElementById('poids').value, taille: document.getElementById('taille').value, sexe: document.getElementById('sexe').value, veg: document.getElementById('check-veg').checked };
+        localStorage.setItem('NutriGenius_V9_FINAL', JSON.stringify(p));
+    }
+
+    function chargerProfil() {
+        const s = localStorage.getItem('NutriGenius_V9_FINAL');
+        if (s) {
+            const d = JSON.parse(s);
+            document.getElementById('age').value = d.age || "";
+            document.getElementById('poids').value = d.poids || "";
+            document.getElementById('taille').value = d.taille || "";
+            document.getElementById('sexe').value = d.sexe || "H";
+            document.getElementById('check-veg').checked = d.veg || false;
+        }
+    }
+
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'fr',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        // Correction ici : On utilise la variable avec les 50 langues
+        includedLanguages: supportedLangs, 
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

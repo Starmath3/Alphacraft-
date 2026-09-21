@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.6.9 - PRO KITCHEN EDITION</title>
+    <style>
+        :root { --bg: #f0f4f8; --card: white; --text: #2c3e50; --primary: #009245; --accent: #e67e22; }
+        .dark-mode { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f4f8; --primary: #27ae60; --accent: #d35400; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); text-align: center; padding: 20px; transition: 0.3s; margin: 0; }
+        .container { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 900px; text-align: left; }
+        
+        #loader-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); z-index: 9999;
+            flex-direction: column; justify-content: center; align-items: center; color: white;
+        }
+        .spinner { width: 60px; height: 60px; border: 6px solid rgba(255,255,255,0.2); border-top: 6px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #loading-percentage { font-size: 2em; font-weight: bold; color: white; margin-bottom: 10px; }
+
+        .header-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
+        .dark-toggle { cursor: pointer; background: var(--primary); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        
+        h1 { margin: 0; color: var(--primary); }
+        .input-group { margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-field, .select-box { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; background: var(--card); color: var(--text); }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-weight: bold; color: var(--primary); cursor: pointer; margin: 15px 0; }
+        
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: var(--primary); font-size: 1.1em; transition: 0.2s; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        
+        .btn-sm { padding: 8px 12px; font-size: 0.75em; margin: 4px 2px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-replace { background: var(--accent); }
+        .btn-recipe { background: #3498db; }
+        .btn-variant { background: #8e44ad; }
+
+        .day-box { background: var(--card); padding: 20px; margin-bottom: 25px; border-radius: 15px; border-left: 12px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .meal-section { margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(127, 140, 141, 0.3); }
+        .details-content { display: none; font-size: 0.95em; margin-top: 12px; background: rgba(0,0,0,0.04); padding: 20px; border-radius: 10px; line-height: 1.6; border-left: 4px solid #3498db; }
+        
+        .macro-box { background: var(--primary); color: white; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.9em; }
+
+        .shopping-list { background: #e8f5e9; border: 2px dashed var(--primary); padding: 20px; border-radius: 15px; margin: 25px 0; color: #1b5e20; }
+        .shopping-item { display: inline-block; background: white; padding: 6px 14px; margin: 5px; border-radius: 20px; font-size: 0.85em; font-weight: bold; border: 1px solid #c3e6cb; }
+        .cal-float { float: right; background: var(--primary); color: white; padding: 5px 15px; border-radius: 12px; font-size: 0.95em; font-weight: bold; }
+
+        .goog-te-gadget-simple { border-radius: 10px !important; padding: 5px !important; border: 1px solid #ccc !important; background: var(--card) !important; }
+        .goog-te-banner-frame.skiptranslate { display: none !important; } 
+        body { top: 0px !important; }
+
+        @media print { .no-print, .btn-sm { display: none !important; } .details-content { display: block !important; border: none; background: none; } }
+    </style>
+</head>
+<body onload="chargerProfil()">
+
+<div id="loader-overlay">
+    <div class="spinner"></div>
+    <div id="loading-percentage">0%</div>
+    <div style="font-size: 1.3em;">Génération de votre menu... 👨‍🍳</div>
+</div>
+
+<div class="container">
+    <div class="header-ui">
+        <h1>NutriGenius AI 🥗</h1>
+        <div id="google_translate_element"></div>
+        <div class="dark-toggle no-print" onclick="toggleDark()">🌓 Mode Sombre</div>
+    </div>
+
+    <div class="no-print">
+        <div class="input-group">
+            <div class="row">
+                <input type="number" id="age" class="input-field" placeholder="Age" oninput="sauvegarderProfil()">
+                <select id="sexe" class="input-field" onchange="sauvegarderProfil()">
+                    <option value="H">Homme</option>
+                    <option value="F">Femme</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="number" id="poids" class="input-field" placeholder="Poids (kg)" oninput="sauvegarderProfil()">
+                <input type="number" id="taille" class="input-field" placeholder="Taille (cm)" oninput="sauvegarderProfil()">
+            </div>
+        </div>
+        <select id="select-duree" class="select-box">
+            <option value="1">🥗 Menu du Jour</option>
+            <option value="7">📅 Menu de la Semaine</option>
+            <option value="30">📊 Menu du Mois</option>
+            <option value="365">🗓️ Menu de l'année</option>
+        </select>
+        <label class="checkbox-group">
+            <input type="checkbox" id="check-veg" onchange="sauvegarderProfil()"> 🥦 Mode Végétarien
+        </label>
+        <button class="btn" onclick="lancer()">GÉNÉRER MON PLAN NUTRITIONNEL</button>
+    </div>
+
+    <div id="resultat"><div id="content-area"></div></div>
+</div>
+
+<script>
+    // Liste étendue des langues (Top 50)
+    const supportedLangs = "en,es,it,de,pt,zh-CN,hi,ar,bn,ru,ja,pa,mr,te,tr,ko,vi,ta,ur,id,pl,uk,th,gu,kn,ml,my,sw,yo,ha,fa,ro,nl,am,az,ig,zu,ceb,tl,mg,ny,sn,st,xh,ht,qu,ay,gn,wuu,ko,yue,mai,om,uz,jv,pnb,su,mwr";
+
+    const db = {
+        petitDej: [
+            { n: "Omelette Soufflée Master 🍳", c: 380, v: true, i: ["4 Oeufs", "Oignons verts", "Curcuma", "Beurre"],
+                variantes: [
+                    { t: "Classique Aérienne", r: ["1. Blancs en neige.", "2. Mélanger aux jaunes.", "3. Cuire 8min."], ntr: "P: 22g | G: 4g | L: 24g", tip: "Ne pas retourner pour garder le volume." },
+                    { t: "Brouillée Créole", r: ["1. Battre les oeufs.", "2. Frire oignons.", "3. Remuer."], ntr: "P: 21g | G: 3g | L: 23g", tip: "Garder baveux pour plus de saveur." },
+                    { t: "Muffins au Four", r: ["1. Moules huilés.", "2. Enfourner 15min."], ntr: "P: 24g | G: 5g | L: 18g", tip: "Pratique pour le batch-cooking." },
+                    { t: "Roulée Japonaise", r: ["1. Fines couches.", "2. Rouler."], ntr: "P: 20g | G: 6g | L: 20g", tip: "Utilisez une poêle carrée." },
+                    { t: "Version Fromage", r: ["1. Ajouter emmental.", "2. Plier."], ntr: "P: 28g | G: 4g | L: 32g", tip: "Excellente source de calcium." }
+                ]
+            },
+            { n: "Bowl Skyr & Fruits Péi 🥭", c: 310, v: true, i: ["200g Skyr", "Mangue", "Graines de lin", "Miel"],
+                variantes: [
+                    { t: "Énergie Matinale", r: ["1. Mixez mangue.", "2. Mélanger Skyr."], ntr: "P: 25g | G: 35g | L: 5g", tip: "Riche en probiotiques naturels." },
+                    { t: "Crunchy Noisettes", r: ["1. Noisettes concassées.", "2. Miel."], ntr: "P: 26g | G: 38g | L: 12g", tip: "Les noisettes boostent la concentration." },
+                    { t: "Smoothie Bowl", r: ["1. Tout mixer.", "2. Boire froid."], ntr: "P: 22g | G: 40g | L: 4g", tip: "Parfait pour les matins pressés." },
+                    { t: "Façon Trifle", r: ["1. Étages alternés.", "2. Frais."], ntr: "P: 24g | G: 36g | L: 6g", tip: "Alternez les couches pour le visuel." },
+                    { t: "Version Gingembre", r: ["1. Râper gingembre.", "2. Mélanger."], ntr: "P: 25g | G: 34g | L: 5g", tip: "Le gingembre renforce l'immunité." }
+                ]
+            },
+            { n: "Pancakes à la Banane 🥞", c: 350, v: true, i: ["2 Bananes", "2 Oeufs", "Avoine", "Cannelle"],
+                variantes: [
+                    { t: "Sans Farine", r: ["1. Écraser bananes.", "2. Mélanger.", "3. Poêler."], ntr: "P: 15g | G: 45g | L: 8g", tip: "Texture fondante et légère." },
+                    { t: "Protidiques", r: ["1. Ajouter 30g de whey."], ntr: "P: 35g | G: 40g | L: 9g", tip: "Le top après le sport." },
+                    { t: "Choco-Gourmand", r: ["1. Pépites chocolat noir."], ntr: "P: 14g | G: 52g | L: 15g", tip: "Utilisez du chocolat à 70% min." },
+                    { t: "Peanut Butter", r: ["1. Beurre cacahuète."], ntr: "P: 18g | G: 46g | L: 18g", tip: "Énergie longue durée." },
+                    { t: "Blueberry Mix", r: ["1. Myrtilles fraîches."], ntr: "P: 15g | G: 48g | L: 9g", tip: "Riche en antioxydants." }
+                ]
+            },
+            { n: "Avocado Toast & Œuf 🥑", c: 420, v: true, i: ["Pain complet", "Avocat", "Œuf", "Sésame"],
+                variantes: [
+                    { t: "Classique", r: ["1. Toaster.", "2. Écraser l'avocat.", "3. Œuf poché."], ntr: "P: 16g | G: 30g | L: 28g", tip: "Citronnez pour éviter l'oxydation." },
+                    { t: "Spicy", r: ["1. Piment chili.", "2. Huile piquante."], ntr: "P: 16g | G: 31g | L: 29g", tip: "Le piment réveille le métabolisme." },
+                    { t: "Saumon Fumé", r: ["1. Ajouter saumon.", "2. Aneth."], ntr: "P: 24g | G: 30g | L: 32g", tip: "Riche en Oméga-3.", v: false },
+                    { t: "Vegan", r: ["1. Remplacer œuf par tofu."], ntr: "P: 18g | G: 32g | L: 26g", tip: "Le tofu fumé est excellent ici." },
+                    { t: "Feta Crunch", r: ["1. Feta émiettée."], ntr: "P: 19g | G: 31g | L: 34g", tip: "Le sel de la feta relève le gras de l'avocat." }
+                ]
+            }
+        ],
+        dejeuner: [
+            { n: "Bowl de Quinoa Post-Workout 🥗", c: 520, v: true, i: ["Quinoa", "Pois chiches", "Patate douce", "Avocat"],
+                variantes: [
+                    { t: "Équilibre Veggie", r: ["1. Cuire quinoa.", "2. Rincer pois.", "3. Assembler."], ntr: "P: 18g | G: 65g | L: 20g", tip: "Riche en magnésium." },
+                    { t: "Protéine+", r: ["1. Ajouter 100g de tofu poêlé."], ntr: "P: 28g | G: 62g | L: 22g", tip: "Optimise la récupération musculaire." },
+                    { t: "Mexicain", r: ["1. Maïs et salsa.", "2. Citron vert."], ntr: "P: 17g | G: 70g | L: 19g", tip: "Le maïs apporte des fibres." },
+                    { t: "Automne", r: ["1. Noix et pommes.", "2. Vinaigre."], ntr: "P: 15g | G: 68g | L: 25g", tip: "Régule la glycémie." },
+                    { t: "Méditerranéen", r: ["1. Olives.", "2. Feta."], ntr: "P: 19g | G: 60g | L: 24g", tip: "Option fraîche et croquante." }
+                ]
+            },
+            { n: "Poulet Croustillant & Purée 🍗", c: 580, v: false, i: ["Poulet", "Cornflakes", "Pommes de terre"],
+                variantes: [
+                    { t: "Cornflakes", r: ["1. Écraser céréales.", "2. Paner.", "3. Cuire."], ntr: "P: 45g | G: 50g | L: 18g", tip: "Croustillant sans friture." },
+                    { t: "Parmesan", r: ["1. Panure fromage/chapelure."], ntr: "P: 48g | G: 45g | L: 22g", tip: "Croûte dorée intense." },
+                    { t: "Patate Douce", r: ["1. Purée orange."], ntr: "P: 44g | G: 55g | L: 17g", tip: "Plus de vitamine A." },
+                    { t: "Aux Herbes", r: ["1. Romarin dans la panure."], ntr: "P: 45g | G: 48g | L: 18g", tip: "Parfume la chair." },
+                    { t: "Spicy", r: ["1. Paprika et piment."], ntr: "P: 45g | G: 49g | L: 19g", tip: "Ambiance Tex-Mex." }
+                ]
+            },
+            { n: "Rougail Saucisses 🥘", c: 710, v: false, i: ["Saucisses", "Tomates", "Oignons", "Gingembre"],
+                variantes: [
+                    { t: "Authentique", r: ["1. Bouillir.", "2. Frire.", "3. Tomates."], ntr: "P: 40g | G: 15g | L: 45g", tip: "Bien roussir les oignons." },
+                    { t: "Léger", r: ["1. Saucisses de poulet."], ntr: "P: 38g | G: 14g | L: 22g", tip: "Moins de graisses saturées." },
+                    { t: "Zembrocal", r: ["1. Riz curcuma.", "2. Haricots rouges."], ntr: "P: 42g | G: 60g | L: 46g", tip: "Le riz doit être jaune vif." },
+                    { t: "Piment Oiseau", r: ["1. Piment écrasé."], ntr: "P: 40g | G: 15g | L: 45g", tip: "Caractère péi." },
+                    { t: "Express", r: ["1. Pulpe tomate.", "2. 15min."], ntr: "P: 35g | G: 18g | L: 40g", tip: "Rapide et efficace." }
+                ]
+            },
+            { n: "Pavé de Saumon & Riz 🐟", c: 540, v: false, i: ["Saumon", "Riz", "Citron", "Aneth"],
+                variantes: [
+                    { t: "Vapeur", r: ["1. Pocher le poisson."], ntr: "P: 35g | G: 45g | L: 22g", tip: "Digestion légère." },
+                    { t: "Laqué Soja", r: ["1. Soja/miel.", "2. Griller."], ntr: "P: 36g | G: 50g | L: 21g", tip: "Caramélise la peau." },
+                    { t: "Papillote", r: ["1. Tomates cerises.", "2. Four."], ntr: "P: 34g | G: 42g | L: 24g", tip: "Garde le jus." },
+                    { t: "Sésame", r: ["1. Croûte de graines."], ntr: "P: 37g | G: 46g | L: 28g", tip: "Goût de noisette." },
+                    { t: "Riz Épinards", r: ["1. Riz vert aux feuilles."], ntr: "P: 36g | G: 48g | L: 23g", tip: "Fibres cachées." }
+                ]
+            },
+            { n: "Carry Poulet Tradition 🍛", c: 620, v: false, i: ["Poulet", "Tomates", "Oignons", "Curcuma"],
+                variantes: [
+                    { t: "Grand-Mère", r: ["1. Roussir.", "2. Mijoter."], ntr: "P: 50g | G: 10g | L: 22g", tip: "La sauce doit bien réduire." },
+                    { t: "Express", r: ["1. Blancs en dés.", "2. Feu vif."], ntr: "P: 48g | G: 12g | L: 18g", tip: "En 20 minutes." },
+                    { t: "Combava", r: ["1. Zestes fins."], ntr: "P: 50g | G: 11g | L: 21g", tip: "Parfum agrume unique." },
+                    { t: "Zéro Huile", r: ["1. Saisir à sec.", "2. Bouillon."], ntr: "P: 52g | G: 9g | L: 10g", tip: "Poêle antiadhésive obligatoire." },
+                    { t: "Massalé", r: ["1. Poudre massalé.", "2. Caloupilé."], ntr: "P: 50g | G: 15g | L: 23g", tip: "Influence indienne." }
+                ]
+            },
+            { n: "Salade de Lentilles & Feta 🥗", c: 410, v: true, i: ["Lentilles", "Feta", "Concombre", "Noix"],
+                variantes: [
+                    { t: "Classique", r: ["1. Mélanger le tout froid."], ntr: "P: 22g | G: 45g | L: 18g", tip: "Riche en fer végétal." },
+                    { t: "Menthe Fraîche", r: ["1. Ajouter menthe ciselée."], ntr: "P: 21g | G: 44g | L: 17g", tip: "Ultra rafraîchissant." },
+                    { t: "Version Tiède", r: ["1. Servir lentilles chaudes."], ntr: "P: 22g | G: 46g | L: 19g", tip: "Confortable en hiver." },
+                    { t: "Pommes/Cerneaux", r: ["1. Dés de pomme verte."], ntr: "P: 19g | G: 52g | L: 21g", tip: "Sucré-salé croquant." },
+                    { t: "Vinaigrette Miel", r: ["1. Moutarde et miel."], ntr: "P: 20g | G: 48g | L: 19g", tip: "Relève le goût terreux des lentilles." }
+                ]
+            },
+            { n: "Pâtes au Pesto & Tofu 🍝", c: 490, v: true, i: ["Pâtes complètes", "Pesto", "Tofu", "Pignons"],
+                variantes: [
+                    { t: "Genovese", r: ["1. Cuire pâtes.", "2. Tofu cubes.", "3. Pesto."], ntr: "P: 25g | G: 55g | L: 22g", tip: "Ne chauffez pas le pesto, mélangez-le à la fin." },
+                    { t: "Pesto Rouge", r: ["1. Tomates séchées mixées."], ntr: "P: 24g | G: 58g | L: 24g", tip: "Goût plus intense et sucré." },
+                    { t: "Tofu Mariné", r: ["1. Tofu à l'ail avant cuisson."], ntr: "P: 27g | G: 54g | L: 20g", tip: "Améliore la texture du tofu." },
+                    { t: "Zucchini Pasta", r: ["1. 50% pâtes / 50% courgettes."], ntr: "P: 20g | G: 35g | L: 21g", tip: "Réduit les calories de moitié." },
+                    { t: "Crunchy", r: ["1. Pignons torréfiés."], ntr: "P: 26g | G: 56g | L: 25g", tip: "La torréfaction change tout." }
+                ]
+            }
+        ],
+        diner: [
+            { n: "Dahl de Lentilles Corail 🍛", c: 510, v: true, i: ["Lentilles Corail", "Lait coco", "Cumin", "Citron"],
+                variantes: [
+                    { t: "Onctueux", r: ["1. Mixer.", "2. Coco."], ntr: "P: 26g | G: 58g | L: 18g", tip: "Réconfortant pour le soir." },
+                    { t: "Épicé", r: ["1. Curry rouge.", "2. Piment."], ntr: "P: 25g | G: 60g | L: 19g", tip: "Stimule la digestion." },
+                    { t: "Épinards", r: ["1. Feuilles fraîches."], ntr: "P: 27g | G: 59g | L: 18g", tip: "Boost de fer." },
+                    { t: "Soupe", r: ["1. Plus de bouillon.", "2. Lisser."], ntr: "P: 24g | G: 55g | L: 15g", tip: "Léger pour l'été." },
+                    { t: "Cajou", r: ["1. Noix entières."], ntr: "P: 28g | G: 62g | L: 25g", tip: "Touche finale croquante." }
+                ]
+            },
+            { n: "Curry de Pois Chiches 🥣", c: 480, v: true, i: ["Pois chiches", "Tomates", "Curry", "Lait coco"],
+                variantes: [
+                    { t: "Classique", r: ["1. Mijoter.", "2. Pois."], ntr: "P: 18g | G: 55g | L: 15g", tip: "Protéines végétales complètes." },
+                    { t: "Vegan", r: ["1. Crème coco."], ntr: "P: 17g | G: 54g | L: 18g", tip: "Doux pour l'estomac." },
+                    { t: "Aubergines", r: ["1. Dés fondants."], ntr: "P: 19g | G: 58g | L: 16g", tip: "Absorbe les épices." },
+                    { t: "Potiron", r: ["1. Courge en dés."], ntr: "P: 18g | G: 62g | L: 14g", tip: "Vitamines hivernales." },
+                    { t: "Rapide", r: ["1. Conserve.", "2. 10min."], ntr: "P: 18g | G: 53g | L: 15g", tip: "Gain de temps." }
+                ]
+            },
+            { n: "Soupe de Poisson Légère 🐠", c: 320, v: false, i: ["Poisson", "Poireaux", "Carottes", "Fenouil"],
+                variantes: [
+                    { t: "Bouillabaisse", r: ["1. Pocher.", "2. Bouillon."], ntr: "P: 35g | G: 12g | L: 8g", tip: "Très peu calorique." },
+                    { t: "Thaï", r: ["1. Citronnelle."], ntr: "P: 34g | G: 15g | L: 10g", tip: "Fraîcheur intense." },
+                    { t: "Crevettes", r: ["1. Ajouter 5 pièces."], ntr: "P: 38g | G: 13g | L: 7g", tip: "Protéines maigres." },
+                    { t: "Velouté", r: ["1. Mixer.", "2. Crème."], ntr: "P: 30g | G: 20g | L: 12g", tip: "Texture douce." },
+                    { t: "Curry", r: ["1. Épices jaunes."], ntr: "P: 32g | G: 18g | L: 9g", tip: "Aide à la digestion." }
+                ]
+            },
+            { n: "Gratin de Courgettes 🥘", c: 390, v: true, i: ["Courgettes", "Ricotta", "Parmesan", "Œufs"],
+                variantes: [
+                    { t: "Traditionnel", r: ["1. Tranches.", "2. Gratiner."], ntr: "P: 22g | G: 15g | L: 24g", tip: "Faites dégorger au sel." },
+                    { t: "Chèvre", r: ["1. Fromage frais."], ntr: "P: 20g | G: 14g | L: 26g", tip: "Goût rustique." },
+                    { t: "Poulet", r: ["1. Ajouter haché."], ntr: "P: 35g | G: 16g | L: 22g", tip: "Plus rassasiant.", v: false },
+                    { t: "Sans Lactose", r: ["1. Crème soja."], ntr: "P: 18g | G: 18g | L: 20g", tip: "Utilisez de la levure maltée." },
+                    { t: "Curry", r: ["1. Épices dans l'appareil."], ntr: "P: 21g | G: 17g | L: 23g", tip: "L'alliance parfaite." }
+                ]
+            },
+            { n: "Chili Veggie 🍛", c: 420, v: true, i: ["Haricots rouges", "Maïs", "Poivrons", "Tomate"],
+                variantes: [
+                    { t: "Classique", r: ["1. Faire revenir poivrons.", "2. Mijoter légumes."], ntr: "P: 19g | G: 55g | L: 12g", tip: "Riche en fibres pour le transit." },
+                    { t: "Quinoa Chili", r: ["1. Ajouter quinoa cuit."], ntr: "P: 22g | G: 60g | L: 14g", tip: "Protéines complètes." },
+                    { t: "Spicy Cocoa", r: ["1. Une pointe de cacao amer."], ntr: "P: 18g | G: 54g | L: 15g", tip: "Le cacao donne une profondeur incroyable." },
+                    { t: "Avocado Side", r: ["1. Servir avec avocat frais."], ntr: "P: 20g | G: 58g | L: 22g", tip: "Bons lipides pour la satiété." },
+                    { t: "Coriandre", r: ["1. Bouquet frais à la fin."], ntr: "P: 18g | G: 53g | L: 13g", tip: "Détoxifie les métaux lourds." }
+                ]
+            }
+        ]
+    };
+
+    let planningGlobal = [];
+
+    function toggleDark() { document.body.classList.toggle('dark-mode'); }
+
+    function lancer() {
+        if (!document.getElementById('age').value) return alert("Veuillez entrer votre Age !");
+        
+        const overlay = document.getElementById('loader-overlay');
+        const percentTxt = document.getElementById('loading-percentage');
+        overlay.style.display = "flex";
+        
+        let progress = 0;
+        percentTxt.innerText = "0%";
+        
+        const interval = setInterval(() => {
+            progress += 5;
+            if(progress > 100) progress = 100;
+            percentTxt.innerText = progress + "%";
+            if(progress >= 100) clearInterval(interval);
+        }, 55);
+
+        setTimeout(() => { 
+            genererPlanning(); 
+            overlay.style.display = "none";
+        }, 1200);
+    }
+
+    function genererPlanning() {
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+
+        const poolP = isVeg ? db.petitDej.filter(x => x.v === true) : db.petitDej;
+        const poolM = isVeg ? db.dejeuner.filter(x => x.v === true) : db.dejeuner;
+        const poolD = isVeg ? db.diner.filter(x => x.v === true) : db.diner;
+
+        if(poolP.length === 0 || poolM.length === 0 || poolD.length === 0) {
+            alert("Erreur : Pas assez de plats végétariens dans la base de données !");
+            document.getElementById('loader-overlay').style.display = "none";
+            return;
+        }
+
+        planningGlobal = [];
+        for (let i = 0; i < jours; i++) {
+            planningGlobal.push({
+                p: JSON.parse(JSON.stringify(poolP[Math.floor(Math.random() * poolP.length)])),
+                m: JSON.parse(JSON.stringify(poolM[Math.floor(Math.random() * poolM.length)])),
+                d: JSON.parse(JSON.stringify(poolD[Math.floor(Math.random() * poolD.length)])),
+                vP: 0, vM: 0, vD: 0
+            });
+        }
+        afficherMenu();
+    }
+
+    function remplacerRepas(jIdx, type) {
+        const isVeg = document.getElementById('check-veg').checked;
+        const categorie = type === 'p' ? db.petitDej : (type === 'm' ? db.dejeuner : db.diner);
+        const pool = isVeg ? categorie.filter(x => x.v === true) : categorie;
+        if (pool.length <= 1) return;
+        let nouveauPlat;
+        const platActuelNom = planningGlobal[jIdx][type].n;
+        do { nouveauPlat = pool[Math.floor(Math.random() * pool.length)]; } while (nouveauPlat.n === platActuelNom);
+        planningGlobal[jIdx][type] = JSON.parse(JSON.stringify(nouveauPlat));
+        planningGlobal[jIdx]['v' + type.toUpperCase()] = 0; 
+        afficherMenu();
+    }
+
+    function changerVariante(jIdx, type) {
+        let key = 'v' + type.toUpperCase();
+        let plat = planningGlobal[jIdx][type];
+        planningGlobal[jIdx][key] = (planningGlobal[jIdx][key] + 1) % plat.variantes.length;
+        afficherMenu();
+    }
+
+    function toggleDetails(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function afficherMenu() {
+        let html = "";
+        planningGlobal.forEach((jour, idx) => {
+            if (idx % 7 === 0) {
+                let listIng = new Set();
+                let fin = Math.min(idx + 7, planningGlobal.length);
+                for(let k=idx; k<fin; k++) {
+                    [planningGlobal[k].p, planningGlobal[k].m, planningGlobal[k].d].forEach(r => r.i.forEach(ing => listIng.add(ing)));
+                }
+                html += `<div class="shopping-list"><b>🛒 LISTE DE COURSES (Semaine ${Math.floor(idx/7)+1})</b><br>${Array.from(listIng).map(n => `<span class="shopping-item">${n}</span>`).join('')}</div>`;
+            }
+            html += `<div class="day-box"><span class="cal-float">${jour.p.c + jour.m.c + jour.d.c} kcal</span><h3>JOUR ${idx + 1}</h3>${renderMeal(idx, 'p', '☀️ Petit-Déjeuner', jour.p, jour.vP)}${renderMeal(idx, 'm', '🥗 Déjeuner', jour.m, jour.vM)}${renderMeal(idx, 'd', '🌙 Dîner', jour.d, jour.vD)}</div>`;
+        });
+        document.getElementById('content-area').innerHTML = html;
+    }
+
+    function renderMeal(jIdx, type, label, meal, vIdx) {
+        const id = `det-${jIdx}-${type}`;
+        const v = meal.variantes[vIdx];
+        return `<div class="meal-section"><b>${label} :</b> ${meal.n} <small>(${v.t})</small><br>🛒 Ingrédients : ${meal.i.join(', ')}<div class="no-print"><button class="btn-sm btn-replace" onclick="remplacerRepas(${jIdx}, '${type}')">🔄 Changer</button><button class="btn-sm btn-variant" onclick="changerVariante(${jIdx}, '${type}')">✨ Variante</button><button class="btn-sm btn-recipe" onclick="toggleDetails('${id}')">📖 Recette</button></div><div id="${id}" class="details-content"><b>👨‍🍳 PRÉPARATION :</b><br>${v.r.map((step, i) => `<b>${i+1}.</b> ${step}`).join('<br>')}<div class="macro-box">📊 <b>Valeurs :</b><br>${v.ntr}</div></div></div>`;
+    }
+
+    function sauvegarderProfil() {
+        const p = { age: document.getElementById('age').value, poids: document.getElementById('poids').value, taille: document.getElementById('taille').value, sexe: document.getElementById('sexe').value, veg: document.getElementById('check-veg').checked };
+        localStorage.setItem('NutriGenius_V9_FINAL', JSON.stringify(p));
+    }
+
+    function chargerProfil() {
+        const s = localStorage.getItem('NutriGenius_V9_FINAL');
+        if (s) {
+            const d = JSON.parse(s);
+            document.getElementById('age').value = d.age || "";
+            document.getElementById('poids').value = d.poids || "";
+            document.getElementById('taille').value = d.taille || "";
+            document.getElementById('sexe').value = d.sexe || "H";
+            document.getElementById('check-veg').checked = d.veg || false;
+        }
+    }
+
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'fr',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        // Correction ici : On utilise la variable avec les 50 langues
+        includedLanguages: supportedLangs, 
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

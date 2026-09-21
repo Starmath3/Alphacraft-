@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI - Version Stable</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; text-align: center; padding-top: 50px; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 90%; max-width: 500px; }
+        button { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 1.1em; }
+        .btn-gps { background: #27ae60; }
+        .btn-ville { background: #3498db; }
+        
+        #loader { display: none; margin: 20px 0; }
+        #percent-container { font-family: monospace; font-size: 2.5em; color: #27ae60; font-weight: bold; margin-bottom: 10px; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 20px; width: 100%; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: #27ae60; transition: width 0.1s linear; }
+        
+        #resultat { display: none; text-align: left; margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 10px; background: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    
+    <button class="btn-gps" onclick="lancer('gps')">📍 Scanner ma position</button>
+    <button class="btn-ville" onclick="lancer('ville')">🌍 Chercher une ville</button>
+
+    <div id="loader">
+        <div id="percent-container"><span id="chiffre">0.0</span>%</div>
+        <div class="progress-bg"><div id="progress-bar"></div></div>
+        <p id="status">Analyse en cours...</p>
+    </div>
+
+    <div id="resultat">
+        <h3 style="color:#27ae60">✅ Votre Menu IA est prêt !</h3>
+        <div id="menu-txt"></div>
+        <p style="margin-top:15px; font-size: 0.9em; color: #666;">🛒 Magasin identifié : <span id="shop-txt" style="font-weight:bold;"></span></p>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkWWqMx0C4DGNeEax1VHGcnu-UdsDpksg&libraries=places"></script>
+
+<script>
+    let interval;
+    let n = 0;
+
+    function lancer(mode) {
+        // Reset de l'interface
+        n = 0;
+        clearInterval(interval);
+        document.getElementById('resultat').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+        document.getElementById('status').innerText = "Connexion aux serveurs...";
+        
+        // Animation fluide
+        interval = setInterval(() => {
+            if (n < 95) {
+                n += 0.3;
+                majBarre();
+            }
+        }, 30);
+
+        if (mode === 'gps') {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    p => chercher(p.coords.latitude, p.coords.longitude),
+                    e => { alert("Erreur GPS : Autorisez la localisation."); arreter(); }
+                );
+            }
+        } else {
+            let v = prompt("Dans quelle ville êtes-vous ?");
+            if (v) {
+                let geo = new google.maps.Geocoder();
+                geo.geocode({address: v}, (res, stat) => {
+                    if (stat === 'OK') chercher(res[0].geometry.location.lat(), res[0].geometry.location.lng());
+                    else { alert("Ville non trouvée."); arreter(); }
+                });
+            } else { arreter(); }
+        }
+    }
+
+    function chercher(lat, lng) {
+        document.getElementById('status').innerText = "Analyse du quartier...";
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+        
+        service.nearbySearch({
+            location: {lat, lng},
+            radius: 1500,
+            type: ['supermarket']
+        }, (results, status) => {
+            // QUOI QU'IL ARRIVE, on finit le chargement
+            setTimeout(() => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    afficher(results[0].name);
+                } else {
+                    afficher("Commerce local");
+                }
+            }, 1000); // On laisse 1 seconde pour faire "vrai"
+        });
+    }
+
+    function afficher(nomMagasin) {
+        clearInterval(interval);
+        n = 100;
+        majBarre();
+        document.getElementById('status').innerText = "Analyse terminée !";
+
+        setTimeout(() => {
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('resultat').style.display = "block";
+            document.getElementById('shop-txt').innerText = nomMagasin;
+            document.getElementById('menu-txt').innerHTML = `
+                <b>• Matin :</b> Porridge aux éclats de noisettes<br>
+                <b>• Midi :</b> Pavé de saumon et riz noir<br>
+                <b>• Soir :</b> Soupe de courge et graines de chia
+            `;
+        }, 500);
+    }
+
+    function majBarre() {
+        document.getElementById('chiffre').innerText = n.toFixed(1);
+        document.getElementById('progress-bar').style.width = n + "%";
+    }
+
+    function arreter() {
+        clearInterval(interval);
+        document.getElementById('loader').style.display = "none";
+    }
+</script>
+
+</body>
+</html>

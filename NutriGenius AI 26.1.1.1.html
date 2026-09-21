@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Menu Local & Magasins</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+        #map { height: 300px; width: 100%; border-radius: 10px; margin-bottom: 15px; }
+        .magasin { background: #eee; padding: 10px; margin-top: 5px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>Assistant de Quartier 📍</h1>
+    <button onclick="trouverMagasins()">Trouver les magasins autour de moi</button>
+    
+    <div id="status"></div>
+    <h3>Magasins à proximité :</h3>
+    <div id="liste-magasins"></div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=TA_CLE_API_ICI&libraries=places"></script>
+
+    <script>
+        function trouverMagasins() {
+            const status = document.getElementById('status');
+            const liste = document.getElementById('liste-magasins');
+
+            // 1. Demander la position GPS
+            if (navigator.geolocation) {
+                status.innerHTML = "Recherche en cours...";
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const maPosition = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    // 2. Créer un service de recherche Places
+                    const service = new google.maps.places.PlacesService(document.createElement('div'));
+
+                    const request = {
+                        location: maPosition,
+                        radius: '1000', // Chercher dans un rayon de 1km
+                        type: ['supermarket'] // Chercher uniquement les supermarchés
+                    };
+
+                    service.nearbySearch(request, (results, statusAPI) => {
+                        if (statusAPI === google.maps.places.PlacesServiceStatus.OK) {
+                            status.innerHTML = "Magasins trouvés !";
+                            liste.innerHTML = ""; // Vider la liste
+                            
+                            results.forEach(place => {
+                                const div = document.createElement('div');
+                                div.className = "magasin";
+                                div.innerHTML = `<strong>${place.name}</strong><br>${place.vicinity}`;
+                                liste.appendChild(div);
+                            });
+                        }
+                    });
+                });
+            } else {
+                status.innerHTML = "La géolocalisation n'est pas supportée par ton navigateur.";
+            }
+        }
+    </script>
+</body>
+</html>

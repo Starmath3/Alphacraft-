@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGenius AI 26.1.6.2 - ULTIMATE GLOBAL</title>
+    <style>
+        :root { --bg: #f0f4f8; --card: white; --text: #2c3e50; --primary: #009245; --accent: #e67e22; }
+        .dark-mode { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f4f8; --primary: #27ae60; --accent: #d35400; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); text-align: center; padding: 20px; transition: 0.3s; margin: 0; }
+        .container { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 900px; text-align: left; }
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        .spinner { width: 60px; height: 60px; border: 6px solid rgba(255,255,255,0.2); border-top: 6px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .header-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .controls-top { display: flex; gap: 10px; }
+        .dark-toggle, .lang-select { cursor: pointer; background: var(--primary); color: white; padding: 10px 18px; border-radius: 25px; font-size: 0.9em; font-weight: bold; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .input-group { margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-field, .select-box { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; background: var(--card); color: var(--text); font-weight: 500; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-weight: bold; color: var(--primary); cursor: pointer; margin: 15px 0; }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-weight: 900; cursor: pointer; color: white; background: linear-gradient(135deg, var(--primary), #2ecc71); font-size: 1.2em; transition: 0.3s; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(39, 174, 96, 0.4); }
+        .day-box { background: var(--card); padding: 25px; margin-bottom: 30px; border-radius: 20px; border-left: 15px solid var(--primary); box-shadow: 0 8px 20px rgba(0,0,0,0.08); position: relative; }
+        .cal-float { position: absolute; top: 15px; right: 20px; background: var(--primary); color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.85em; font-weight: bold; }
+        .meal-card { margin-top: 15px; padding: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .shopping-list { background: #e8f5e9; border: 3px dashed var(--primary); padding: 25px; border-radius: 20px; margin: 30px 0; color: #1b5e20; }
+        .shopping-item { display: inline-block; background: white; padding: 8px 16px; margin: 6px; border-radius: 25px; font-size: 0.9em; font-weight: bold; border: 1px solid #c3e6cb; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .btn-sm { padding: 10px 15px; font-size: 0.8em; margin: 5px 3px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; transition: 0.2s; }
+        .btn-replace { background: var(--accent); }
+        .btn-variant { background: #8e44ad; }
+        .btn-recipe { background: #3498db; }
+        .details-content { display: none; margin-top: 15px; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 15px; border-left: 5px solid #3498db; }
+        .macro-box { background: var(--primary); color: white; padding: 15px; border-radius: 12px; margin: 15px 0; font-size: 0.9em; line-height: 1.6; }
+    </style>
+</head>
+<body onload="chargerProfil()">
+<div id="loader-overlay"><div class="spinner"></div><div id="loader-text">Loading...</div></div>
+<div class="container">
+    <div class="header-ui">
+        <h1>NutriGenius AI 🥗✨</h1>
+        <div class="controls-top">
+            <select id="lang-picker" class="lang-select" onchange="changerLangue()">
+                <option value="fr">🇫🇷 Français</option><option value="en">🇺🇸 English</option><option value="zh">🇨🇳 中文</option>
+                <option value="hi">🇮🇳 हिन्दी</option><option value="es">🇪🇸 Español</option><option value="ar">🇸🇦 العربية</option>
+                <option value="bn">🇧🇩 বাংলা</option><option value="pt">🇧🇷 Português</option><option value="ru">🇷🇺 Русский</option>
+                <option value="ur">🇵🇰 اردو</option>
+            </select>
+            <button class="dark-toggle no-print" onclick="toggleDark()">🌓</button>
+        </div>
+    </div>
+    <div class="no-print">
+        <div class="input-group">
+            <div class="row">
+                <input type="number" id="age" class="input-field" placeholder="Âge">
+                <select id="sexe" class="input-field">
+                    <option value="H" id="opt-h">♂️ Homme</option><option value="F" id="opt-f">♀️ Femme</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="number" id="poids" class="input-field" placeholder="Poids (kg)">
+                <input type="number" id="taille" class="input-field" placeholder="Taille (cm)">
+            </div>
+        </div>
+        <select id="select-duree" class="select-box">
+            <option value="1" id="dur-1">📅 Menu du Jour</option>
+            <option value="7" id="dur-7">🗓️ Menu de la Semaine</option>
+            <option value="30" id="dur-30">🌙 Menu du Mois</option>
+            <option value="365" id="dur-365">🌍 Menu de l'Année</option>
+        </select>
+        <label class="checkbox-group"><input type="checkbox" id="check-veg"> <span id="lbl-veg">🥗 Mode Végétarien</span></label>
+        <button class="btn" onclick="lancer()" id="btn-gen">🚀 GÉNÉRER MON PLAN ULTIME</button>
+    </div>
+    <div id="content-area"></div>
+</div>
+
+<script>
+    let currentLang = 'fr';
+    let planningGlobal = [];
+
+    const translations = {
+        fr: { age: "Âge", poids: "Poids (kg)", taille: "Taille (cm)", gen: "🚀 GÉNÉRER MON MENU", veg: "🥗 Mode Végétarien", shopping: "🛒 LISTE DE COURSES MAGIQUE", change: "🔄 Changer", variant: "✨ Variante", recipe: "📖 Détails", steps: "👨‍🍳 PRÉPARATION :", tip: "💡 CONSEIL", male: "♂️ Homme", female: "♀️ Femme", day: "JOUR", menu1: "📅 Menu du Jour", menu7: "🗓️ Menu de la Semaine", menu30: "🌙 Menu du Mois", menu365: "🌍 Menu de l'Année", macroTitle: "📊 Valeurs Nutritionnelles :" },
+        en: { age: "Age", poids: "Weight (kg)", taille: "Height (cm)", gen: "🚀 GENERATE ULTIMATE PLAN", veg: "🥗 Vegetarian Mode", shopping: "🛒 MAGIC SHOPPING LIST", change: "🔄 Change", variant: "✨ Variant", recipe: "📖 Details", steps: "👨‍🍳 PREPARATION:", tip: "💡 TIP", male: "♂️ Male", female: "♀️ Female", day: "DAY", menu1: "📅 Daily Menu", menu7: "🗓️ Weekly Menu", menu30: "🌙 Monthly Menu", menu365: "🌍 Yearly Menu", macroTitle: "📊 Nutritional Values:" }
+        // Les autres langues seront complétées dans la logique de la Partie 4
+    };
+const db = {
+        petitDej: [
+            { 
+                n: { fr: "L'Omelette Soufflée Royale 🍳", en: "Royal Soufflé Omelette 🍳", zh: "皇家舒芙蕾欧姆蛋 🍳", hi: "रॉयल सफ़ल ऑमलेट 🍳", es: "Tortilla Soufflé Real 🍳", ar: "أومليت سوفليه ملكي 🍳", bn: "রয়্যাল সোফেল অমলেট 🍳", pt: "Omelete Soufflé Real 🍳", ru: "Королевский омлет-суфле 🍳", ur: "رائل سوفلے آملیٹ 🍳" },
+                c: 410, v: true,
+                i: { 
+                    fr: ["4 Œufs", "Oignons verts", "Curcuma", "Beurre", "Fromage"], 
+                    en: ["4 Eggs", "Green onions", "Turmeric", "Butter", "Cheese"],
+                    es: ["4 Huevos", "Cebollino", "Cúrcuma", "Mantequilla", "Queso"],
+                    zh: ["4个鸡蛋", "青葱", "姜黄", "黄油", "奶酪"]
+                },
+                variantes: [
+                    { 
+                        t: { fr: "Classique Aérienne ☁️", en: "Classic Airy ☁️" },
+                        r: { fr: ["1. Monter les blancs.", "2. Mélanger.", "3. Cuire."], en: ["1. Whip whites.", "2. Mix.", "3. Cook."] },
+                        ntr: { fr: "Prot: 24g | Glu: 5g | Lip: 28g", en: "Prot: 24g | Carbs: 5g | Fat: 28g" },
+                        tip: { fr: "Ne pas retourner.", en: "Do not flip." }
+                    },
+                    { 
+                        t: { fr: "Version Fromagère 🧀", en: "Cheesy Version 🧀" },
+                        r: { fr: ["1. Ajouter emmental.", "2. Fondre à cœur."], en: ["1. Add cheese.", "2. Melt inside."] },
+                        ntr: { fr: "Prot: 30g | Glu: 5g | Lip: 35g", en: "Prot: 30g | Carbs: 5g | Fat: 35g" },
+                        tip: { fr: "Utilisez du cheddar.", en: "Use cheddar." }
+                    },
+                    { 
+                        t: { fr: "Style Épicé 🔥", en: "Spicy Style 🔥" },
+                        r: { fr: ["1. Ajouter piment.", "2. Sauter oignons."], en: ["1. Add chili.", "2. Sauté onions."] },
+                        ntr: { fr: "Prot: 24g | Glu: 6g | Lip: 28g", en: "Prot: 24g | Carbs: 6g | Fat: 28g" },
+                        tip: { fr: "Piment oiseau.", en: "Bird's eye chili." }
+                    },
+                    { 
+                        t: { fr: "Aux Fines Herbes 🌿", en: "Fine Herbs 🌿" },
+                        r: { fr: ["1. Ciseler persil.", "2. Mixer."], en: ["1. Chop parsley.", "2. Mix."] },
+                        ntr: { fr: "Prot: 24g | Glu: 5g | Lip: 28g", en: "Prot: 24g | Carbs: 5g | Fat: 28g" },
+                        tip: { fr: "Herbes fraîches.", en: "Fresh herbs." }
+                    },
+                    { 
+                        t: { fr: "Petit-Déj de Champion 💪", en: "Champion B-fast 💪" },
+                        r: { fr: ["1. Ajouter dés de jambon.", "2. Servir chaud."], en: ["1. Add ham dice.", "2. Serve hot."] },
+                        ntr: { fr: "Prot: 35g | Glu: 6g | Lip: 30g", en: "Prot: 35g | Carbs: 6g | Fat: 30g" },
+                        tip: { fr: "Riche en fer.", en: "High iron." }
+                    }
+                ]
+            },
+            { 
+                n: { fr: "Pancakes Protéinés Avocat 🥑", en: "Protein Avocado Pancakes 🥑", zh: "鳄梨蛋白质煎饼 🥑", hi: "एवोकाडो प्रोटीन पैनकेक 🥑", es: "Tortitas de Proteína y Aguacate 🥑", ar: "بان كيك البروتين بالأفوكادو 🥑", bn: "অ্যাভোকাডো প্রোটিন প্যানকেক 🥑", pt: "Panquecas de Proteína de Abacate 🥑", ru: "Протеиновые блинчики с авокадо 🥑", ur: "ایوکاڈو پروٹین پین کیک 🥑" },
+                c: 450, v: true,
+                i: { fr: ["Avocat", "Avoine", "Blancs d'oeufs", "Miel"], en: ["Avocado", "Oats", "Egg whites", "Honey"] },
+                variantes: [
+                    { t: { fr: "Original 🥑", en: "Original 🥑" }, r: { fr: ["Mixer.", "Cuire."], en: ["Blend.", "Cook."] }, ntr: { fr: "P:20g G:45g L:18g", en: "P:20g C:45g F:18g" }, tip: { fr: "Bien mûr.", en: "Very ripe." } },
+                    { t: { fr: "Choco-Avocat 🍫", en: "Choco-Avo 🍫" }, r: { fr: ["Cacao."], en: ["Cocoa."] }, ntr: { fr: "P:21g G:48g L:20g", en: "P:21g C:48g F:20g" }, tip: { fr: "Cacao pur.", en: "Pure cocoa." } },
+                    { t: { fr: "Aux Baies 🍓", en: "Berry Blast 🍓" }, r: { fr: ["Ajouter fraises."], en: ["Add berries."] }, ntr: { fr: "P:20g G:50g L:18g", en: "P:20g C:50g F:18g" }, tip: { fr: "Baies rouges.", en: "Red berries." } },
+                    { t: { fr: "Version Crunchy 🥜", en: "Crunchy Version 🥜" }, r: { fr: ["Éclats de noix."], en: ["Walnut bits."] }, ntr: { fr: "P:22g G:45g L:25g", en: "P:22g C:45g F:25g" }, tip: { fr: "Noix de pécan.", en: "Pecans." } },
+                    { t: { fr: "Fitness Max 🏋️", en: "Fitness Max 🏋️" }, r: { fr: ["Ajouter whey."], en: ["Add whey."] }, ntr: { fr: "P:40g G:40g L:18g", en: "P:40g C:40g F:18g" }, tip: { fr: "Sans sucre.", en: "Zero sugar." } }
+                ]
+            }
+        ],
+dejeuner: [
+            { 
+                n: { fr: "Carry Poulet Grand-Mère 🍗", en: "Grandma's Chicken Curry 🍗", zh: "祖母家常咖喱鸡 🍗", hi: "दादी का चिकन करी 🍗", es: "Curry de Pollo de la Abuela 🍗", ar: "كاري دجاج الجدة 🍗", bn: "ঠাকুমার চিকেন কারি 🍗", pt: "Caril de Frango da Vovó 🍗", ru: "Бабушкин карри с курицей 🍗", ur: "دادی کی چکن کڑی 🍗" },
+                c: 650, v: false,
+                i: { 
+                    fr: ["Poulet", "Tomates", "Oignons", "Gingembre", "Curcuma", "Thym"],
+                    en: ["Chicken", "Tomatoes", "Onions", "Ginger", "Turmeric", "Thyme"]
+                },
+                variantes: [
+                    { 
+                        t: { fr: "Traditionnel Réunionnais 🇷🇪", en: "Traditional Reunion Style 🇷🇪" },
+                        r: { fr: ["1. Roussir le poulet.", "2. Ajouter épices.", "3. Mijoter."], en: ["1. Brown chicken.", "2. Add spices.", "3. Simmer."] },
+                        ntr: { fr: "P: 55g | G: 10g | L: 20g", en: "P: 55g | C: 10g | F: 20g" },
+                        tip: { fr: "Pas d'eau dans le carry !", en: "No water in the curry!" }
+                    },
+                    { 
+                        t: { fr: "Version Crémée 🥛", en: "Creamy Version 🥛" },
+                        r: { fr: ["1. Ajouter lait de coco.", "2. Épaissir."], en: ["1. Add coconut milk.", "2. Thicken."] },
+                        ntr: { fr: "P: 52g | G: 15g | L: 35g", en: "P: 52g | C: 15g | F: 35g" },
+                        tip: { fr: "Lait de coco bio.", en: "Organic coconut milk." }
+                    },
+                    { 
+                        t: { fr: "Mode Express ⚡", en: "Express Mode ⚡" },
+                        r: { fr: ["1. Utiliser autocuiseur.", "2. 15 min."], en: ["1. Use pressure cooker.", "2. 15 min."] },
+                        ntr: { fr: "P: 55g | G: 10g | L: 20g", en: "P: 55g | C: 10g | F: 20g" },
+                        tip: { fr: "Poulet déjà découpé.", en: "Pre-cut chicken." }
+                    },
+                    { 
+                        t: { fr: "Aux Pommes de Terre 🥔", en: "With Potatoes 🥔" },
+                        r: { fr: ["1. Ajouter dés de patates.", "2. Cuire fondant."], en: ["1. Add potato cubes.", "2. Cook until soft."] },
+                        ntr: { fr: "P: 50g | G: 35g | L: 20g", en: "P: 50g | C: 35g | F: 20g" },
+                        tip: { fr: "Pommes de terre à chair ferme.", en: "Firm potatoes." }
+                    },
+                    { 
+                        t: { fr: "Version Pimentée 🔥🔥🔥", en: "Extra Spicy 🔥🔥🔥" },
+                        r: { fr: ["1. Écraser piment oiseau.", "2. Mélanger."], en: ["1. Crush bird chili.", "2. Mix."] },
+                        ntr: { fr: "P: 55g | G: 11g | L: 20g", en: "P: 55g | C: 11g | F: 20g" },
+                        tip: { fr: "Attention, ça pique !", en: "Careful, it's hot!" }
+                    }
+                ]
+            }
+        ],
+        diner: [
+            { 
+                n: { fr: "Wok Veggie Impérial 🥦", en: "Imperial Veggie Wok 🥦", zh: "宫廷素食炒菜 🥦", hi: "शाही शाकाहारी वॉक 🥦", es: "Wok Vegetariano Imperial 🥦", ar: "ووك خضار إمبراطوري 🥣", bn: "ইম্পেরিয়াল ভেজি ওয়াক 🥦", pt: "Wok Vegetariano Imperial 🥦", ru: "Императорский овощной вок 🥦", ur: "شاہی سبزی ووک 🥦" },
+                c: 420, v: true,
+                i: { fr: ["Tofu", "Brocolis", "Champignons", "Sauce Soja"], en: ["Tofu", "Broccoli", "Mushrooms", "Soy Sauce"] },
+                variantes: [
+                    { t: { fr: "Classique Soja 🥢", en: "Classic Soy 🥢" }, r: { fr: ["Sauter le tout."], en: ["Stir-fry all."] }, ntr: { fr: "P:25g G:20g L:12g", en: "P:25g C:20g F:12g" }, tip: { fr: "Feu vif.", en: "High heat." } },
+                    { t: { fr: "Aigre-Doux 🍍", en: "Sweet & Sour 🍍" }, r: { fr: ["Ajouter ananas."], en: ["Add pineapple."] }, ntr: { fr: "P:22g G:45g L:10g", en: "P:22g C:45g F:10g" }, tip: { fr: "Ananas frais.", en: "Fresh pineapple." } },
+                    { t: { fr: "Style Satay 🥜", en: "Satay Style 🥜" }, r: { fr: ["Beurre cacahuète."], en: ["Peanut butter."] }, ntr: { fr: "P:30g G:25g L:22g", en: "P:30g C:25g F:22g" }, tip: { fr: "Sauce onctueuse.", en: "Creamy sauce." } },
+                    { t: { fr: "Gingembre Frais 🫚", en: "Fresh Ginger 🫚" }, r: { fr: ["Râper le gingembre."], en: ["Grate ginger."] }, ntr: { fr: "P:25g G:22g L:12g", en: "P:25g C:22g F:12g" }, tip: { fr: "Anti-inflammatoire.", en: "Anti-inflammatory." } },
+                    { t: { fr: "Riz Sauté Inclu 🍚", en: "Fried Rice Included 🍚" }, r: { fr: ["Ajouter riz cuit."], en: ["Add cooked rice."] }, ntr: { fr: "P:25g G:65g L:15g", en: "P:25g C:65g F:15g" }, tip: { fr: "Riz de la veille.", en: "Leftover rice." } }
+                ]
+            }
+        ]
+    };
+function toggleDark() { document.body.classList.toggle('dark-mode'); }
+
+    function changerLangue() {
+        currentLang = document.getElementById('lang-picker').value;
+        const t = translations[currentLang] || translations['en'];
+        
+        // Mise à jour de l'interface
+        document.getElementById('age').placeholder = t.age;
+        document.getElementById('poids').placeholder = t.poids;
+        document.getElementById('taille').placeholder = t.taille;
+        document.getElementById('btn-gen').innerText = t.gen;
+        document.getElementById('lbl-veg').innerText = t.veg;
+        document.getElementById('opt-h').innerText = t.male;
+        document.getElementById('opt-f').innerText = t.female;
+        document.getElementById('dur-1').innerText = t.menu1;
+        document.getElementById('dur-7').innerText = t.menu7;
+        document.getElementById('dur-30').innerText = t.menu30;
+        document.getElementById('dur-365').innerText = t.menu365;
+
+        if (planningGlobal.length > 0) afficherMenu();
+    }
+
+    function lancer() {
+        if (!document.getElementById('age').value) {
+            const msg = (currentLang === 'fr') ? "Veuillez entrer votre Âge !" : "Please enter your Age!";
+            return alert(msg);
+        }
+        // Affichage du loader "Loading..." universel
+        document.getElementById('loader-overlay').style.display = "flex";
+        
+        // Simulation de calcul IA (plus long pour les plans annuels)
+        const delai = planningGlobal.length > 30 ? 2500 : 1200;
+        
+        setTimeout(() => { 
+            genererPlanning(); 
+            document.getElementById('loader-overlay').style.display = "none";
+        }, delai);
+    }
+
+    function genererPlanning() {
+        const jours = parseInt(document.getElementById('select-duree').value);
+        const isVeg = document.getElementById('check-veg').checked;
+        
+        const poolP = isVeg ? db.petitDej.filter(x => x.v) : db.petitDej;
+        const poolM = isVeg ? db.dejeuner.filter(x => x.v) : db.dejeuner;
+        const poolD = isVeg ? db.diner.filter(x => x.v) : db.diner;
+
+        planningGlobal = [];
+        for (let i = 0; i < jours; i++) {
+            planningGlobal.push({
+                p: JSON.parse(JSON.stringify(poolP[Math.floor(Math.random() * poolP.length)])),
+                m: JSON.parse(JSON.stringify(poolM[Math.floor(Math.random() * poolM.length)])),
+                d: JSON.parse(JSON.stringify(poolD[Math.floor(Math.random() * poolD.length)])),
+                vP: Math.floor(Math.random() * 5), // Sélection aléatoire parmi les 5 variantes
+                vM: Math.floor(Math.random() * 5),
+                vD: Math.floor(Math.random() * 5)
+            });
+        }
+        afficherMenu();
+    }
+
+    function remplacerRepas(jIdx, type) {
+        const isVeg = document.getElementById('check-veg').checked;
+        const cat = type === 'p' ? db.petitDej : (type === 'm' ? db.dejeuner : db.diner);
+        const pool = isVeg ? cat.filter(x => x.v) : cat;
+        
+        let nouveau;
+        do { nouveau = pool[Math.floor(Math.random() * pool.length)]; } 
+        while (nouveau.n.fr === planningGlobal[jIdx][type].n.fr);
+        
+        planningGlobal[jIdx][type] = JSON.parse(JSON.stringify(nouveau));
+        planningGlobal[jIdx]['v' + type.toUpperCase()] = 0; 
+        afficherMenu();
+    }
+
+    function changerVariante(jIdx, type) {
+        let key = 'v' + type.toUpperCase();
+        let nbVar = planningGlobal[jIdx][type].variantes.length;
+        planningGlobal[jIdx][key] = (planningGlobal[jIdx][key] + 1) % nbVar;
+        afficherMenu();
+    }
+
+    function toggleDetails(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function afficherMenu() {
+        const t = translations[currentLang] || translations['en'];
+        let html = "";
+        
+        planningGlobal.forEach((jour, idx) => {
+            // Liste de courses tous les 7 jours
+            if (idx % 7 === 0) {
+                let listIng = new Set();
+                let fin = Math.min(idx + 7, planningGlobal.length);
+                for(let k=idx; k<fin; k++) {
+                    [planningGlobal[k].p, planningGlobal[k].m, planningGlobal[k].d].forEach(r => {
+                        let ingLang = r.i[currentLang] || r.i['fr'] || r.i['en'];
+                        ingLang.forEach(ing => listIng.add(ing));
+                    });
+                }
+                html += `<div class="shopping-list"><h3>${t.shopping}</h3>${Array.from(listIng).map(n => `<span class="shopping-item">${n}</span>`).join('')}</div>`;
+            }
+
+            html += `
+            <div class="day-box">
+                <div class="cal-float">${jour.p.c + jour.m.c + jour.d.c} kcal</div>
+                <h2 style="color:var(--primary)">✨ ${t.day} ${idx + 1}</h2>
+                ${renderMeal(idx, 'p', '☀️ PETIT-DÉJEUNER', jour.p, jour.vP)}
+                ${renderMeal(idx, 'm', '🍴 DÉJEUNER', jour.m, jour.vM)}
+                ${renderMeal(idx, 'd', '🌙 DÎNER', jour.d, jour.vD)}
+            </div>`;
+        });
+        document.getElementById('content-area').innerHTML = html;
+    }
+
+    function renderMeal(jIdx, type, label, meal, vIdx) {
+        const t = translations[currentLang] || translations['en'];
+        const id = `det-${jIdx}-${type}`;
+        const lang = currentLang;
+        
+        // Sécurité si la variante n'existe pas (cas de base de données asymétrique)
+        const v = meal.variantes[vIdx] || meal.variantes[0];
+
+        return `
+        <div class="meal-card">
+            <b style="font-size:1.1em;">${label} :</b> <span style="font-size:1.1em;">${meal.n[lang] || meal.n['fr']}</span><br>
+            <i style="color:var(--primary)">🛒 ${(meal.i[lang] || meal.i['fr']).join(', ')}</i>
+            <div class="no-print" style="margin-top:10px;">
+                <button class="btn-sm btn-replace" onclick="remplacerRepas(${jIdx}, '${type}')">${t.change}</button>
+                <button class="btn-sm btn-variant" onclick="changerVariante(${jIdx}, '${type}')">${t.variant} (${vIdx + 1}/5)</button>
+                <button class="btn-sm btn-recipe" onclick="toggleDetails('${id}')">${t.recipe}</button>
+            </div>
+            <div id="${id}" class="details-content">
+                <h4 style="margin-top:0;">✨ ${v.t[lang] || v.t['fr']}</h4>
+                <b>${t.steps}</b><br>
+                ${(v.r[lang] || v.r['fr']).map((s, i) => `<b>${i+1}.</b> ${s}`).join('<br>')}
+                <div class="macro-box">
+                    <b>${t.macroTitle}</b><br>${v.ntr[lang] || v.ntr['fr']}
+                </div>
+                <div style="color:var(--accent); font-weight:bold;">${t.tip} : ${v.tip[lang] || v.tip['fr']}</div>
+            </div>
+        </div>`;
+    }
+
+    function sauvegarderProfil() {
+        const p = { 
+            age: document.getElementById('age').value, 
+            poids: document.getElementById('poids').value, 
+            taille: document.getElementById('taille').value, 
+            sexe: document.getElementById('sexe').value, 
+            veg: document.getElementById('check-veg').checked 
+        };
+        localStorage.setItem('NutriGenius_V26_1_6_2_Final', JSON.stringify(p));
+    }
+
+    function chargerProfil() {
+        const s = localStorage.getItem('NutriGenius_V26_1_6_2_Final');
+        if (s) {
+            const d = JSON.parse(s);
+            document.getElementById('age').value = d.age || "";
+            document.getElementById('poids').value = d.poids || "";
+            document.getElementById('taille').value = d.taille || "";
+            document.getElementById('sexe').value = d.sexe || "H";
+            document.getElementById('check-veg').checked = d.veg || false;
+        }
+        changerLangue();
+    }
+</script>
+</body>
+</html>

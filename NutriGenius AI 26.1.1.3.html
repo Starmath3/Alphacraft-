@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriGenius AI - Mode Mondial</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #27ae60; text-align: center; font-size: 2em; }
+        .btn-main { width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1em; cursor: pointer; transition: 0.3s; margin-bottom: 10px; }
+        .btn-main:hover { background: #219150; }
+        .menu-box { margin-top: 20px; border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; background: #fff; }
+        .meal { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #ddd; }
+        .meal strong { color: #2ecc71; text-transform: uppercase; font-size: 0.9em; }
+        .shop-list { background: #f9f9f9; padding: 10px; border-radius: 5px; font-size: 0.9em; border-left: 4px solid #27ae60; }
+        .loading { font-style: italic; color: #888; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NutriGenius AI 🥗</h1>
+    <p style="text-align: center;">Détection de quartier et menus locaux (Monde Entier).</p>
+    
+    <button class="btn-main" onclick="lancerNutriGenius()">📍 Scanner mon quartier (Auto)</button>
+    <button class="btn-main" style="background:#3498db;" onclick="demanderVille()">🌍 Chercher une autre ville</button>
+    
+    <div id="status" style="margin-top: 15px; text-align: center; color: #666;"></div>
+    
+    <div id="resultat" style="display:none;">
+        <div class="menu-box">
+            <h3>📅 Ton Menu du Jour</h3>
+            <div id="contenu-menu"></div>
+        </div>
+        
+        <div class="menu-box">
+            <h3>🛒 Magasins trouvés à proximité</h3>
+            <div id="liste-magasins"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=TA_CLE_API_ICI&libraries=places"></script>
+
+<script>
+    // --- CONFIGURATION ---
+    // REMPLACE "TA_CLE_API_ICI" ci-dessus par ta vraie clé.
+    
+    function lancerNutriGenius() {
+        const status = document.getElementById('status');
+        status.innerHTML = "<span class='loading'>Tentative de localisation...</span>";
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    lancerRecherche(pos.coords.latitude, pos.coords.longitude);
+                },
+                (error) => {
+                    status.innerHTML = "❌ GPS refusé ou indisponible. Utilisez le bouton bleu !";
+                }
+            );
+        } else {
+            demanderVille();
+        }
+    }
+
+    function demanderVille() {
+        const ville = prompt("Dans quelle ville ou quel quartier es-tu ? (ex: Tokyo, Londres, Bordeaux)");
+        if (ville) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: ville }, (results, status) => {
+                if (status === "OK") {
+                    const loc = results[0].geometry.location;
+                    lancerRecherche(loc.lat(), loc.lng());
+                } else {
+                    alert("Oups, je n'ai pas trouvé cet endroit sur la carte.");
+                }
+            });
+        }
+    }
+
+    function lancerRecherche(lat, lng) {
+        const status = document.getElementById('status');
+        const resDiv = document.getElementById('resultat');
+        const coords = { lat: lat, lng: lng };
+        
+        status.innerHTML = "🔎 Analyse des commerces locaux en cours...";
+
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+        service.nearbySearch({
+            location: coords,
+            radius: 2000, 
+            type: ['supermarket', 'grocery_or_supermarket']
+        }, (results, statusAPI) => {
+            if (statusAPI === google.maps.places.PlacesServiceStatus.OK) {
+                resDiv.style.display = "block";
+                status.innerHTML = "✅ Analyse terminée avec succès !";
+                
+                // Affichage des magasins
+                const shopDiv = document.getElementById('liste-magasins');
+                shopDiv.innerHTML = results.slice(0, 3).map(p => `• <strong>${p.name}</strong> (${p.vicinity})`).join('<br>');
+                
+                genererMenuIA(results[0].name);
+            } else {
+                status.innerHTML = "⚠️ Aucun magasin trouvé dans cette zone.";
+            }
+        });
+    }
+
+    function genererMenuIA(nomMagasin) {
+        const menus = [
+            { m: "Toast avocat et œufs", d: "Salade fraîche du marché", s: "Saumon grillé et riz", l: "Avocat, Œufs, Salade, Saumon" },
+            { m: "Muesli aux fruits rouges", d: "Bowl de quinoa et légumes", s: "Soupe maison et pain bio", l: "Muesli, Quinoa, Légumes de saison" }
+        ];
+        const random = menus[Math.floor(Math.random() * menus.length)];
+        
+        document.getElementById('contenu-menu').innerHTML = `
+            <div class="meal"><strong>Matin :</strong> ${random.m}</div>
+            <div class="meal"><strong>Midi :</strong> ${random.d}</div>
+            <div class="meal"><strong>Soir :</strong> ${random.s}</div>
+            <div class="shop-list">📝 <strong>Liste à acheter chez ${nomMagasin} :</strong><br>${random.l}</div>
+        `;
+    }
+</script>
+
+</body>
+</html>
