@@ -1,0 +1,2312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Funcora 0.0</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --fond:#131722; --fond2:#1b2130; --fond3:#232b3d; --bord:#333d54;
+  --texte:#e8edf7; --texte2:#9aa6bf; --accent:#2d70f5; --accent2:#3ec46d;
+  --grille:#2a3244; --axe:#7d8aa5;
+}
+html,body{margin:0;padding:0;background:var(--fond);color:var(--texte);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px}
+body{padding:0 0 env(safe-area-inset-bottom,0px)}
+h1{margin:0;font-size:26px;letter-spacing:.5px}
+h1 span{color:var(--accent);font-weight:400}
+header{padding:14px 16px 8px}
+.sous{margin:4px 0 0;color:var(--texte2);font-size:13px}
+#barre{display:flex;gap:8px;padding:8px 16px}
+#demande,#reproche{flex:1;min-width:0;padding:12px 14px;border-radius:10px;border:1px solid var(--bord);
+  background:var(--fond2);color:var(--texte);font-size:16px;outline:none}
+#demande:focus,#reproche:focus{border-color:var(--accent)}
+button{font-family:inherit;font-size:14px;cursor:pointer;border:1px solid var(--bord);
+  background:var(--fond3);color:var(--texte);padding:11px 16px;border-radius:10px}
+button:hover{background:#2c364c}
+button.principal{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.principal:hover{background:#245fd6}
+button:disabled{opacity:.5;cursor:default}
+#exemples{display:flex;flex-wrap:wrap;gap:6px;padding:2px 16px 8px}
+.puce{background:var(--fond2);border:1px solid var(--bord);color:var(--texte2);
+  padding:6px 10px;border-radius:999px;font-size:12.5px;cursor:pointer}
+.puce:hover{color:var(--texte);border-color:var(--accent)}
+#outils{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:6px 16px 10px}
+.groupe{display:flex;align-items:center;gap:8px;background:var(--fond2);border:1px solid var(--bord);
+  border-radius:10px;padding:6px 10px}
+.groupe label{color:var(--texte2);font-size:12.5px;white-space:nowrap}
+.bascule{display:flex;border:1px solid var(--bord);border-radius:10px;overflow:hidden}
+.bascule button{border:0;border-radius:0;padding:10px 14px;background:var(--fond2)}
+.bascule button.actif{background:var(--accent);color:#fff;font-weight:600}
+input[type=range]{width:110px;accent-color:var(--accent)}
+.fichier{display:inline-block}
+.fichier input{display:none}
+main{display:flex;gap:12px;padding:0 16px;align-items:stretch}
+#zoneGraphe{position:relative;flex:1;min-width:0;background:var(--fond2);border:1px solid var(--bord);
+  border-radius:12px;overflow:hidden;height:min(62vh,560px)}
+#graphe{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#graphe.attrape{cursor:grabbing}
+#etat{position:absolute;left:10px;top:10px;background:#0b0f18cc;border:1px solid var(--bord);
+  padding:6px 10px;border-radius:8px;font-size:12.5px;color:var(--texte2);pointer-events:none;
+  max-width:72%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#outilsGraphe{position:absolute;right:10px;bottom:10px;display:flex;gap:6px}
+#outilsGraphe button{padding:8px 10px;font-size:12.5px;background:#0b0f18cc}
+#panneau{width:380px;flex:0 0 380px;background:var(--fond2);border:1px solid var(--bord);
+  border-radius:12px;display:flex;flex-direction:column;height:min(62vh,560px)}
+#entete{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px;border-bottom:1px solid var(--bord)}
+#compteur{font-size:13px;color:var(--texte2)}
+#compteur b{color:var(--texte);font-size:15px}
+#liste{flex:1;overflow:auto;padding:6px}
+.eq{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border-radius:8px;font-size:13.5px;line-height:1.45}
+.eq:hover{background:var(--fond3)}
+.pastille{width:12px;height:12px;border-radius:50%;flex:0 0 12px;margin-top:4px}
+.form{font-family:"Cambria Math","Latin Modern Math",Georgia,serif;font-size:15px;word-break:break-word}
+.dom{color:var(--texte2)}
+#pagination{display:flex;gap:6px;align-items:center;justify-content:center;padding:8px;
+  border-top:1px solid var(--bord);font-size:12.5px;color:var(--texte2)}
+#pagination button{padding:6px 10px;font-size:12.5px}
+#retouches{padding:12px 16px 20px}
+#journal{max-height:180px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.msg{padding:8px 11px;border-radius:10px;font-size:13.5px;max-width:92%}
+.msg.moi{align-self:flex-end;background:var(--accent);color:#fff}
+.msg.app{align-self:flex-start;background:var(--fond2);border:1px solid var(--bord);color:var(--texte)}
+.msg.app.rate{border-color:#8a5a2b;color:#f0c890}
+.barre2{display:flex;gap:8px}
+#modalDessin{position:fixed;inset:0;background:#0b0f18e8;z-index:50;display:flex;align-items:center;
+  justify-content:center;padding:16px}
+#modalDessin[hidden]{display:none}
+#modalDessin .carte{background:var(--fond2);border:1px solid var(--bord);border-radius:14px;padding:14px;
+  max-width:min(560px,94vw)}
+#modalDessin h2{margin:0 0 10px;font-size:18px}
+#toile{background:#fff;border-radius:10px;touch-action:none;display:block;width:min(500px,86vw);height:min(500px,86vw)}
+#modalDessin .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pied{padding:0 16px 22px;color:var(--texte2);font-size:12px;text-align:center}
+@media (max-width:860px){
+  main{flex-direction:column}
+  #panneau{width:auto;flex:1 1 auto;height:min(52vh,420px)}
+  #zoneGraphe{height:min(46vh,420px)}
+  header{padding:10px 14px 4px}
+  h1{font-size:22px}
+  .sous{font-size:12px}
+  #exemples,#outils{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:10px}
+  #exemples::-webkit-scrollbar,#outils::-webkit-scrollbar{display:none}
+  #exemples>*,#outils>*{flex:0 0 auto}
+  .puce{white-space:nowrap}
+  #etat{font-size:11px;padding:4px 8px;max-width:62%}
+  input[type=range]{width:90px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Funcora <span>0.0</span></h1>
+  <p class="sous">Écris ce que tu veux dessiner : Funcora le trace avec des fonctions mathématiques,
+    et te donne toutes les équations à copier.</p>
+</header>
+
+<div id="barre">
+  <input id="demande" placeholder="une maison avec un sapin et un soleil" autocomplete="off">
+  <button id="btnTracer" class="principal">Tracer</button>
+</div>
+
+<div id="exemples"></div>
+
+<div id="outils">
+  <div class="bascule" id="modeBascule">
+    <button data-mode="formules" class="actif">Formules</button>
+    <button data-mode="tracage">Traçage</button>
+  </div>
+  <div class="groupe"><label for="detail">Détail</label><input type="range" id="detail" min="1" max="5" value="3"><span id="detailVal">3</span></div>
+  <div class="groupe"><label for="couleurs">Couleurs</label><input type="range" id="couleurs" min="1" max="8" value="5"><span id="couleursVal">5</span></div>
+  <label class="fichier"><button type="button" onclick="this.parentNode.querySelector('input').click()">Importer une image</button><input type="file" id="fichier" accept="image/*"></label>
+  <button id="btnDessiner">Dessiner à la main</button>
+</div>
+
+<main>
+  <section id="zoneGraphe">
+    <canvas id="graphe"></canvas>
+    <div id="etat">Prêt.</div>
+    <div id="outilsGraphe">
+      <button id="btnZoomM">−</button>
+      <button id="btnZoomP">+</button>
+      <button id="btnRecadrer">Recadrer</button>
+    </div>
+  </section>
+  <aside id="panneau">
+    <div id="entete">
+      <span id="compteur"><b>0</b> fonction</span>
+      <button id="btnCopier">Copier pour Desmos</button>
+    </div>
+    <div id="liste"></div>
+    <div id="pagination"></div>
+  </aside>
+</main>
+
+<section id="retouches">
+  <div id="journal"></div>
+  <div class="barre2">
+    <input id="reproche" placeholder="fais-lui un reproche : « le toit est trop grand », « plus de détails »" autocomplete="off">
+    <button id="btnReproche">Corriger</button>
+  </div>
+</section>
+
+<p class="pied">Funcora 0.0 — tout se passe dans cette page, sans internet et sans compte.</p>
+
+<div id="modalDessin" hidden>
+  <div class="carte">
+    <h2>Dessine, Funcora en fera des fonctions</h2>
+    <canvas id="toile" width="512" height="512"></canvas>
+    <div class="actions">
+      <button id="btnToileValider" class="principal">Transformer en fonctions</button>
+      <button id="btnToileEffacer">Effacer</button>
+      <button id="btnToileFermer">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =======================================================================
+   FUNCORA 0.0
+   Un dessin -> des fonctions. Tout est calculé ici, hors ligne.
+   Plan du fichier :
+     1. Outils généraux
+     2. Familles de courbes (paramètres, évaluation, écriture)
+     3. Transformations (échelle, déplacement, miroir, rotation)
+     4. Ajustement : un nuage de points -> une équation
+     5. Contours : pixels -> polygones (marching squares)
+     6. Vectoriseur : mot / emoji / image / dessin -> courbes
+     7. Lexique des mots et modèles paramétriques faits main
+     8. Scène : plusieurs objets, placement, historique
+     9. Reproches : corriger le dessin en français
+    10. Rendu du repère et panneau des équations
+    11. Interface
+   ======================================================================= */
+
+/* ---------- 1. Outils généraux ---------------------------------------- */
+
+const PALETTE = ["#2d70f5","#3ec46d","#f2c744","#f08a35","#c07cf5","#f27a9b","#e2564d","#48c7d0"];
+
+function borne(v, min, max){ return v < min ? min : (v > max ? max : v); }
+
+function arrondi(v, d){
+  if (!isFinite(v)) return 0;
+  const p = Math.pow(10, d === undefined ? 4 : d);
+  const r = Math.round(v * p) / p;
+  return Object.is(r, -0) ? 0 : r;
+}
+
+// Nombre écrit court : 2 au lieu de 2.0000
+function nb(v, d){
+  const r = arrondi(v, d);
+  return String(r);
+}
+
+// "sans accents, en minuscules" pour comparer les mots
+function normaliser(txt){
+  return String(txt).toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ").trim();
+}
+
+function distanceCouleur(a, b){
+  const dr = a[0]-b[0], dg = a[1]-b[1], db = a[2]-b[2];
+  return dr*dr + dg*dg + db*db;
+}
+
+function rgbHex(c){
+  const h = v => borne(Math.round(v),0,255).toString(16).padStart(2,"0");
+  return "#" + h(c[0]) + h(c[1]) + h(c[2]);
+}
+
+// Une couleur trop sombre disparaît sur fond noir : on l'éclaircit un peu.
+function lisibleSurFonce(c){
+  const lum = 0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2];
+  if (lum >= 70) return c.slice();
+  const k = 70 / Math.max(lum, 6);
+  return [borne(c[0]*k + 30, 0, 255), borne(c[1]*k + 30, 0, 255), borne(c[2]*k + 30, 0, 255)];
+}
+
+/* ---------- 2. Familles de courbes ------------------------------------
+   Une courbe garde SES PARAMÈTRES, jamais un texte figé : on peut donc la
+   déplacer, l'agrandir, la retourner, et n'écrire l'équation qu'à la fin.
+     { fam, p, axe, dom, col }
+   axe "x" : y = f(x), le domaine porte sur x.
+   axe "y" : x = f(y), le domaine porte sur y (morceaux verticaux).
+------------------------------------------------------------------------ */
+
+const FAMILLES = {
+  // y = a t + b
+  droite: {
+    ev: (p,t) => p.a*t + p.b,
+    ech: null,
+    ecrire: (p,v) => {
+      const a = arrondi(p.a), b = arrondi(p.b);
+      if (a === 0) return nb(b);
+      let s = (a === 1 ? "" : (a === -1 ? "-" : nb(a))) + v;
+      if (b > 0) s += " + " + nb(b);
+      else if (b < 0) s += " - " + nb(-b);
+      return s;
+    }
+  },
+  // y = a (t - h)^2 + k
+  parabole: {
+    ev: (p,t) => p.a*(t-p.h)*(t-p.h) + p.k,
+    ecrire: (p,v,style) => {
+      const a = arrondi(p.a), h = arrondi(p.h), k = arrondi(p.k);
+      const coef = a === 1 ? "" : (a === -1 ? "-" : nb(a));
+      const dedans = h === 0 ? v : "(" + v + (h > 0 ? " - " + nb(h) : " + " + nb(-h)) + ")";
+      const carre = style === "desmos" ? dedans + "^2" : dedans + "²";
+      let s = coef + carre;
+      if (k > 0) s += " + " + nb(k);
+      else if (k < 0) s += " - " + nb(-k);
+      return s;
+    }
+  },
+  // y = k + s * sqrt(r^2 - (t - h)^2)
+  arc: {
+    ev: (p,t) => {
+      const d = p.r*p.r - (t-p.h)*(t-p.h);
+      return d < 0 ? NaN : p.k + p.s*Math.sqrt(d);
+    },
+    ecrire: (p,v,style) => {
+      const h = arrondi(p.h), k = arrondi(p.k), r2 = arrondi(p.r*p.r);
+      const dedans = h === 0 ? v : "(" + v + (h > 0 ? " - " + nb(h) : " + " + nb(-h)) + ")";
+      const carre = style === "desmos" ? dedans + "^2" : dedans + "²";
+      const rac = style === "desmos" ? "sqrt(" + nb(r2) + " - " + carre + ")"
+                                     : "√(" + nb(r2) + " - " + carre + ")";
+      const sig = p.s >= 0 ? " + " : " - ";
+      if (k === 0) return (p.s >= 0 ? "" : "-") + rac;
+      return nb(k) + sig + rac;
+    }
+  },
+  // y = k + s * ry * sqrt(1 - ((t - h)/rx)^2)
+  ellipse: {
+    ev: (p,t) => {
+      const u = (t-p.h)/p.rx;
+      const d = 1 - u*u;
+      return d < 0 ? NaN : p.k + p.s*p.ry*Math.sqrt(d);
+    },
+    ecrire: (p,v,style) => {
+      const h = arrondi(p.h), k = arrondi(p.k), rx = arrondi(p.rx), ry = arrondi(p.ry);
+      const dedans = h === 0 ? v : "(" + v + (h > 0 ? " - " + nb(h) : " + " + nb(-h)) + ")";
+      const q = style === "desmos" ? "((" + dedans + ")/" + nb(rx) + ")^2"
+                                   : "((" + dedans + ")/" + nb(rx) + ")²";
+      const rac = (style === "desmos" ? "sqrt(1 - " + q + ")" : "√(1 - " + q + ")");
+      const corps = (ry === 1 ? "" : nb(ry)) + rac;
+      const sig = p.s >= 0 ? " + " : " - ";
+      if (k === 0) return (p.s >= 0 ? "" : "-") + corps;
+      return nb(k) + sig + corps;
+    }
+  },
+  // y = a |t - h| + k
+  absolue: {
+    ev: (p,t) => p.a*Math.abs(t-p.h) + p.k,
+    ecrire: (p,v,style) => {
+      const a = arrondi(p.a), h = arrondi(p.h), k = arrondi(p.k);
+      const coef = a === 1 ? "" : (a === -1 ? "-" : nb(a));
+      const arg = v + (h > 0 ? " - " + nb(h) : (h < 0 ? " + " + nb(-h) : ""));
+      const va = style === "desmos" ? "abs(" + arg + ")" : "|" + arg + "|";
+      let s = coef + va;
+      if (k > 0) s += " + " + nb(k);
+      else if (k < 0) s += " - " + nb(-k);
+      return s;
+    }
+  },
+  // y = A sin(w (t - ph)) + k
+  sinus: {
+    ev: (p,t) => p.A*Math.sin(p.w*(t-p.ph)) + p.k,
+    ecrire: (p,v) => {
+      const A = arrondi(p.A), w = arrondi(p.w), ph = arrondi(p.ph), k = arrondi(p.k);
+      const coef = A === 1 ? "" : (A === -1 ? "-" : nb(A));
+      const arg = (w === 1 ? "" : nb(w)) +
+        (ph === 0 ? v : "(" + v + (ph > 0 ? " - " + nb(ph) : " + " + nb(-ph)) + ")");
+      let s = coef + "sin(" + arg + ")";
+      if (k > 0) s += " + " + nb(k);
+      else if (k < 0) s += " - " + nb(-k);
+      return s;
+    }
+  },
+  // y = a e^(b (t - h)) + k
+  expo: {
+    ev: (p,t) => p.a*Math.exp(p.b*(t-p.h)) + p.k,
+    ecrire: (p,v,style) => {
+      const a = arrondi(p.a), b = arrondi(p.b), h = arrondi(p.h), k = arrondi(p.k);
+      const coef = a === 1 ? "" : (a === -1 ? "-" : nb(a));
+      const arg = (b === 1 ? "" : nb(b)) +
+        (h === 0 ? v : "(" + v + (h > 0 ? " - " + nb(h) : " + " + nb(-h)) + ")");
+      let s = coef + (style === "desmos" ? "e^(" + arg + ")" : "e^(" + arg + ")");
+      if (k > 0) s += " + " + nb(k);
+      else if (k < 0) s += " - " + nb(-k);
+      return s;
+    }
+  },
+  // cercle entier : (x - h)^2 + (y - k)^2 = r^2  (équation implicite)
+  cercle: { ev: null, ecrire: null },
+  // droite verticale ou horizontale pure : t = c
+  constante: { ev: (p) => p.c, ecrire: (p) => nb(p.c) }
+};
+
+function courbe(fam, p, axe, dom, col){
+  return { fam: fam, p: p, axe: axe || "x", dom: [dom[0], dom[1]], col: col || PALETTE[0] };
+}
+
+function evaluer(c, t){
+  const f = FAMILLES[c.fam];
+  return f && f.ev ? f.ev(c.p, t) : NaN;
+}
+
+// Un point de la courbe, dans le repère (x, y)
+function pointCourbe(c, t){
+  const v = evaluer(c, t);
+  return c.axe === "x" ? [t, v] : [v, t];
+}
+
+/* --- Écriture des équations --- */
+
+function texteEquation(c, style){
+  const desmos = style === "desmos";
+  const v = c.axe === "x" ? "x" : "y";
+  const sortie = c.axe === "x" ? "y" : "x";
+  const le = desmos ? "<=" : "≤";
+  const d0 = nb(Math.min(c.dom[0], c.dom[1])), d1 = nb(Math.max(c.dom[0], c.dom[1]));
+
+  if (c.fam === "cercle"){
+    const h = arrondi(c.p.h), k = arrondi(c.p.k), r2 = arrondi(c.p.r*c.p.r);
+    const gx = "(x" + (h > 0 ? " - " + nb(h) : (h < 0 ? " + " + nb(-h) : "")) + ")";
+    const gy = "(y" + (k > 0 ? " - " + nb(k) : (k < 0 ? " + " + nb(-k) : "")) + ")";
+    const c2 = desmos ? "^2" : "²";
+    return gx + c2 + " + " + gy + c2 + " = " + nb(r2);
+  }
+  if (c.fam === "constante"){
+    const other = c.axe === "x" ? "y" : "x";
+    const dom = " {" + d0 + " " + le + " " + v + " " + le + " " + d1 + "}";
+    return other + " = " + nb(c.p.c) + dom;
+  }
+  const f = FAMILLES[c.fam];
+  const corps = f.ecrire(c.p, v, desmos ? "desmos" : "uni");
+  const dom = " {" + d0 + " " + le + " " + v + " " + le + " " + d1 + "}";
+  return sortie + " = " + corps + dom;
+}
+
+/* ---------- 3. Transformations ---------------------------------------
+   Elles agissent sur les PARAMÈTRES, pour que les équations restent
+   propres après un déplacement ou un agrandissement.
+------------------------------------------------------------------------ */
+
+// Décale l'entrée : f(t) devient f(t - d)
+function decalerEntree(c, d){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite":  p.b = p.b - p.a*d; break;
+    case "parabole": case "absolue": p.h = p.h + d; break;
+    case "arc": case "ellipse": p.h = p.h + d; break;
+    case "sinus": p.ph = p.ph + d; break;
+    case "expo": p.h = p.h + d; break;
+    case "constante": break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: [c.dom[0]+d, c.dom[1]+d], col: c.col };
+}
+
+// Décale la sortie : f(t) devient f(t) + d
+function decalerSortie(c, d){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.b += d; break;
+    case "parabole": case "absolue": case "arc": case "ellipse": case "sinus": case "expo":
+      p.k += d; break;
+    case "constante": p.c += d; break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: c.dom.slice(), col: c.col };
+}
+
+// Inverse la sortie : f(t) devient -f(t)
+function opposerSortie(c){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.a = -p.a; p.b = -p.b; break;
+    case "parabole": case "absolue": p.a = -p.a; p.k = -p.k; break;
+    case "arc": case "ellipse": p.k = -p.k; p.s = -p.s; break;
+    case "sinus": p.A = -p.A; p.k = -p.k; break;
+    case "expo": p.a = -p.a; p.k = -p.k; break;
+    case "constante": p.c = -p.c; break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: c.dom.slice(), col: c.col };
+}
+
+// Inverse l'entrée : f(t) devient f(-t)
+function opposerEntree(c){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.a = -p.a; break;
+    case "parabole": case "absolue": p.h = -p.h; break;
+    case "arc": case "ellipse": p.h = -p.h; break;
+    case "sinus": p.A = -p.A; p.ph = -p.ph; break;
+    case "expo": p.b = -p.b; p.h = -p.h; break;
+    case "constante": break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: [-c.dom[1], -c.dom[0]], col: c.col };
+}
+
+function agrandir(c, s){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:c.p.h*s, k:c.p.k*s, r:c.p.r*s}, axe:c.axe, dom:[c.dom[0]*s, c.dom[1]*s], col:c.col };
+  }
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.b *= s; break;
+    case "parabole": p.a = p.a/s; p.h *= s; p.k *= s; break;
+    case "absolue": p.h *= s; p.k *= s; break;
+    case "arc": p.h *= s; p.k *= s; p.r *= s; break;
+    case "ellipse": p.h *= s; p.k *= s; p.rx *= s; p.ry *= s; break;
+    case "sinus": p.A *= s; p.w = p.w/s; p.ph *= s; p.k *= s; break;
+    case "expo": p.a *= s; p.b = p.b/s; p.h *= s; p.k *= s; break;
+    case "constante": p.c *= s; break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: [c.dom[0]*s, c.dom[1]*s], col: c.col };
+}
+
+function deplacer(c, dx, dy){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:c.p.h+dx, k:c.p.k+dy, r:c.p.r}, axe:c.axe, dom:c.dom.slice(), col:c.col };
+  }
+  const dEntree = c.axe === "x" ? dx : dy;
+  const dSortie = c.axe === "x" ? dy : dx;
+  return decalerSortie(decalerEntree(c, dEntree), dSortie);
+}
+
+// Miroir gauche/droite : (x, y) -> (-x, y)
+function miroirX(c){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:-c.p.h, k:c.p.k, r:c.p.r}, axe:c.axe, dom:c.dom.slice(), col:c.col };
+  }
+  return c.axe === "x" ? opposerEntree(c) : opposerSortie(c);
+}
+
+// Quart de tour : (x, y) -> (-y, x)
+function tourner90(c){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:-c.p.k, k:c.p.h, r:c.p.r}, axe:c.axe, dom:c.dom.slice(), col:c.col };
+  }
+  const o = opposerSortie(c);
+  return { fam:o.fam, p:o.p, axe: c.axe === "x" ? "y" : "x", dom:o.dom.slice(), col:o.col };
+}
+
+function transformerListe(liste, t){
+  let out = liste;
+  if (t.mir)  out = out.map(miroirX);
+  if (t.rot){ for (let i = 0; i < ((t.rot % 4) + 4) % 4; i++) out = out.map(tourner90); }
+  if (t.s && t.s !== 1) out = out.map(c => agrandir(c, t.s));
+  if (t.dx || t.dy) out = out.map(c => deplacer(c, t.dx || 0, t.dy || 0));
+  return out;
+}
+
+/* ---------- 4. Ajustement : des points -> une équation ---------------- */
+
+// Résout un petit système linéaire (pivot de Gauss). m : n x (n+1).
+function resoudre(m){
+  const n = m.length;
+  for (let i = 0; i < n; i++){
+    let piv = i;
+    for (let r = i+1; r < n; r++) if (Math.abs(m[r][i]) > Math.abs(m[piv][i])) piv = r;
+    if (Math.abs(m[piv][i]) < 1e-12) return null;
+    const tmp = m[i]; m[i] = m[piv]; m[piv] = tmp;
+    for (let r = 0; r < n; r++){
+      if (r === i) continue;
+      const f = m[r][i]/m[i][i];
+      for (let ccc = i; ccc <= n; ccc++) m[r][ccc] -= f*m[i][ccc];
+    }
+  }
+  const sol = [];
+  for (let i = 0; i < n; i++) sol.push(m[i][n]/m[i][i]);
+  return sol;
+}
+
+// Erreur maximale d'une famille sur le morceau
+function erreurMax(ts, vs, f){
+  let e = 0;
+  for (let i = 0; i < ts.length; i++){
+    const d = Math.abs(vs[i] - f(ts[i]));
+    if (!isFinite(d)) return Infinity;
+    if (d > e) e = d;
+  }
+  return e;
+}
+
+function ajusterDroite(ts, vs){
+  const n = ts.length;
+  let st = 0, sv = 0, stt = 0, stv = 0;
+  for (let i = 0; i < n; i++){ st += ts[i]; sv += vs[i]; stt += ts[i]*ts[i]; stv += ts[i]*vs[i]; }
+  const den = n*stt - st*st;
+  if (Math.abs(den) < 1e-12) return null;
+  const a = (n*stv - st*sv)/den;
+  const b = (sv - a*st)/n;
+  return { a: a, b: b };
+}
+
+function ajusterParabole(ts, vs){
+  const n = ts.length;
+  let s = [0,0,0,0,0], sv = [0,0,0];
+  for (let i = 0; i < n; i++){
+    const t = ts[i], v = vs[i];
+    const t2 = t*t;
+    s[0] += 1; s[1] += t; s[2] += t2; s[3] += t2*t; s[4] += t2*t2;
+    sv[0] += v; sv[1] += v*t; sv[2] += v*t2;
+  }
+  const sol = resoudre([
+    [s[2], s[1], s[0], sv[0]],
+    [s[3], s[2], s[1], sv[1]],
+    [s[4], s[3], s[2], sv[2]]
+  ]);
+  if (!sol) return null;
+  const A = sol[0], B = sol[1], C = sol[2];        // v = A t^2 + B t + C
+  if (Math.abs(A) < 1e-9) return null;
+  const h = -B/(2*A), k = C - A*h*h;
+  return { a: A, h: h, k: k };
+}
+
+// Cercle par moindres carrés (méthode de Kåsa)
+function ajusterCercle(ts, vs){
+  const n = ts.length;
+  let stt = 0, svv = 0, stv = 0, st = 0, sv = 0, sq = 0, sqt = 0, sqv = 0;
+  for (let i = 0; i < n; i++){
+    const t = ts[i], v = vs[i], q = t*t + v*v;
+    stt += t*t; svv += v*v; stv += t*v; st += t; sv += v;
+    sq += q; sqt += q*t; sqv += q*v;
+  }
+  const sol = resoudre([
+    [stt, stv, st, sqt],
+    [stv, svv, sv, sqv],
+    [st,  sv,  n,  sq]
+  ]);
+  if (!sol) return null;
+  const h = sol[0]/2, k = sol[1]/2;
+  const r2 = sol[2] + h*h + k*k;
+  if (!(r2 > 0)) return null;
+  return { h: h, k: k, r: Math.sqrt(r2) };
+}
+
+// Le morceau est-il bien une fonction de t (t qui avance toujours) ?
+function monotone(ts){
+  const n = ts.length;
+  if (n < 3) return true;
+  const total = ts[n-1] - ts[0];
+  if (Math.abs(total) < 1e-9) return false;
+  const sens = Math.sign(total);
+  const pas = Math.abs(total)/(n-1)*0.35;
+  for (let i = 1; i < n; i++){
+    const d = (ts[i] - ts[i-1])*sens;
+    if (d < -pas) return false;
+  }
+  return true;
+}
+
+// Coeur du vectoriseur : trouve la plus simple équation qui colle au morceau.
+function ajusterMorceau(pts, tol){
+  const n = pts.length;
+  if (n < 2) return null;
+  let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
+  for (let i = 0; i < n; i++){
+    const p = pts[i];
+    if (p[0] < xmin) xmin = p[0]; if (p[0] > xmax) xmax = p[0];
+    if (p[1] < ymin) ymin = p[1]; if (p[1] > ymax) ymax = p[1];
+  }
+  const axe = (xmax - xmin) >= (ymax - ymin) ? "x" : "y";
+  const ts = [], vs = [];
+  for (let i = 0; i < n; i++){
+    ts.push(axe === "x" ? pts[i][0] : pts[i][1]);
+    vs.push(axe === "x" ? pts[i][1] : pts[i][0]);
+  }
+  if (!monotone(ts)) return null;
+  const dom = [Math.min(ts[0], ts[n-1]), Math.max(ts[0], ts[n-1])];
+  if (dom[1] - dom[0] < 1e-9) return null;
+
+  // 1) une droite ?
+  const dr = ajusterDroite(ts, vs);
+  if (dr && erreurMax(ts, vs, t => dr.a*t + dr.b) <= tol){
+    if (Math.abs(dr.a) < 1e-6) return courbe("constante", {c: arrondi(dr.b)}, axe, dom);
+    return courbe("droite", dr, axe, dom);
+  }
+  if (n < 5) return dr ? courbe("droite", dr, axe, dom) : null;
+
+  // 2) un arc de cercle ?
+  const ce = ajusterCercle(ts, vs);
+  if (ce && isFinite(ce.r) && ce.r < (dom[1]-dom[0])*60){
+    const milieu = vs[Math.floor(n/2)];
+    const s = milieu >= ce.k ? 1 : -1;
+    const p = { h: ce.h, k: ce.k, r: ce.r, s: s };
+    let bon = true;
+    for (let i = 0; i < n; i++){
+      if (Math.abs(ts[i] - ce.h) > ce.r*0.999){ bon = false; break; }
+      if ((vs[i] - ce.k)*s < -tol){ bon = false; break; }
+    }
+    if (bon && erreurMax(ts, vs, t => FAMILLES.arc.ev(p, t)) <= tol)
+      return courbe("arc", p, axe, dom);
+  }
+
+  // 3) une parabole ?
+  const pa = ajusterParabole(ts, vs);
+  if (pa && erreurMax(ts, vs, t => FAMILLES.parabole.ev(pa, t)) <= tol)
+    return courbe("parabole", pa, axe, dom);
+
+  return null;
+}
+
+/* Découpe une polyligne en morceaux et donne la liste des courbes.
+   On part des sommets « importants » (Douglas-Peucker) et on essaie
+   d'aller le plus loin possible avec une seule équation.            */
+function polyligneVersCourbes(pts, tol){
+  const anc = indicesDouglasPeucker(pts, tol);
+  const out = [];
+  let i = 0;
+  let garde = 0;
+  while (i < anc.length - 1 && garde++ < 20000){
+    let meilleur = null, meilleurJ = i + 1;
+    for (let j = i + 1; j < anc.length; j++){
+      const morceau = pts.slice(anc[i], anc[j] + 1);
+      if (morceau.length > 600) break;
+      const c = ajusterMorceau(morceau, tol);
+      if (!c){ if (j > i + 1) break; else continue; }
+      meilleur = c; meilleurJ = j;
+    }
+    if (!meilleur){
+      const a = pts[anc[i]], b = pts[anc[i+1]];
+      meilleur = droiteEntre(a, b);
+      meilleurJ = i + 1;
+    }
+    if (meilleur) out.push(meilleur);
+    i = meilleurJ;
+  }
+  return out;
+}
+
+function droiteEntre(a, b){
+  const dx = b[0]-a[0], dy = b[1]-a[1];
+  if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) return null;
+  if (Math.abs(dx) >= Math.abs(dy)){
+    const p = { a: dy/dx, b: a[1] - (dy/dx)*a[0] };
+    return courbe("droite", p, "x", [Math.min(a[0],b[0]), Math.max(a[0],b[0])]);
+  }
+  if (Math.abs(dx) < 1e-9)
+    return courbe("constante", {c: arrondi(a[0])}, "y", [Math.min(a[1],b[1]), Math.max(a[1],b[1])]);
+  const p = { a: dx/dy, b: a[0] - (dx/dy)*a[1] };
+  return courbe("droite", p, "y", [Math.min(a[1],b[1]), Math.max(a[1],b[1])]);
+}
+
+// Douglas-Peucker : garde les sommets qui comptent, renvoie leurs indices
+function indicesDouglasPeucker(pts, tol){
+  const n = pts.length;
+  if (n <= 2) return pts.map((_, i) => i);
+  const garder = new Uint8Array(n);
+  garder[0] = 1; garder[n-1] = 1;
+  const pile = [[0, n-1]];
+  while (pile.length){
+    const [d, f] = pile.pop();
+    if (f - d < 2) continue;
+    const ax = pts[d][0], ay = pts[d][1], bx = pts[f][0], by = pts[f][1];
+    const vx = bx-ax, vy = by-ay;
+    const long = Math.hypot(vx, vy);
+    let pire = -1, idx = -1;
+    for (let i = d+1; i < f; i++){
+      const px = pts[i][0]-ax, py = pts[i][1]-ay;
+      const dist = long < 1e-12 ? Math.hypot(px, py) : Math.abs(px*vy - py*vx)/long;
+      if (dist > pire){ pire = dist; idx = i; }
+    }
+    if (pire > tol && idx > 0){
+      garder[idx] = 1;
+      pile.push([d, idx]); pile.push([idx, f]);
+    }
+  }
+  const out = [];
+  for (let i = 0; i < n; i++) if (garder[i]) out.push(i);
+  return out;
+}
+
+/* ---------- 5. Contours : des pixels -> des polygones -----------------
+   Marching squares : on parcourt les cases entre pixels, on note les
+   petits segments de frontière, puis on les recolle en boucles.
+------------------------------------------------------------------------ */
+
+function extraireContours(masque, w, h){
+  const val = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? 0 : masque[y*w + x];
+  const segs = [];
+  const T = (x,y) => [x+0.5, y], R = (x,y) => [x+1, y+0.5],
+        B = (x,y) => [x+0.5, y+1], L = (x,y) => [x, y+0.5];
+  for (let y = -1; y < h; y++){
+    for (let x = -1; x < w; x++){
+      const a = val(x,y), b = val(x+1,y), c = val(x+1,y+1), d = val(x,y+1);
+      const code = a*8 + b*4 + c*2 + d;
+      if (code === 0 || code === 15) continue;
+      switch (code){
+        case 1:  segs.push([L(x,y), B(x,y)]); break;
+        case 2:  segs.push([B(x,y), R(x,y)]); break;
+        case 3:  segs.push([L(x,y), R(x,y)]); break;
+        case 4:  segs.push([T(x,y), R(x,y)]); break;
+        case 5:  segs.push([L(x,y), T(x,y)]); segs.push([B(x,y), R(x,y)]); break;
+        case 6:  segs.push([T(x,y), B(x,y)]); break;
+        case 7:  segs.push([L(x,y), T(x,y)]); break;
+        case 8:  segs.push([T(x,y), L(x,y)]); break;
+        case 9:  segs.push([T(x,y), B(x,y)]); break;
+        case 10: segs.push([T(x,y), R(x,y)]); segs.push([B(x,y), L(x,y)]); break;
+        case 11: segs.push([T(x,y), R(x,y)]); break;
+        case 12: segs.push([L(x,y), R(x,y)]); break;
+        case 13: segs.push([B(x,y), R(x,y)]); break;
+        case 14: segs.push([L(x,y), B(x,y)]); break;
+      }
+    }
+  }
+  // Recollage des petits segments en polylignes
+  const cle = p => (p[0]*2) + "," + (p[1]*2);
+  const adj = new Map();
+  segs.forEach((s, i) => {
+    for (const k of [cle(s[0]), cle(s[1])]){
+      if (!adj.has(k)) adj.set(k, []);
+      adj.get(k).push(i);
+    }
+  });
+  const pris = new Uint8Array(segs.length);
+  const polys = [];
+  for (let i = 0; i < segs.length; i++){
+    if (pris[i]) continue;
+    pris[i] = 1;
+    const poly = [segs[i][0], segs[i][1]];
+    // on avance par la fin
+    let boucle = false;
+    for (let sens = 0; sens < 2; sens++){
+      let garde = 0;
+      while (garde++ < 100000){
+        const bout = sens === 0 ? poly[poly.length-1] : poly[0];
+        const liste = adj.get(cle(bout)) || [];
+        let suiv = -1;
+        for (const j of liste) if (!pris[j]){ suiv = j; break; }
+        if (suiv < 0) break;
+        pris[suiv] = 1;
+        const s = segs[suiv];
+        const autre = (cle(s[0]) === cle(bout)) ? s[1] : s[0];
+        if (sens === 0) poly.push(autre); else poly.unshift(autre);
+        if (cle(autre) === cle(poly[sens === 0 ? 0 : poly.length-1])){ boucle = true; break; }
+      }
+      if (boucle) break;
+    }
+    if (poly.length >= 4) polys.push({ pts: poly, ferme: boucle });
+  }
+  return polys;
+}
+
+// Adoucit l'escalier des pixels (moyenne glissante)
+function lisser(pts, passes, ferme){
+  let cur = pts;
+  for (let p = 0; p < passes; p++){
+    const n = cur.length;
+    const out = new Array(n);
+    for (let i = 0; i < n; i++){
+      let ia = i-1, ib = i+1;
+      if (ia < 0) ia = ferme ? n-2 : 0;
+      if (ib >= n) ib = ferme ? 1 : n-1;
+      out[i] = [(cur[ia][0] + 2*cur[i][0] + cur[ib][0])/4,
+                (cur[ia][1] + 2*cur[i][1] + cur[ib][1])/4];
+    }
+    if (ferme && n > 1) out[n-1] = out[0].slice();
+    cur = out;
+  }
+  return cur;
+}
+
+/* ---------- 6. Vectoriseur universel ----------------------------------
+   Le navigateur sait déjà dessiner presque tout (emoji, texte, image,
+   dessin à la main). Funcora récupère ces pixels et les retransforme en
+   équations : c'est ce qui lui permet de tracer n'importe quoi.
+------------------------------------------------------------------------ */
+
+const TAILLE_SOURCE = 512;
+const POLICE_EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","EmojiOne Color","Twemoji Mozilla","Android Emoji",sans-serif';
+
+const REGLAGES = [
+  { tol: 3.0, lisse: 3, mini: 36, max: 150 },
+  { tol: 2.0, lisse: 3, mini: 28, max: 350 },
+  { tol: 1.2, lisse: 2, mini: 20, max: 800 },
+  { tol: 0.7, lisse: 2, mini: 14, max: 1500 },
+  { tol: 0.4, lisse: 1, mini: 10, max: 2600 }
+];
+
+function creerCanvas(taille){
+  const cv = document.createElement("canvas");
+  cv.width = taille; cv.height = taille;
+  return cv;
+}
+
+function contexteVide(cv){
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  return ctx;
+}
+
+function dessinerEmoji(ctx, emoji, taille){
+  ctx.save();
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#111";
+  let px = Math.round(taille*0.74);
+  ctx.font = px + "px " + POLICE_EMOJI;
+  const l = ctx.measureText(emoji).width;
+  if (l > taille*0.92) { px = Math.round(px*taille*0.9/l); ctx.font = px + "px " + POLICE_EMOJI; }
+  ctx.fillText(emoji, taille/2, taille/2);
+  ctx.restore();
+}
+
+function dessinerTexte(ctx, texte, taille){
+  ctx.save();
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#111";
+  const mots = texte.split(/\s+/).filter(Boolean);
+  const lignes = [];
+  let ligne = "";
+  for (const m of mots){
+    const essai = ligne ? ligne + " " + m : m;
+    if (essai.length > 9 && ligne){ lignes.push(ligne); ligne = m; } else ligne = essai;
+  }
+  if (ligne) lignes.push(ligne);
+  const plusLong = lignes.reduce((a,b) => a.length >= b.length ? a : b, "");
+  let px = Math.round(taille*0.8);
+  ctx.font = "bold " + px + 'px Georgia,"Times New Roman",serif';
+  const l = Math.max(ctx.measureText(plusLong).width, 1);
+  px = Math.min(px, Math.round(px*taille*0.86/l), Math.round(taille*0.9/lignes.length));
+  ctx.font = "bold " + px + 'px Georgia,"Times New Roman",serif';
+  const h = px*1.12;
+  const y0 = taille/2 - (lignes.length-1)*h/2;
+  lignes.forEach((t, i) => ctx.fillText(t, taille/2, y0 + i*h));
+  ctx.restore();
+}
+
+// Les emojis sont-ils vraiment dessinés sur cet appareil ?
+let _emojiOk = null;
+function emojiDisponible(){
+  if (_emojiOk !== null) return _emojiOk;
+  try {
+    const masque = (txt) => {
+      const cv = creerCanvas(64);
+      const ctx = contexteVide(cv);
+      dessinerEmoji(ctx, txt, 64);
+      const d = ctx.getImageData(0,0,64,64).data;
+      const m = new Uint8Array(64*64);
+      let n = 0;
+      for (let i = 0; i < 64*64; i++){ m[i] = d[i*4+3] > 100 ? 1 : 0; n += m[i]; }
+      return { m: m, n: n };
+    };
+    const a = masque("🏠");          // maison
+    const b = masque("􏿽");          // caractère inexistant -> carré vide
+    if (a.n < 40) { _emojiOk = false; return _emojiOk; }
+    let inter = 0, union = 0;
+    for (let i = 0; i < a.m.length; i++){
+      if (a.m[i] && b.m[i]) inter++;
+      if (a.m[i] || b.m[i]) union++;
+    }
+    _emojiOk = union === 0 ? false : (inter/union) < 0.8;
+  } catch (e){ _emojiOk = false; }
+  return _emojiOk;
+}
+
+/* --- Séparation fond / dessin --- */
+function masqueAvantPlan(data, w, h){
+  const n = w*h;
+  const fg = new Uint8Array(n);
+  let transp = 0;
+  for (let i = 0; i < n; i++) if (data[i*4+3] < 128) transp++;
+  if (transp > n*0.02){
+    for (let i = 0; i < n; i++) fg[i] = data[i*4+3] >= 128 ? 1 : 0;
+    return fg;
+  }
+  // Image opaque : le fond est la couleur des bords
+  const bords = [];
+  for (let x = 0; x < w; x += 4){ bords.push([data[x*4], data[x*4+1], data[x*4+2]]);
+    const j = ((h-1)*w + x)*4; bords.push([data[j], data[j+1], data[j+2]]); }
+  for (let y = 0; y < h; y += 4){ const a = (y*w)*4, b = (y*w + w-1)*4;
+    bords.push([data[a], data[a+1], data[a+2]]); bords.push([data[b], data[b+1], data[b+2]]); }
+  const med = k => { const v = bords.map(c => c[k]).sort((p,q) => p-q); return v[Math.floor(v.length/2)] || 0; };
+  const fond = [med(0), med(1), med(2)];
+  for (let i = 0; i < n; i++){
+    const c = [data[i*4], data[i*4+1], data[i*4+2]];
+    fg[i] = distanceCouleur(c, fond) > 3200 ? 1 : 0;
+  }
+  return fg;
+}
+
+/* --- Couleurs dominantes (k-moyennes allégé) --- */
+function couleursDominantes(data, fg, n, k){
+  const ech = [];
+  const pas = Math.max(1, Math.floor(n/6000));
+  for (let i = 0; i < n; i += pas) if (fg[i]) ech.push([data[i*4], data[i*4+1], data[i*4+2]]);
+  if (!ech.length) return [];
+  k = Math.min(k, ech.length);
+  const cent = [ech[0].slice()];
+  while (cent.length < k){                       // init « le plus loin »
+    let best = null, bestD = -1;
+    for (let i = 0; i < ech.length; i += Math.max(1, Math.floor(ech.length/400))){
+      let d = Infinity;
+      for (const c of cent) d = Math.min(d, distanceCouleur(ech[i], c));
+      if (d > bestD){ bestD = d; best = ech[i]; }
+    }
+    if (!best) break;
+    cent.push(best.slice());
+  }
+  for (let it = 0; it < 10; it++){
+    const som = cent.map(() => [0,0,0,0]);
+    for (const p of ech){
+      let bi = 0, bd = Infinity;
+      for (let i = 0; i < cent.length; i++){ const d = distanceCouleur(p, cent[i]); if (d < bd){ bd = d; bi = i; } }
+      som[bi][0] += p[0]; som[bi][1] += p[1]; som[bi][2] += p[2]; som[bi][3]++;
+    }
+    for (let i = 0; i < cent.length; i++)
+      if (som[i][3]) cent[i] = [som[i][0]/som[i][3], som[i][1]/som[i][3], som[i][2]/som[i][3]];
+  }
+  return cent;
+}
+
+/* --- Le passage pixels -> courbes --- */
+function vectoriserContexte(ctx, taille, opts){
+  const reg = REGLAGES[borne((opts.detail|0) - 1, 0, 4)];
+  const img = ctx.getImageData(0, 0, taille, taille);
+  const data = img.data;
+  const n = taille*taille;
+  const fg = masqueAvantPlan(data, taille, taille);
+
+  // cadre du dessin -> repère mathématique centré, hauteur voulue
+  let bx0 = taille, by0 = taille, bx1 = -1, by1 = -1, total = 0;
+  for (let y = 0; y < taille; y++) for (let x = 0; x < taille; x++)
+    if (fg[y*taille + x]){ total++;
+      if (x < bx0) bx0 = x; if (x > bx1) bx1 = x;
+      if (y < by0) by0 = y; if (y > by1) by1 = y; }
+  if (total < 30) return { courbes: [], vide: true };
+  const bw = Math.max(bx1-bx0+1, 1), bh = Math.max(by1-by0+1, 1);
+  const unite = (opts.hauteur || 10) / Math.max(bw, bh);
+  const cx = bx0 + bw/2, cy = by0 + bh/2;
+  const versRepere = p => [(p[0]-cx)*unite, (cy-p[1])*unite];
+  const tolG = reg.tol*unite;
+
+  // masques par couleur
+  const nbCoul = borne(opts.couleurs || 1, 1, 8);
+  let masques;
+  if (nbCoul <= 1){
+    masques = [{ masque: fg, couleur: null, taille: total }];
+  } else {
+    const brut = couleursDominantes(data, fg, n, nbCoul);
+    // on fusionne les couleurs trop proches : sinon l'anticrénelage des bords
+    // crée de faux calques et chaque trait serait tracé deux ou trois fois.
+    const cent = [];
+    for (const c of brut){
+      let proche = false;
+      for (const g of cent) if (distanceCouleur(c, g) < 2200){ proche = true; break; }
+      if (!proche) cent.push(c);
+    }
+    const plusProche = (p, liste) => {
+      let bi = 0, bd = Infinity;
+      for (let j = 0; j < liste.length; j++){ const d = distanceCouleur(p, liste[j]); if (d < bd){ bd = d; bi = j; } }
+      return bi;
+    };
+    const compte = cent.map(() => 0);
+    for (let i = 0; i < n; i++){
+      if (!fg[i]) continue;
+      compte[plusProche([data[i*4], data[i*4+1], data[i*4+2]], cent)]++;
+    }
+    const seuil = Math.max(total*0.02, 60);
+    let gardes = cent.filter((c, j) => compte[j] >= seuil);
+    if (!gardes.length){
+      let bj = 0;
+      for (let j = 1; j < cent.length; j++) if (compte[j] > compte[bj]) bj = j;
+      gardes = [cent[bj]];
+    }
+    masques = gardes.map(c => ({ masque: new Uint8Array(n), couleur: c, taille: 0 }));
+    for (let i = 0; i < n; i++){
+      if (!fg[i]) continue;
+      const bi = plusProche([data[i*4], data[i*4+1], data[i*4+2]], gardes);
+      masques[bi].masque[i] = 1; masques[bi].taille++;
+    }
+  }
+
+  // contours de chaque masque, les plus gros d'abord
+  const morceaux = [];
+  masques.forEach((m, i) => {
+    const polys = extraireContours(m.masque, taille, taille);
+    for (const poly of polys){
+      if (poly.pts.length < reg.mini) continue;
+      morceaux.push({ poly: poly, couleur: m.couleur, rang: i });
+    }
+  });
+  morceaux.sort((a, b) => b.poly.pts.length - a.poly.pts.length);
+
+  const courbes = [];
+  for (const mo of morceaux){
+    if (courbes.length >= reg.max) break;
+    const liss = lisser(mo.poly.pts, reg.lisse, mo.poly.ferme).map(versRepere);
+    const cs = polyligneVersCourbes(liss, tolG);
+    const coul = mo.couleur ? rgbHex(lisibleSurFonce(mo.couleur)) : null;
+    for (const c of cs){ if (!c) continue; c.col = coul; courbes.push(c); }
+  }
+  return { courbes: courbes, vide: courbes.length === 0 };
+}
+
+// Dessine un mot dans un canvas : son emoji si l'appareil en a un, sinon le mot écrit
+function canvasMot(mot){
+  const cv = creerCanvas(TAILLE_SOURCE);
+  const ctx = contexteVide(cv);
+  const emo = emojiPour(mot);
+  if (emo && emojiDisponible()){ dessinerEmoji(ctx, emo, TAILLE_SOURCE); cv.source = "emoji"; }
+  else { dessinerTexte(ctx, mot, TAILLE_SOURCE); cv.source = "texte"; }
+  return cv;
+}
+
+// Trace un mot puis le vectorise
+function vectoriserMot(mot, opts){
+  const cv = canvasMot(mot);
+  const r = vectoriserContexte(cv.getContext("2d", { willReadFrequently: true }), TAILLE_SOURCE, opts);
+  r.source = cv.source;
+  return r;
+}
+
+function vectoriserImage(img, opts){
+  const cv = creerCanvas(TAILLE_SOURCE);
+  const ctx = contexteVide(cv);
+  const ech = Math.min(TAILLE_SOURCE/img.width, TAILLE_SOURCE/img.height);
+  const w = img.width*ech, h = img.height*ech;
+  ctx.drawImage(img, (TAILLE_SOURCE-w)/2, (TAILLE_SOURCE-h)/2, w, h);
+  const r = vectoriserContexte(ctx, TAILLE_SOURCE, opts);
+  r.source = "image";
+  return r;
+}
+
+/* ---------- 7a. Lexique : un mot -> un emoji --------------------------
+   La police emoji de l'appareil sert de bibliothèque de dessins : des
+   milliers de sujets, sans un octet téléchargé. Si le mot n'est pas là,
+   Funcora trace le mot écrit — il ne renonce jamais.
+------------------------------------------------------------------------ */
+
+const EMOJIS = {
+  // maison et bâtiments
+  "maison":"🏠","maison de campagne":"🏡","immeuble":"🏢","ecole":"🏫",
+  "hopital":"🏥","banque":"🏦","hotel":"🏨","chateau":"🏰","eglise":"⛪",
+  "usine":"🏭","tente":"⛺","pont":"🌉","ville":"🏙","cabane":"🏚",
+  // nature
+  "arbre":"🌳","sapin":"🌲","palmier":"🌴","cactus":"🌵","trefle":"🍀",
+  "fleur":"🌻","rose":"🌹","tulipe":"🌷","marguerite":"🌼","feuille":"🍁",
+  "montagne":"⛰","volcan":"🌋","desert":"🏜","plage":"🏖","foret":"🌲",
+  "soleil":"☀","lune":"🌙","etoile":"⭐","nuage":"☁","pluie":"🌧",
+  "neige":"❄","orage":"⛈","eclair":"⚡","arc en ciel":"🌈","goutte":"💧",
+  "feu":"🔥","terre":"🌍","planete":"🪐","fusee":"🚀","galaxie":"🌌",
+  // animaux
+  "chat":"🐱","chien":"🐶","souris":"🐭","lapin":"🐰","renard":"🦊",
+  "ours":"🐻","panda":"🐼","lion":"🦁","tigre":"🐯","cheval":"🐴",
+  "licorne":"🦄","vache":"🐮","cochon":"🐷","mouton":"🐑","singe":"🐵",
+  "elephant":"🐘","girafe":"🦒","zebre":"🦓","dinosaure":"🦕","dragon":"🐉",
+  "oiseau":"🐦","poule":"🐔","poussin":"🐥","canard":"🦆","pingouin":"🐧",
+  "aigle":"🦅","hibou":"🦉","poisson":"🐟","dauphin":"🐬","baleine":"🐳",
+  "requin":"🦈","pieuvre":"🐙","crabe":"🦀","escargot":"🐌","papillon":"🦋",
+  "abeille":"🐝","coccinelle":"🐞","araignee":"🕷","serpent":"🐍","tortue":"🐢",
+  "grenouille":"🐸","crocodile":"🐊","ecureuil":"🐿","herisson":"🦔","chauve souris":"🦇",
+  // nourriture
+  "pomme":"🍎","poire":"🍐","banane":"🍌","orange":"🍊","citron":"🍋",
+  "fraise":"🍓","cerise":"🍒","raisin":"🍇","pasteque":"🍉","ananas":"🍍",
+  "carotte":"🥕","tomate":"🍅","champignon":"🍄","pain":"🍞","croissant":"🥐",
+  "fromage":"🧀","pizza":"🍕","burger":"🍔","frites":"🍟","gateau":"🎂",
+  "glace":"🍦","bonbon":"🍬","chocolat":"🍫","cafe":"☕","oeuf":"🥚",
+  // objets
+  "voiture":"🚗","bus":"🚌","camion":"🚛","velo":"🚲","moto":"🏍",
+  "train":"🚂","avion":"✈","bateau":"⛵","helicoptere":"🚁","tracteur":"🚜",
+  "montgolfiere":"🎈","ancre":"⚓","cle":"🔑","cadenas":"🔒","marteau":"🔨",
+  "ciseaux":"✂","crayon":"✏","stylo":"🖊","livre":"📚","cahier":"📓",
+  "regle":"📐","ordinateur":"💻","telephone":"📱","camera":"📷","television":"📺",
+  "ampoule":"💡","bougie":"🕯","horloge":"🕐","montre":"⌚","parapluie":"☂",
+  "cadeau":"🎁","ballon":"⚽","basket":"🏀","tennis":"🎾","trophee":"🏆",
+  "guitare":"🎸","piano":"🎹","trompette":"🎺","violon":"🎻","note de musique":"🎵",
+  "couronne":"👑","diamant":"💎","piece":"🪙","argent":"💰","panier":"🧺",
+  "cle a molette":"🔧","fusil":"🔫","epee":"⚔","bouclier":"🛡","robot":"🤖",
+  "fantome":"👻","extraterrestre":"👽","citrouille":"🎃","sorciere":"🧙","couteau":"🔪",
+  // symboles et gens
+  "coeur":"❤","sourire":"🙂","visage":"😀","triste":"😢","clin d oeil":"😉",
+  "bonhomme":"🚶","bonhomme de neige":"⛄","main":"✋","pouce":"👍","oeil":"👁",
+  "eclair jaune":"⚡","drapeau":"🏁","cible":"🎯","de":"🎲","carte":"🗺",
+  "boussole":"🧭","telescope":"🔭","microscope":"🔬","aimant":"🧲","engrenage":"⚙",
+  "ampoule idee":"💡","pied":"🦶","os":"🦴","empreinte":"🐾","note":"📝"
+};
+
+// cherche un emoji en tolérant les pluriels
+function emojiPour(mot){
+  const m = normaliser(mot);
+  if (EMOJIS[m]) return EMOJIS[m];
+  if (m.endsWith("x") && EMOJIS[m.slice(0,-1)]) return EMOJIS[m.slice(0,-1)];
+  if (m.endsWith("s") && EMOJIS[m.slice(0,-1)]) return EMOJIS[m.slice(0,-1)];
+  return null;
+}
+
+/* ---------- 7b. Modèles paramétriques faits main ----------------------
+   Pour les sujets courants, des équations écrites à la main : peu
+   nombreuses, très lisibles — parfaites pour Desmos ou pour un cours.
+------------------------------------------------------------------------ */
+
+function mSeg(x1,y1,x2,y2,col){ const c = droiteEntre([x1,y1],[x2,y2]); if (c) c.col = col; return c; }
+function mVert(x,y0,y1,col){ return courbe("constante",{c:x},"y",[Math.min(y0,y1),Math.max(y0,y1)],col); }
+function mHoriz(y,x0,x1,col){ return courbe("constante",{c:y},"x",[Math.min(x0,x1),Math.max(x0,x1)],col); }
+function mArc(h,k,r,s,x0,x1,col){ return courbe("arc",{h:h,k:k,r:r,s:s},"x",[x0,x1],col); }
+function mCercle(h,k,r,col){ return courbe("cercle",{h:h,k:k,r:r},"x",[h-r,h+r],col); }
+function mParab(a,h,k,x0,x1,col){ return courbe("parabole",{a:a,h:h,k:k},"x",[x0,x1],col); }
+function mAbs(a,h,k,x0,x1,col){ return courbe("absolue",{a:a,h:h,k:k},"x",[x0,x1],col); }
+function mEll(h,k,rx,ry,s,col){ return courbe("ellipse",{h:h,k:k,rx:rx,ry:ry,s:s},"x",[h-rx,h+rx],col); }
+function mSinY(A,w,ph,k,y0,y1,col){ return courbe("sinus",{A:A,w:w,ph:ph,k:k},"y",[y0,y1],col); }
+function mSinX(A,w,ph,k,x0,x1,col){ return courbe("sinus",{A:A,w:w,ph:ph,k:k},"x",[x0,x1],col); }
+function mExpY(a,b,h,k,y0,y1,col){ return courbe("expo",{a:a,b:b,h:h,k:k},"y",[y0,y1],col); }
+function rect(x0,y0,x1,y1,col){
+  return [mHoriz(y0,x0,x1,col), mHoriz(y1,x0,x1,col), mVert(x0,y0,y1,col), mVert(x1,y0,y1,col)];
+}
+
+const C_MUR="#f2c744", C_TOIT="#e2564d", C_BOIS="#c08a55", C_VERT="#3ec46d",
+      C_BLEU="#2d70f5", C_JAUNE="#f2c744", C_GRIS="#9aa6bf", C_ROSE="#f27a9b",
+      C_ORANGE="#f08a35", C_VIOLET="#c07cf5", C_BLANC="#e8edf7";
+
+const MODELES = {
+  maison: { mots:["maison","maisons","chalet","baraque"], ciel:false,
+    options:["toit","porte","fenetre","cheminee","fumee"], f: function(o){
+    o = o || {};
+    const L = [];
+    const ht = 5 + 3.2*(typeof o.toit === "number" ? o.toit : 1);   // hauteur de la pointe
+    const pente = (ht - 5)/4.3;
+    L.push.apply(L, tag([mHoriz(0,-3.5,3.5,C_MUR), mVert(-3.5,0,5,C_MUR), mVert(3.5,0,5,C_MUR)], "mur"));
+    L.push.apply(L, tag([mSeg(-4.3,5,0,ht,C_TOIT), mSeg(0,ht,4.3,5,C_TOIT),
+      mHoriz(5,-4.3,-3.5,C_TOIT), mHoriz(5,3.5,4.3,C_TOIT), mHoriz(5,-3.5,3.5,C_TOIT)], "toit"));
+    if (o.porte !== false){
+      const pp = borne(typeof o.porte === "number" ? o.porte : 1, 0.3, 1.6);
+      const lp = 0.8*pp, hp = 2.7*pp;
+      L.push.apply(L, tag([mVert(-0.5-lp,0,hp,C_BOIS), mVert(-0.5+lp,0,hp,C_BOIS),
+        mHoriz(hp,-0.5-lp,-0.5+lp,C_BOIS), mCercle(-0.5+lp-0.3,hp/2,0.14,C_BOIS)], "porte"));
+    }
+    const nf = o.fenetre === false ? 0 : borne(typeof o.fenetre === "number" ? o.fenetre : 1, 0, 3);
+    const places = [[1.2,2.8,2.8,4.2], [-2.8,-1.2,2.8,4.2], [-0.8,0.8,5.5,6.5]];
+    for (let i = 0; i < nf; i++){
+      const f = places[i];
+      const m = rect(f[0],f[2],f[1],f[3],C_BLEU);
+      m.push(mVert((f[0]+f[1])/2,f[2],f[3],C_BLEU), mHoriz((f[2]+f[3])/2,f[0],f[1],C_BLEU));
+      L.push.apply(L, tag(m, "fenetre"));
+    }
+    if (o.cheminee !== false){
+      const y1 = ht - pente*2.2, y2 = ht - pente*2.9, haut = ht + 0.2;
+      L.push.apply(L, tag([mVert(2.2,y1,haut,C_GRIS), mVert(2.9,y2,haut,C_GRIS),
+        mHoriz(haut,2.2,2.9,C_GRIS)], "cheminee"));
+      if (o.fumee !== false)
+        L.push.apply(L, tag([mSinY(0.4,2.6,haut,2.55,haut,haut+2.8,C_GRIS)], "fumee"));
+    }
+    return L;
+  }},
+  sapin: { mots:["sapin","sapins","epicea","arbre de noel"], ciel:false, f: function(){
+    const L = [];
+    L.push.apply(L, tag([mVert(-0.45,0,0.7,C_BOIS), mVert(0.45,0,0.7,C_BOIS), mHoriz(0,-0.45,0.45,C_BOIS)], "tronc"));
+    L.push(mAbs(-1.8,0,4.2,-2.2,2.2,C_VERT), mHoriz(0.24,-2.2,2.2,C_VERT));
+    L.push(mAbs(-1.8,0,6.6,-1.7,1.7,C_VERT), mHoriz(3.54,-1.7,1.7,C_VERT));
+    L.push(mAbs(-1.8,0,9,-1.2,1.2,C_VERT), mHoriz(6.84,-1.2,1.2,C_VERT));
+    return L;
+  }},
+  arbre: { mots:["arbre","arbres","chene"], ciel:false, f: function(){
+    const L = [];
+    L.push.apply(L, tag([mExpY(-0.9,-0.8,0,-0.42,0,3.4,C_BOIS), mExpY(0.9,-0.8,0,0.42,0,3.4,C_BOIS)], "tronc"));
+    L.push.apply(L, tag([mCercle(0,6.2,3.1,C_VERT),
+      mArc(-2.7,5.1,1.5,1,-4.2,-1.2,C_VERT), mArc(2.7,5.1,1.5,1,1.2,4.2,C_VERT)], "feuille"));
+    return L;
+  }},
+  soleil: { mots:["soleil","soleils"], ciel:true, f: function(){
+    const L = [mCercle(0,0,2.2,C_JAUNE)];
+    for (let i = 0; i < 12; i++){
+      const a = i*Math.PI/6;
+      L.push.apply(L, tag([mSeg(2.8*Math.cos(a),2.8*Math.sin(a),4.2*Math.cos(a),4.2*Math.sin(a),C_ORANGE)], "rayon"));
+    }
+    return L;
+  }},
+  lune: { mots:["lune","lunes"], ciel:true, f: function(){
+    return [mCercle(0,0,2.4,C_BLANC), mCercle(-0.8,0.6,0.5,C_GRIS),
+            mCercle(0.9,0.2,0.35,C_GRIS), mCercle(0.1,-1.1,0.45,C_GRIS)];
+  }},
+  nuage: { mots:["nuage","nuages"], ciel:true, f: function(){
+    return [mArc(-1.8,0,1.2,1,-3,-0.6,C_BLANC), mArc(0,0.35,1.75,1,-1.75,1.75,C_BLANC),
+            mArc(2,0,1.3,1,0.7,3.3,C_BLANC), mHoriz(0,-3,3.3,C_BLANC)];
+  }},
+  montagne: { mots:["montagne","montagnes","mont","sommet"], ciel:false, f: function(){
+    const L = [];
+    L.push(mAbs(-2.2,0,8,-3.6,3.6,C_GRIS), mAbs(-2,3.6,5.6,0.6,6.2,C_GRIS));
+    L.push(mSeg(-1,5.8,0,8,C_BLANC), mSeg(0,8,1,5.8,C_BLANC), mSeg(-1,5.8,-0.4,6.4,C_BLANC));
+    L.push(mHoriz(0.08,-3.6,6.2,C_VERT));
+    return L;
+  }},
+  etoile: { mots:["etoile","etoiles","star"], ciel:true, f: function(){
+    const L = [], pts = [];
+    for (let i = 0; i < 10; i++){
+      const r = i % 2 === 0 ? 4.2 : 1.8;
+      const a = -Math.PI/2 + i*Math.PI/5;
+      pts.push([r*Math.cos(a), r*Math.sin(a)]);
+    }
+    for (let i = 0; i < 10; i++){
+      const a = pts[i], b = pts[(i+1)%10];
+      L.push(mSeg(a[0],a[1],b[0],b[1],C_JAUNE));
+    }
+    return L;
+  }},
+  coeur: { mots:["coeur","coeurs","amour"], ciel:false, f: function(){
+    return [mArc(-1.6,2.2,1.6,1,-3.2,0,C_ROSE), mArc(1.6,2.2,1.6,1,0,3.2,C_ROSE),
+            mParab(-0.469,-3.2,2.2,-3.2,0,C_ROSE), mParab(-0.469,3.2,2.2,0,3.2,C_ROSE)];
+  }},
+  chat: { mots:["chat","chats","chaton","minou"], ciel:false, f: function(){
+    const L = [];
+    L.push(mEll(0,5.2,3,2.8,1,C_ORANGE), mEll(0,5.2,3,2.8,-1,C_ORANGE));
+    L.push.apply(L, tag([mSeg(-2.4,7,-1.9,9.4,C_ORANGE), mSeg(-1.9,9.4,-0.5,7.9,C_ORANGE),
+      mSeg(2.4,7,1.9,9.4,C_ORANGE), mSeg(1.9,9.4,0.5,7.9,C_ORANGE)], "oreille"));
+    L.push.apply(L, tag([mCercle(-1.2,5.8,0.42,C_VERT), mCercle(1.2,5.8,0.42,C_VERT)], "oeil"));
+    L.push(mSeg(-0.4,4.7,0,4.3,C_ROSE), mSeg(0,4.3,0.4,4.7,C_ROSE), mSeg(-0.4,4.7,0.4,4.7,C_ROSE));
+    L.push(mArc(-0.45,4.35,0.45,-1,-0.9,0,C_GRIS), mArc(0.45,4.35,0.45,-1,0,0.9,C_GRIS));
+    for (const s of [-1,1]) for (let i = 0; i < 3; i++)
+      L.push.apply(L, tag([mSeg(s*1.1, 4.7 - i*0.05 + 0.4, s*3.4, 5.2 - i*0.7 + 0.4, C_GRIS)], "moustache"));
+    return L;
+  }},
+  poisson: { mots:["poisson","poissons"], ciel:false, f: function(){
+    const L = [];
+    L.push(mParab(-0.42,0,4.4,-2.3,2.3,C_BLEU), mParab(0.42,0,1.2,-2.3,2.3,C_BLEU));
+    L.push.apply(L, tag([mSeg(2.29,2.8,4,4.6,C_BLEU), mSeg(4,4.6,4,1,C_BLEU), mSeg(4,1,2.29,2.8,C_BLEU)], "queue"));
+    L.push(mCercle(-1.2,3.3,0.28,C_BLANC));
+    L.push(mParab(-1.6,0,5.6,-0.9,0.9,C_BLEU));
+    L.push(mArc(-2.1,3.1,0.55,-1,-2.65,-1.9,C_BLEU));
+    return L;
+  }},
+  voiture: { mots:["voiture","voitures","auto","bagnole"], ciel:false, f: function(){
+    const L = [];
+    L.push(mHoriz(1,-4,4,C_BLEU), mHoriz(2.6,-4,4,C_BLEU), mVert(-4,1,2.6,C_BLEU), mVert(4,1,2.6,C_BLEU));
+    L.push(mSeg(-2.2,2.6,-1.3,4.2,C_BLEU), mSeg(2.2,2.6,1.3,4.2,C_BLEU), mHoriz(4.2,-1.3,1.3,C_BLEU));
+    L.push(mVert(0,2.6,4.2,C_GRIS));
+    L.push.apply(L, tag([mCercle(-2.4,1,1,C_GRIS), mCercle(2.4,1,1,C_GRIS),
+      mCercle(-2.4,1,0.35,C_GRIS), mCercle(2.4,1,0.35,C_GRIS)], "roue"));
+    return L;
+  }},
+  fusee: { mots:["fusee","fusees","navette"], ciel:false, f: function(){
+    const L = [];
+    L.push(mVert(-1.2,1.5,6,C_BLANC), mVert(1.2,1.5,6,C_BLANC), mHoriz(1.5,-1.2,1.2,C_BLANC));
+    L.push(mParab(-2.083,0,9,-1.2,1.2,C_TOIT));
+    L.push(mSeg(-1.2,3,-2.6,1,C_TOIT), mSeg(-2.6,1,-1.2,1.5,C_TOIT));
+    L.push(mSeg(1.2,3,2.6,1,C_TOIT), mSeg(2.6,1,1.2,1.5,C_TOIT));
+    L.push.apply(L, tag([mCercle(0,5,0.6,C_BLEU)], "hublot"));
+    L.push.apply(L, tag([mAbs(3,0,-1.5,-1,1,C_ORANGE)], "flamme"));
+    return L;
+  }},
+  fleur: { mots:["fleur","fleurs","tulipe","rose"], ciel:false, f: function(){
+    const L = [];
+    for (let i = 0; i < 6; i++){
+      const a = i*Math.PI/3;
+      L.push(mCercle(1.5*Math.cos(a), 7.5 + 1.5*Math.sin(a), 1.1, C_ROSE));
+    }
+    L.push(mCercle(0,7.5,0.9,C_JAUNE));
+    L.push.apply(L, tag([mSinY(0.5,0.85,0,0,0,6.1,C_VERT)], "tige"));
+    L.push.apply(L, tag([mEll(-1.5,3.2,1.5,0.6,1,C_VERT), mEll(-1.5,3.2,1.5,0.6,-1,C_VERT),
+      mEll(1.5,4.4,1.5,0.6,1,C_VERT), mEll(1.5,4.4,1.5,0.6,-1,C_VERT)], "feuille"));
+    return L;
+  }},
+  bonhomme: { mots:["bonhomme","personnage","humain","homme","femme","gens"], ciel:false, f: function(){
+    const L = [];
+    L.push(mCercle(0,8.6,1.2,C_JAUNE));
+    L.push(mVert(0,4.2,7.4,C_BLEU));
+    L.push(mSeg(-2,5.6,0,6.9,C_BLEU), mSeg(0,6.9,2,5.6,C_BLEU));
+    L.push(mSeg(0,4.2,-1.6,0,C_BLEU), mSeg(0,4.2,1.6,0,C_BLEU));
+    L.push(mCercle(-0.4,8.8,0.14,C_BOIS), mCercle(0.4,8.8,0.14,C_BOIS));
+    L.push(mArc(0,8.3,0.5,-1,-0.5,0.5,C_BOIS));
+    return L;
+  }},
+  sol: { mots:["sol","herbe","terrain","pelouse"], ciel:false, decor:true, f: function(){
+    return [mHoriz(0,-9,9,C_VERT), mSinX(0.32,7,0,0.34,-9,9,C_VERT)];
+  }}
+};
+
+function modelePour(mot){
+  const m = normaliser(mot);
+  for (const cle in MODELES) if (MODELES[cle].mots.indexOf(m) >= 0) return cle;
+  const sing = m.replace(/s$/,"");
+  for (const cle in MODELES) if (MODELES[cle].mots.indexOf(sing) >= 0) return cle;
+  return null;
+}
+
+/* ---------- 8. La scène : plusieurs objets, placés ensemble ------------ */
+
+function tag(liste, nom){ liste.forEach(c => { if (c) c.part = nom; }); return liste; }
+
+function echantillonsCourbe(c, n){
+  const out = [];
+  if (c.fam === "cercle"){
+    const N = Math.max(n, 28);
+    for (let i = 0; i <= N; i++){
+      const a = i*2*Math.PI/N;
+      out.push([c.p.h + c.p.r*Math.cos(a), c.p.k + c.p.r*Math.sin(a)]);
+    }
+    return out;
+  }
+  const t0 = Math.min(c.dom[0], c.dom[1]), t1 = Math.max(c.dom[0], c.dom[1]);
+  const serre = (c.fam === "arc" || c.fam === "ellipse");
+  const N = Math.max(2, n|0);
+  for (let i = 0; i <= N; i++){
+    const u = i/N;
+    const t = serre ? (t0+t1)/2 + (t1-t0)/2*Math.sin(Math.PI*(u-0.5)) : t0 + (t1-t0)*u;
+    const v = evaluer(c, t);
+    if (!isFinite(v)){ out.push(null); continue; }
+    out.push(c.axe === "x" ? [t, v] : [v, t]);
+  }
+  return out;
+}
+
+function bboxListe(liste){
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const c of liste){
+    if (!c) continue;
+    for (const p of echantillonsCourbe(c, 24)){
+      if (!p) continue;
+      if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0];
+      if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1];
+    }
+  }
+  if (!isFinite(x0)) return null;
+  return { x0:x0, x1:x1, y0:y0, y1:y1, w: Math.max(x1-x0, 1e-6), h: Math.max(y1-y0, 1e-6) };
+}
+
+const MOTS_CIEL = ["soleil","lune","nuage","nuages","etoile","etoiles","oiseau","avion","arc en ciel","eclair","planete","fusee"];
+
+const scene = {
+  objets: [],
+  mode: "formules",
+  detail: 3,
+  couleurs: 5,
+  historique: [],
+  demande: ""
+};
+
+let _idObjet = 1;
+
+function creerObjet(mot, type, source){
+  return {
+    id: _idObjet++,
+    mot: mot,
+    type: type || "mot",
+    src: source || null,
+    mode: scene.mode,
+    detail: scene.detail,
+    couleurs: scene.couleurs,
+    opts: {},
+    retirees: [],
+    palette: false,
+    couleurForcee: null,
+    t: { s: 1, dx: 0, dy: 0, mir: false, rot: 0 },
+    man: { s: 1, dx: 0, dy: 0 },   // ce que l'utilisateur a corrigé à la main
+    ciel: false,
+    info: "",
+    base: []
+  };
+}
+
+function regenererBase(o){
+  const reg = { detail: o.detail, couleurs: o.couleurs, hauteur: 10 };
+  if (o.type === "image" || o.type === "dessin"){
+    const ctx = o.src.getContext("2d", { willReadFrequently: true });
+    const r = vectoriserContexte(ctx, o.src.width, reg);
+    o.base = r.courbes; o.info = o.type; o.ciel = false;
+    return;
+  }
+  const cle = modelePour(o.mot);
+  o.modele = cle;
+  o.ciel = cle ? !!MODELES[cle].ciel : MOTS_CIEL.indexOf(normaliser(o.mot)) >= 0;
+  if (o.mode === "formules" && cle){
+    o.base = MODELES[cle].f(o.opts).filter(Boolean);
+    o.info = "formules";
+    return;
+  }
+  if (o.mode === "tracage" && cle && !emojiPour(o.mot) && !emojiDisponible()){
+    o.base = MODELES[cle].f(o.opts).filter(Boolean);
+    o.info = "formules";
+    return;
+  }
+  const r = vectoriserMot(o.mot, reg);
+  if (r.courbes.length){
+    o.base = r.courbes;
+    o.info = r.source;
+  } else if (cle){
+    o.base = MODELES[cle].f(o.opts).filter(Boolean);
+    o.info = "formules";
+  } else {
+    o.base = []; o.info = "vide";
+  }
+}
+
+function courbesObjet(o){
+  let base = o.base.filter(c => c && o.retirees.indexOf(c.part) < 0);
+  let liste = transformerListe(base, o.t);
+  liste.forEach((c, i) => {
+    if (o.couleurForcee) c.col = o.couleurForcee;
+    else if (o.palette || !c.col) c.col = PALETTE[i % PALETTE.length];
+  });
+  return liste;
+}
+
+function courbesScene(){
+  const out = [];
+  for (const o of scene.objets) out.push.apply(out, courbesObjet(o));
+  return out;
+}
+
+// Place les objets : les uns à côté des autres sur le sol, le décor en haut
+// Le placement automatique, puis par-dessus les corrections demandées
+function appliquerPlacement(o, s0, dx0, dy0){
+  if (!o.man) o.man = { s: 1, dx: 0, dy: 0 };
+  o.t.s = arrondi(s0*o.man.s, 3);
+  o.t.dx = arrondi(dx0 + o.man.dx, 2);
+  o.t.dy = arrondi(dy0*o.man.s + o.man.dy, 2);
+}
+
+function placerScene(){
+  const sol = scene.objets.filter(o => !o.ciel);
+  const ciel = scene.objets.filter(o => o.ciel);
+  // un seul objet en mode formules : on garde ses coordonnées d'origine,
+  // les équations restent avec des nombres ronds.
+  if (scene.objets.length === 1 && scene.objets[0].info === "formules"){
+    appliquerPlacement(scene.objets[0], 1, 0, 0);
+    return;
+  }
+  let curseur = 0;
+  sol.forEach((o, i) => {
+    const b = bboxListe(o.base.filter(c => c && o.retirees.indexOf(c.part) < 0));
+    if (!b){ appliquerPlacement(o, 1, 0, 0); return; }
+    const hCible = i === 0 ? 9 : 6.5;
+    // l'échelle se calcule sur la taille d'origine : enlever une cheminée
+    // ne doit pas faire grossir toute la maison.
+    if (!o.ref || o.refInfo !== o.info){ o.ref = b; o.refInfo = o.info; }
+    const s = arrondi(Math.min(hCible/o.ref.h, 12/o.ref.w), 2);
+    o.pos = { s: s, dx: arrondi(curseur - b.x0*s, 1), dy: arrondi(-b.y0*s, 1) };
+    curseur += b.w*s + 1.3;
+  });
+  const largeur = Math.max(curseur - 1.3, 6);
+  sol.forEach(o => { if (o.pos) appliquerPlacement(o, o.pos.s, arrondi(o.pos.dx - largeur/2, 1), o.pos.dy); });
+  ciel.forEach((o, i) => {
+    const b = bboxListe(o.base.filter(c => c && o.retirees.indexOf(c.part) < 0));
+    if (!b){ appliquerPlacement(o, 1, 0, 10); return; }
+    if (!o.ref || o.refInfo !== o.info){ o.ref = b; o.refInfo = o.info; }
+    const s = arrondi(Math.min(4.4/o.ref.h, 5.5/o.ref.w), 2);
+    const n = ciel.length;
+    const cx = (i + 1)/(n + 1)*largeur - largeur/2 + largeur*0.12;
+    appliquerPlacement(o, s, arrondi(cx - (b.x0 + b.w/2)*s, 1), arrondi(10.2 - b.y0*s, 1));
+  });
+}
+
+function memoriser(){
+  const copie = scene.objets.map(o => {
+    const c = Object.assign({}, o);
+    c.base = null;
+    c.t = Object.assign({}, o.t);
+    c.man = Object.assign({}, o.man || { s:1, dx:0, dy:0 });
+    c.opts = Object.assign({}, o.opts);
+    c.retirees = o.retirees.slice();
+    return c;
+  });
+  scene.historique.push({ objets: copie, mode: scene.mode, detail: scene.detail, couleurs: scene.couleurs, demande: scene.demande });
+  if (scene.historique.length > 30) scene.historique.shift();
+}
+
+function annulerDerniere(){
+  if (scene.historique.length < 1) return false;
+  const e = scene.historique.pop();
+  scene.objets = e.objets;
+  scene.mode = e.mode; scene.detail = e.detail; scene.couleurs = e.couleurs; scene.demande = e.demande;
+  scene.objets.forEach(regenererBase);
+  return true;
+}
+
+/* ---------- Analyse de la demande ------------------------------------- */
+
+const MOTS_INUTILES = ["dessine","dessiner","dessin","trace","tracer","fais","faire","moi","genere","generer",
+  "cree","creer","montre","montrer","je","veux","voudrais","peux","tu","stp","s","il","te","plait","please",
+  "un","une","des","le","la","les","du","de","d","l","au","aux","mon","ma","mes","ce","cette"];
+
+function nettoyerSujet(p){
+  const mots = p.trim().split(/\s+/).filter(Boolean);
+  while (mots.length && MOTS_INUTILES.indexOf(mots[0]) >= 0) mots.shift();
+  return mots.join(" ").trim();
+}
+
+function analyserDemande(txt){
+  let n = " " + normaliser(txt) + " ";
+  n = n.replace(/ (avec|et|puis|ainsi que|plus) /g, " | ");
+  n = n.replace(/[,+]/g, " | ");
+  const sujets = n.split("|").map(nettoyerSujet).filter(Boolean);
+  return sujets.length ? sujets : [];
+}
+
+function construireScene(demande){
+  const sujets = analyserDemande(demande);
+  if (!sujets.length) return { ok: false, message: "Écris ce que tu veux dessiner, par exemple « une maison »." };
+  scene.demande = demande;
+  scene.objets = sujets.slice(0, 6).map(m => creerObjet(m, "mot"));
+  scene.objets.forEach(o => { o.mode = scene.mode; o.detail = scene.detail; o.couleurs = scene.couleurs; regenererBase(o); });
+  scene.objets = scene.objets.filter(o => o.base.length);
+  if (!scene.objets.length) return { ok: false, message: "Je n'arrive pas à tracer ça. Essaie un autre mot, ou importe une image." };
+  placerScene();
+  return { ok: true, sujets: sujets };
+}
+
+function ajouterObjetMot(mot){
+  const o = creerObjet(mot, "mot");
+  o.mode = scene.mode; o.detail = scene.detail; o.couleurs = scene.couleurs;
+  regenererBase(o);
+  if (!o.base.length) return null;
+  scene.objets.push(o);
+  placerScene();
+  return o;
+}
+
+function objetDepuisSource(nom, type, canvas){
+  const o = creerObjet(nom, type, canvas);
+  o.mode = "tracage"; o.detail = scene.detail; o.couleurs = scene.couleurs;
+  regenererBase(o);
+  return o;
+}
+
+/* ---------- 9. Les reproches : corriger le dessin en français ---------- */
+
+const PIECES = {
+  toit:["toit","toiture"], cheminee:["cheminee"], fumee:["fumee"], porte:["porte"],
+  fenetre:["fenetre","fenetres","vitre","vitres"], mur:["mur","murs"], roue:["roue","roues"],
+  hublot:["hublot"], flamme:["flamme","flammes","feu"], moustache:["moustache","moustaches"],
+  oreille:["oreille","oreilles"], oeil:["oeil","yeux"], tronc:["tronc"], rayon:["rayon","rayons"],
+  feuille:["feuille","feuilles","feuillage"], tige:["tige"], queue:["queue"]
+};
+
+const COULEURS_MOTS = {
+  rouge:"#e2564d", bleu:"#2d70f5", bleue:"#2d70f5", vert:"#3ec46d", verte:"#3ec46d",
+  jaune:"#f2c744", orange:"#f08a35", violet:"#c07cf5", violette:"#c07cf5", rose:"#f27a9b",
+  blanc:"#e8edf7", blanche:"#e8edf7", noir:"#8a94ab", gris:"#9aa6bf", grise:"#9aa6bf",
+  marron:"#c08a55", brun:"#c08a55", cyan:"#48c7d0", turquoise:"#48c7d0"
+};
+
+function trouverPiece(n){
+  for (const cle in PIECES) for (const m of PIECES[cle])
+    if (new RegExp("\\b" + m + "\\b").test(n)) return cle;
+  return null;
+}
+
+function trouverObjet(n){
+  for (const o of scene.objets){
+    const m = normaliser(o.mot);
+    if (m && new RegExp("\\b" + m.replace(/[.*+?^${}()|[\]\\]/g,"") + "\\b").test(n)) return o;
+  }
+  return null;
+}
+
+function objetPrincipal(){ return scene.objets.length ? scene.objets[0] : null; }
+
+function appliquerReproche(txt){
+  const n = normaliser(txt);
+  if (!n) return { ok:false, message:"Dis-moi ce qui ne va pas." };
+
+  if (/\b(annule|annuler|retour|reviens|undo|avant)\b/.test(n)){
+    if (annulerDerniere()) return { ok:true, message:"C'est annulé, on revient au dessin d'avant." };
+    return { ok:false, message:"Il n'y a rien à annuler." };
+  }
+
+  memoriser();
+  const cible = trouverObjet(n) || objetPrincipal();
+  if (!cible) return { ok:false, message:"Il n'y a encore rien à corriger : demande d'abord un dessin." };
+  const piece = trouverPiece(n);
+  const tous = /\b(tout|tous|toute|entier|dessin|scene)\b/.test(n);
+  const vises = tous ? scene.objets : [cible];
+  const modele = cible.modele && MODELES[cible.modele];
+  const options = (modele && modele.options) || [];
+  const nomCible = cible.mot;
+
+  const grand = /\b(plus (grand|gros|grande|large|haut|haute|long|longue)|agrandis|agrandir|grossis|trop petit|trop petite|minuscule|plus grand)\b/.test(n);
+  const petit = /\b(plus (petit|petite|fin|mince|bas|basse|court|courte)|reduis|reduire|diminue|retrecis|trop grand|trop grande|trop gros|enorme)\b/.test(n);
+  const facteurTexte = n.match(/\b(?:fois|x|\*)\s*([0-9]+(?:[.,][0-9]+)?)/);
+  let facteur = grand ? 1.35 : (petit ? 1/1.35 : 1);
+  if (facteurTexte){
+    const v = parseFloat(facteurTexte[1].replace(",", "."));
+    if (isFinite(v) && v > 0.05 && v < 20) facteur = petit ? 1/v : v;
+  }
+  if (/\b(deux fois plus (grand|gros))\b/.test(n)) facteur = 2;
+  if (/\b(deux fois plus (petit|petite))\b/.test(n)) facteur = 0.5;
+
+  /* --- enlever --- */
+  if (/\b(enleve|enlever|supprime|supprimer|retire|retirer|vire|sans|cache)\b/.test(n)){
+    if (piece){
+      if (options.indexOf(piece) >= 0){ cible.opts[piece] = false; regenererBase(cible); placerScene();
+        return { ok:true, message:"D'accord, j'enlève " + piece + " sur " + nomCible + "." }; }
+      let trouve = false;
+      for (const o of vises){
+        if (o.base.some(c => c && c.part === piece)){ o.retirees.push(piece); trouve = true; }
+      }
+      if (trouve){ placerScene(); return { ok:true, message:"C'est enlevé : " + piece + "." }; }
+      return { ok:false, message:"Je ne trouve pas « " + piece + " » dans ce dessin." };
+    }
+    const objVise = trouverObjet(n);
+    if (objVise && scene.objets.length > 1){
+      scene.objets = scene.objets.filter(o => o !== objVise);
+      placerScene();
+      return { ok:true, message:"J'ai retiré " + objVise.mot + " de la scène." };
+    }
+    return { ok:false, message:"Précise ce que j'enlève : « enlève la cheminée », « enlève le sapin »." };
+  }
+
+  /* --- ajouter --- */
+  if (/\b(ajoute|ajouter|rajoute|mets|met|mettre|avec un|avec une)\b/.test(n)){
+    if (piece && options.indexOf(piece) >= 0){
+      const v = cible.opts[piece];
+      cible.opts[piece] = (typeof v === "number") ? v + 1 : true;
+      regenererBase(cible); placerScene();
+      return { ok:true, message:"J'ajoute " + piece + " sur " + nomCible + "." };
+    }
+    if (piece && cible.retirees.indexOf(piece) >= 0){
+      cible.retirees = cible.retirees.filter(p => p !== piece);
+      placerScene();
+      return { ok:true, message:"Je remets " + piece + "." };
+    }
+    const apres = n.replace(/^.*\b(ajoute|ajouter|rajoute|mets|met|mettre)\b/, "");
+    const sujet = nettoyerSujet(apres);
+    if (sujet){
+      const o = ajouterObjetMot(sujet);
+      if (o) return { ok:true, message:"J'ajoute " + sujet + " à la scène." };
+      return { ok:false, message:"Je n'arrive pas à tracer « " + sujet + " »." };
+    }
+    return { ok:false, message:"Dis-moi quoi ajouter : « ajoute un soleil »." };
+  }
+
+  /* --- pièce paramétrable (toit plus pointu, porte plus grande...) --- */
+  if (piece && (grand || petit || /\bpointu|plat|pentu|haut\b/.test(n))){
+    if (options.indexOf(piece) >= 0){
+      const actuel = typeof cible.opts[piece] === "number" ? cible.opts[piece] : 1;
+      let f = facteur;
+      if (/\bpointu|pentu\b/.test(n)) f = 1.3;
+      if (/\bplat\b/.test(n)) f = 0.75;
+      cible.opts[piece] = borne(actuel*f, 0.2, 4);
+      regenererBase(cible); placerScene();
+      return { ok:true, message:"Voilà : " + piece + " " + (f >= 1 ? "plus grand" : "plus petit") + " sur " + nomCible + "." };
+    }
+    // sinon : on agrandit juste cette pièce, autour de son centre
+    let touche = 0;
+    for (const o of vises){
+      const morceaux = o.base.filter(c => c && c.part === piece);
+      if (!morceaux.length) continue;
+      const b = bboxListe(morceaux);
+      if (!b) continue;
+      const cx = (b.x0+b.x1)/2, cy = (b.y0+b.y1)/2;
+      const remplace = morceaux.map(c => {
+        let r = deplacer(c, -cx, -cy);
+        r = agrandir(r, facteur);
+        r = deplacer(r, cx, cy);
+        r.part = c.part; r.col = c.col;
+        return r;
+      });
+      let k = 0;
+      o.base = o.base.map(c => (c && c.part === piece) ? remplace[k++] : c);
+      touche++;
+    }
+    if (touche){ placerScene(); return { ok:true, message:(facteur >= 1 ? "J'agrandis " : "Je réduis ") + piece + "." }; }
+    return { ok:false, message:"Je ne trouve pas « " + piece + " » dans ce dessin." };
+  }
+
+  /* --- taille globale --- */
+  if (grand || petit || (facteurTexte && facteur !== 1)){
+    vises.forEach(o => { o.man.s = borne(o.man.s*facteur, 0.15, 8); });
+    placerScene();
+    return { ok:true, message:(facteur >= 1 ? "J'agrandis " : "Je réduis ") + (tous ? "tout le dessin" : nomCible) + "." };
+  }
+
+  /* --- déplacement --- */
+  const pas = 2.2;
+  let bouge = null;
+  if (/\b(a gauche|vers la gauche|plus a gauche|gauche)\b/.test(n)) bouge = [-pas, 0];
+  else if (/\b(a droite|vers la droite|plus a droite|droite)\b/.test(n)) bouge = [pas, 0];
+  else if (/\b(plus haut|monte|vers le haut|en haut|remonte)\b/.test(n)) bouge = [0, pas];
+  else if (/\b(plus bas|descend|vers le bas|en bas|baisse)\b/.test(n)) bouge = [0, -pas];
+  else if (/\b(au milieu|au centre|centre|recentre)\b/.test(n)) bouge = "centre";
+  if (bouge === "centre"){
+    scene.objets.forEach(o => { o.man = { s: o.man.s, dx: 0, dy: 0 }; });
+    placerScene();
+    return { ok:true, message:"Tout est recentré." };
+  }
+  if (bouge){
+    vises.forEach(o => { o.man.dx += bouge[0]; o.man.dy += bouge[1]; });
+    placerScene();
+    return { ok:true, message:"Déplacé " + (bouge[0] < 0 ? "à gauche" : bouge[0] > 0 ? "à droite" : bouge[1] > 0 ? "vers le haut" : "vers le bas") + "." };
+  }
+
+  /* --- retournement / rotation --- */
+  if (/\b(retourne|miroir|inverse|autre sens|symetrique)\b/.test(n)){
+    vises.forEach(o => { o.t.mir = !o.t.mir; });
+    placerScene();
+    return { ok:true, message:"Retourné comme dans un miroir." };
+  }
+  if (/\b(tourne|pivote|rotation|couche|penche)\b/.test(n)){
+    const sens = /\b(gauche|antihoraire)\b/.test(n) ? 3 : 1;
+    vises.forEach(o => { o.t.rot = (o.t.rot + sens) % 4; });
+    placerScene();
+    return { ok:true, message:"J'ai fait tourner d'un quart de tour." };
+  }
+
+  /* --- niveau de détail / mode --- */
+  if (/\b(plus de detail|plus de details|plus precis|plus fin|plus ressemblant|plus realiste|mieux|vrai dessin|plus beau)\b/.test(n)){
+    let change = false;
+    if (scene.mode === "formules"){   // les modèles tout faits ne peuvent pas être plus détaillés
+      scene.mode = "tracage"; change = true;
+    } else if (scene.detail < 5){ scene.detail++; change = true; }
+    scene.objets.forEach(o => { o.mode = scene.mode; o.detail = scene.detail; regenererBase(o); });
+    placerScene();
+    return { ok:change, message: change
+      ? "Plus de détails : niveau " + scene.detail + (scene.mode === "tracage" ? ", en mode traçage" : "") + "."
+      : "C'est déjà le maximum de détails." };
+  }
+  if (/\b(moins de detail|moins de fonctions|trop de fonctions|simplifie|plus simple|trop complique|allege)\b/.test(n)){
+    let change = false;
+    if (/\b(fonctions|simple|simplifie)\b/.test(n) && scene.mode === "tracage" && scene.detail <= 2){
+      scene.mode = "formules"; change = true;
+    }
+    if (scene.detail > 1){ scene.detail--; change = true; }
+    scene.objets.forEach(o => { o.mode = scene.mode; o.detail = scene.detail; regenererBase(o); });
+    placerScene();
+    return { ok:change, message: change
+      ? "Version plus simple : niveau " + scene.detail + (scene.mode === "formules" ? " (mode formules)" : "") + "."
+      : "C'est déjà le plus simple." };
+  }
+  if (/\b(formules?|equations simples|pour desmos|propre)\b/.test(n)){
+    scene.mode = "formules";
+    scene.objets.forEach(o => { o.mode = "formules"; regenererBase(o); });
+    placerScene();
+    return { ok:true, message:"Mode formules : peu d'équations, bien lisibles." };
+  }
+  if (/\b(tracage|trace le vrai|photo|image reelle)\b/.test(n)){
+    scene.mode = "tracage";
+    scene.objets.forEach(o => { o.mode = "tracage"; regenererBase(o); });
+    placerScene();
+    return { ok:true, message:"Mode traçage : beaucoup plus de fonctions, beaucoup plus ressemblant." };
+  }
+
+  /* --- couleurs --- */
+  if (/\bnoir et blanc\b/.test(n)){
+    scene.couleurs = 1;
+    scene.objets.forEach(o => { o.couleurs = 1; o.palette = false; o.couleurForcee = "#e8edf7"; regenererBase(o); });
+    placerScene();
+    return { ok:true, message:"Tout en blanc sur fond sombre." };
+  }
+  if (/\b(arc en ciel|toutes les couleurs|colore|coloree|multicolore)\b/.test(n)){
+    vises.forEach(o => { o.palette = true; o.couleurForcee = null; });
+    return { ok:true, message:"Chaque fonction a maintenant sa couleur." };
+  }
+  if (/\bplus de couleurs\b/.test(n)){
+    scene.couleurs = borne(scene.couleurs + 2, 1, 8);
+    scene.objets.forEach(o => { o.couleurs = scene.couleurs; o.couleurForcee = null; o.palette = false; regenererBase(o); });
+    placerScene();
+    return { ok:true, message:"Plus de couleurs : " + scene.couleurs + "." };
+  }
+  for (const mot in COULEURS_MOTS){
+    if (new RegExp("\\b" + mot + "\\b").test(n)){
+      vises.forEach(o => { o.couleurForcee = COULEURS_MOTS[mot]; o.palette = false; });
+      return { ok:true, message:"Tracé en " + mot + "." };
+    }
+  }
+
+  return { ok:false, message:"Je n'ai pas compris. Essaie : « plus grand », « à gauche », « plus de détails », « enlève la cheminée », « ajoute un soleil », « en rouge », « annule »." };
+}
+
+/* ---------- 10. Le repère et le panneau des équations ----------------- */
+
+const cvGraphe = document.getElementById("graphe");
+const ctxG = cvGraphe.getContext("2d");
+const elEtat = document.getElementById("etat");
+const elListe = document.getElementById("liste");
+const elPagination = document.getElementById("pagination");
+const elCompteur = document.getElementById("compteur");
+const elJournal = document.getElementById("journal");
+
+let COURBES = [];
+let page = 0;
+const PAR_PAGE = 200;
+let vue = { cx: 0, cy: 5, ppu: 32 };
+
+function redimensionner(){
+  const r = cvGraphe.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cvGraphe.width = Math.max(1, Math.round(r.width*dpr));
+  cvGraphe.height = Math.max(1, Math.round(r.height*dpr));
+  ctxG.setTransform(dpr, 0, 0, dpr, 0, 0);
+  dessiner();
+}
+
+function largeurVue(){ return cvGraphe.width / (Math.min(window.devicePixelRatio || 1, 2)); }
+function hauteurVue(){ return cvGraphe.height / (Math.min(window.devicePixelRatio || 1, 2)); }
+function versEcranX(x){ return largeurVue()/2 + (x - vue.cx)*vue.ppu; }
+function versEcranY(y){ return hauteurVue()/2 - (y - vue.cy)*vue.ppu; }
+function versRepereX(px){ return vue.cx + (px - largeurVue()/2)/vue.ppu; }
+function versRepereY(py){ return vue.cy - (py - hauteurVue()/2)/vue.ppu; }
+
+function pasGrille(){
+  const brut = 80/vue.ppu;
+  const p = Math.pow(10, Math.floor(Math.log10(brut)));
+  for (const m of [1, 2, 5, 10]) if (p*m >= brut) return p*m;
+  return p*10;
+}
+
+function dessinerGrille(){
+  const W = largeurVue(), H = hauteurVue();
+  const pas = pasGrille();
+  const x0 = versRepereX(0), x1 = versRepereX(W), y0 = versRepereY(H), y1 = versRepereY(0);
+  ctxG.lineWidth = 1;
+  ctxG.strokeStyle = "#2a3244";
+  ctxG.beginPath();
+  for (let x = Math.ceil(x0/pas)*pas; x <= x1; x += pas){
+    const px = Math.round(versEcranX(x)) + 0.5;
+    ctxG.moveTo(px, 0); ctxG.lineTo(px, H);
+  }
+  for (let y = Math.ceil(y0/pas)*pas; y <= y1; y += pas){
+    const py = Math.round(versEcranY(y)) + 0.5;
+    ctxG.moveTo(0, py); ctxG.lineTo(W, py);
+  }
+  ctxG.stroke();
+  // axes
+  ctxG.strokeStyle = "#7d8aa5";
+  ctxG.lineWidth = 1.4;
+  ctxG.beginPath();
+  const py0 = Math.round(versEcranY(0)) + 0.5, px0 = Math.round(versEcranX(0)) + 0.5;
+  ctxG.moveTo(0, py0); ctxG.lineTo(W, py0);
+  ctxG.moveTo(px0, 0); ctxG.lineTo(px0, H);
+  ctxG.stroke();
+  // graduations
+  ctxG.fillStyle = "#9aa6bf";
+  ctxG.font = "11px system-ui,sans-serif";
+  ctxG.textAlign = "center"; ctxG.textBaseline = "top";
+  for (let x = Math.ceil(x0/pas)*pas; x <= x1; x += pas){
+    if (Math.abs(x) < pas/2) continue;
+    ctxG.fillText(nb(x, 2), versEcranX(x), borne(py0 + 4, 4, H - 16));
+  }
+  ctxG.textAlign = "right"; ctxG.textBaseline = "middle";
+  for (let y = Math.ceil(y0/pas)*pas; y <= y1; y += pas){
+    if (Math.abs(y) < pas/2) continue;
+    ctxG.fillText(nb(y, 2), borne(px0 - 6, 26, W - 4), versEcranY(y));
+  }
+}
+
+function echantillonsAffichage(c){
+  if (c._ppu === vue.ppu && c._ech) return c._ech;
+  let n;
+  if (c.fam === "cercle") n = borne(Math.round(2*Math.PI*c.p.r*vue.ppu/5), 32, 400);
+  else n = borne(Math.round(Math.abs(c.dom[1]-c.dom[0])*vue.ppu/3), 14, 320);
+  c._ech = echantillonsCourbe(c, n);
+  c._ppu = vue.ppu;
+  return c._ech;
+}
+
+function dessinerCourbes(){
+  const W = largeurVue(), H = hauteurVue();
+  ctxG.lineWidth = 2.1;
+  ctxG.lineJoin = "round"; ctxG.lineCap = "round";
+  for (const c of COURBES){
+    const pts = echantillonsAffichage(c);
+    ctxG.strokeStyle = c.col || "#2d70f5";
+    ctxG.beginPath();
+    let leve = true;
+    for (const p of pts){
+      if (!p){ leve = true; continue; }
+      const px = versEcranX(p[0]), py = versEcranY(p[1]);
+      if (px < -4000 || px > W + 4000 || py < -4000 || py > H + 4000){ leve = true; continue; }
+      if (leve){ ctxG.moveTo(px, py); leve = false; } else ctxG.lineTo(px, py);
+    }
+    ctxG.stroke();
+  }
+}
+
+function dessiner(){
+  ctxG.clearRect(0, 0, largeurVue(), hauteurVue());
+  ctxG.fillStyle = "#1b2130";
+  ctxG.fillRect(0, 0, largeurVue(), hauteurVue());
+  dessinerGrille();
+  dessinerCourbes();
+}
+
+function recadrer(){
+  const b = bboxListe(COURBES);
+  if (!b){ vue = { cx: 0, cy: 5, ppu: 32 }; dessiner(); return; }
+  const W = largeurVue(), H = hauteurVue();
+  const marge = 0.12;
+  vue.ppu = borne(Math.min(W/(b.w*(1+marge*2)), H/(b.h*(1+marge*2))), 1, 400);
+  vue.cx = (b.x0 + b.x1)/2;
+  vue.cy = (b.y0 + b.y1)/2;
+  COURBES.forEach(c => { c._ech = null; });
+  dessiner();
+}
+
+/* --- panneau des équations --- */
+
+function majPanneau(){
+  const n = COURBES.length;
+  elCompteur.innerHTML = "<b>" + n + "</b> fonction" + (n > 1 ? "s" : "");
+  const pages = Math.max(1, Math.ceil(n/PAR_PAGE));
+  if (page >= pages) page = pages - 1;
+  const debut = page*PAR_PAGE, fin = Math.min(n, debut + PAR_PAGE);
+  const frag = document.createDocumentFragment();
+  for (let i = debut; i < fin; i++){
+    const c = COURBES[i];
+    const d = document.createElement("div");
+    d.className = "eq";
+    const past = document.createElement("span");
+    past.className = "pastille";
+    past.style.background = c.col || "#2d70f5";
+    const f = document.createElement("span");
+    f.className = "form";
+    const txt = texteEquation(c, "uni");
+    const coupe = txt.indexOf(" {");
+    if (coupe > 0){
+      f.appendChild(document.createTextNode(txt.slice(0, coupe)));
+      const dom = document.createElement("span");
+      dom.className = "dom";
+      dom.textContent = txt.slice(coupe);
+      f.appendChild(dom);
+    } else f.textContent = txt;
+    d.appendChild(past); d.appendChild(f);
+    frag.appendChild(d);
+  }
+  elListe.innerHTML = "";
+  elListe.appendChild(frag);
+  elListe.scrollTop = 0;
+  elPagination.innerHTML = "";
+  if (pages > 1){
+    const prec = document.createElement("button");
+    prec.textContent = "◀";
+    prec.disabled = page === 0;
+    prec.onclick = () => { page--; majPanneau(); };
+    const suiv = document.createElement("button");
+    suiv.textContent = "▶";
+    suiv.disabled = page >= pages - 1;
+    suiv.onclick = () => { page++; majPanneau(); };
+    const txt = document.createElement("span");
+    txt.textContent = "équations " + (debut+1) + " à " + fin + " sur " + n;
+    elPagination.appendChild(prec); elPagination.appendChild(txt); elPagination.appendChild(suiv);
+  } else if (n){
+    const txt = document.createElement("span");
+    txt.textContent = "toutes les équations sont affichées";
+    elPagination.appendChild(txt);
+  }
+}
+
+function texteExport(){
+  return COURBES.map(c => texteEquation(c, "desmos").replace(/\s+/g, "")).join("\n");
+}
+
+function copierPourDesmos(){
+  const texte = texteExport();
+  if (!texte){ journal("Il n'y a encore aucune équation à copier.", "app", true); return; }
+  const fini = ok => journal(ok
+    ? "J'ai copié " + COURBES.length + " équations : colle-les dans Desmos (une par ligne)."
+    : "Copie impossible ici : sélectionne les équations dans la liste.", "app", !ok);
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texte).then(() => fini(true), () => fini(copierRepli(texte)));
+  } else fini(copierRepli(texte));
+}
+
+function copierRepli(texte){
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = texte;
+    ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e){ return false; }
+}
+
+/* ---------- 11. Interface --------------------------------------------- */
+
+function journal(texte, qui, rate){
+  const d = document.createElement("div");
+  d.className = "msg " + (qui === "moi" ? "moi" : "app") + (rate ? " rate" : "");
+  d.textContent = texte;
+  elJournal.appendChild(d);
+  elJournal.scrollTop = elJournal.scrollHeight;
+  while (elJournal.children.length > 40) elJournal.removeChild(elJournal.firstChild);
+}
+
+function etat(txt){ elEtat.textContent = txt; }
+
+function majTout(recadre){
+  COURBES = courbesScene();
+  page = 0;
+  if (recadre) recadrer(); else dessiner();
+  majPanneau();
+}
+
+function descriptionScene(){
+  const parts = scene.objets.map(o => {
+    const src = o.info === "formules" ? "formules" : (o.info === "emoji" ? "traçage" :
+      (o.info === "texte" ? "texte tracé" : o.info));
+    return o.mot + " (" + src + ")";
+  });
+  return parts.join(", ");
+}
+
+function tracerDemande(txt, silencieux){
+  const t0 = performance.now();
+  etat("Je calcule les fonctions…");
+  const r = construireScene(txt);
+  if (!r.ok){
+    etat("Rien à tracer.");
+    journal(r.message, "app", true);
+    return false;
+  }
+  majTout(true);
+  const ms = Math.round(performance.now() - t0);
+  etat(descriptionScene() + " — " + COURBES.length + " fonctions en " + ms + " ms");
+  if (!silencieux){
+    journal("Voilà " + descriptionScene() + " : " + COURBES.length + " fonctions. Tu peux me faire des reproches en dessous.", "app");
+    const ecrits = scene.objets.filter(o => o.info === "texte").map(o => o.mot);
+    if (ecrits.length)
+      journal("Je ne connais pas de dessin pour « " + ecrits.join(" », « ") +
+        " » : j'ai tracé le mot écrit. Importe une image ou dessine-le à la main pour le vrai dessin.", "app");
+  }
+  return true;
+}
+
+function regenererTout(){
+  scene.objets.forEach(o => { o.mode = scene.mode; o.detail = scene.detail; o.couleurs = scene.couleurs; regenererBase(o); });
+  placerScene();
+  majTout(false);
+  etat(descriptionScene() + " — " + COURBES.length + " fonctions");
+}
+
+const EXEMPLES = ["une maison", "une maison avec un sapin et un soleil", "un chat", "une fusée",
+  "un coeur", "une fleur", "une voiture", "un dragon", "une pizza", "un papillon"];
+
+function construireExemples(){
+  const box = document.getElementById("exemples");
+  EXEMPLES.forEach(ex => {
+    const b = document.createElement("button");
+    b.className = "puce";
+    b.textContent = ex;
+    b.onclick = () => { document.getElementById("demande").value = ex; lancerTrace(); };
+    box.appendChild(b);
+  });
+}
+
+function lancerTrace(){
+  const txt = document.getElementById("demande").value.trim();
+  if (!txt) return;
+  journal(txt, "moi");
+  scene.historique = [];
+  setTimeout(() => tracerDemande(txt), 10);
+}
+
+/* --- souris et doigts sur le repère --- */
+(function interactionsGraphe(){
+  let attrape = false, dernier = null, pincee = null;
+  cvGraphe.addEventListener("pointerdown", e => {
+    attrape = true; dernier = [e.clientX, e.clientY];
+    cvGraphe.classList.add("attrape");
+    cvGraphe.setPointerCapture(e.pointerId);
+  });
+  cvGraphe.addEventListener("pointermove", e => {
+    if (!attrape || !dernier) return;
+    const dx = e.clientX - dernier[0], dy = e.clientY - dernier[1];
+    dernier = [e.clientX, e.clientY];
+    vue.cx -= dx/vue.ppu; vue.cy += dy/vue.ppu;
+    dessiner();
+  });
+  const fin = e => { attrape = false; dernier = null; cvGraphe.classList.remove("attrape"); };
+  cvGraphe.addEventListener("pointerup", fin);
+  cvGraphe.addEventListener("pointercancel", fin);
+  cvGraphe.addEventListener("wheel", e => {
+    e.preventDefault();
+    zoomer(Math.pow(0.999, e.deltaY), e.clientX, e.clientY);
+  }, { passive: false });
+  cvGraphe.addEventListener("touchmove", e => {
+    if (e.touches.length !== 2) return;
+    e.preventDefault();
+    const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    if (pincee) zoomer(d/pincee, (e.touches[0].clientX + e.touches[1].clientX)/2, (e.touches[0].clientY + e.touches[1].clientY)/2);
+    pincee = d;
+  }, { passive: false });
+  cvGraphe.addEventListener("touchend", () => { pincee = null; });
+})();
+
+function zoomer(facteur, clientX, clientY){
+  const r = cvGraphe.getBoundingClientRect();
+  const px = (clientX === undefined ? r.width/2 : clientX - r.left);
+  const py = (clientY === undefined ? r.height/2 : clientY - r.top);
+  const ax = versRepereX(px), ay = versRepereY(py);
+  vue.ppu = borne(vue.ppu*facteur, 1.5, 600);
+  vue.cx = ax - (px - largeurVue()/2)/vue.ppu;
+  vue.cy = ay + (py - hauteurVue()/2)/vue.ppu;
+  COURBES.forEach(c => { c._ech = null; });
+  dessiner();
+}
+
+/* --- boutons, curseurs, import, dessin --- */
+
+document.getElementById("btnTracer").onclick = lancerTrace;
+document.getElementById("demande").addEventListener("keydown", e => { if (e.key === "Enter") lancerTrace(); });
+document.getElementById("btnRecadrer").onclick = recadrer;
+document.getElementById("btnZoomP").onclick = () => zoomer(1.25);
+document.getElementById("btnZoomM").onclick = () => zoomer(0.8);
+document.getElementById("btnCopier").onclick = copierPourDesmos;
+
+document.querySelectorAll("#modeBascule button").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll("#modeBascule button").forEach(x => x.classList.remove("actif"));
+    b.classList.add("actif");
+    scene.mode = b.dataset.mode;
+    if (!scene.objets.length) return;
+    memoriser();
+    etat("Je recalcule…");
+    setTimeout(() => {
+      regenererTout();
+      journal(scene.mode === "formules"
+        ? "Mode formules : des équations peu nombreuses et très lisibles."
+        : "Mode traçage : je redessine à partir des pixels, beaucoup plus de fonctions.", "app");
+    }, 10);
+  };
+});
+
+const elDetail = document.getElementById("detail"), elDetailVal = document.getElementById("detailVal");
+elDetail.oninput = () => { elDetailVal.textContent = elDetail.value; };
+elDetail.onchange = () => {
+  scene.detail = parseInt(elDetail.value, 10);
+  if (!scene.objets.length) return;
+  memoriser();
+  etat("Je recalcule…");
+  setTimeout(regenererTout, 10);
+};
+const elCoul = document.getElementById("couleurs"), elCoulVal = document.getElementById("couleursVal");
+elCoul.oninput = () => { elCoulVal.textContent = elCoul.value; };
+elCoul.onchange = () => {
+  scene.couleurs = parseInt(elCoul.value, 10);
+  if (!scene.objets.length) return;
+  memoriser();
+  scene.objets.forEach(o => { o.couleurForcee = null; o.palette = false; });
+  etat("Je recalcule…");
+  setTimeout(regenererTout, 10);
+};
+
+document.getElementById("fichier").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const lect = new FileReader();
+  lect.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const cv = creerCanvas(TAILLE_SOURCE);
+      const ctx = contexteVide(cv);
+      const ech = Math.min(TAILLE_SOURCE/img.width, TAILLE_SOURCE/img.height);
+      const w = img.width*ech, h = img.height*ech;
+      ctx.drawImage(img, (TAILLE_SOURCE-w)/2, (TAILLE_SOURCE-h)/2, w, h);
+      etat("Je transforme l'image en fonctions…");
+      journal("Image importée : " + f.name, "moi");
+      setTimeout(() => {
+        scene.historique = [];
+        const o = objetDepuisSource(f.name.replace(/\.[^.]+$/, "") || "image", "image", cv);
+        if (!o.base.length){ journal("Cette image est trop uniforme pour en tirer des contours.", "app", true); etat("Rien à tracer."); return; }
+        scene.objets = [o];
+        placerScene();
+        majTout(true);
+        etat("image — " + COURBES.length + " fonctions");
+        journal("Ton image est devenue " + COURBES.length + " fonctions. Règle « Détail » pour en avoir plus ou moins.", "app");
+      }, 10);
+    };
+    img.src = lect.result;
+  };
+  lect.readAsDataURL(f);
+  e.target.value = "";
+});
+
+/* --- dessin à la main --- */
+const modal = document.getElementById("modalDessin");
+const toile = document.getElementById("toile");
+const ctxToile = toile.getContext("2d", { willReadFrequently: true });
+function viderToile(){
+  ctxToile.fillStyle = "#ffffff";
+  ctxToile.fillRect(0, 0, toile.width, toile.height);
+  ctxToile.strokeStyle = "#111318";
+  ctxToile.lineWidth = 9;
+  ctxToile.lineJoin = "round"; ctxToile.lineCap = "round";
+}
+viderToile();
+(function dessinLibre(){
+  let trace = false, prec = null;
+  const pos = e => {
+    const r = toile.getBoundingClientRect();
+    return [(e.clientX - r.left)*toile.width/r.width, (e.clientY - r.top)*toile.height/r.height];
+  };
+  toile.addEventListener("pointerdown", e => {
+    trace = true; prec = pos(e); toile.setPointerCapture(e.pointerId);
+    ctxToile.beginPath(); ctxToile.moveTo(prec[0], prec[1]); ctxToile.lineTo(prec[0]+0.01, prec[1]); ctxToile.stroke();
+  });
+  toile.addEventListener("pointermove", e => {
+    if (!trace) return;
+    const p = pos(e);
+    ctxToile.beginPath(); ctxToile.moveTo(prec[0], prec[1]); ctxToile.lineTo(p[0], p[1]); ctxToile.stroke();
+    prec = p;
+  });
+  const fin = () => { trace = false; prec = null; };
+  toile.addEventListener("pointerup", fin);
+  toile.addEventListener("pointercancel", fin);
+})();
+document.getElementById("btnDessiner").onclick = () => { modal.hidden = false; };
+document.getElementById("btnToileFermer").onclick = () => { modal.hidden = true; };
+document.getElementById("btnToileEffacer").onclick = viderToile;
+document.getElementById("btnToileValider").onclick = () => {
+  modal.hidden = true;
+  etat("Je transforme ton dessin en fonctions…");
+  journal("Mon dessin à la main", "moi");
+  setTimeout(() => {
+    const cv = creerCanvas(TAILLE_SOURCE);
+    cv.getContext("2d").drawImage(toile, 0, 0, TAILLE_SOURCE, TAILLE_SOURCE);
+    scene.historique = [];
+    const o = objetDepuisSource("dessin", "dessin", cv);
+    if (!o.base.length){ journal("La feuille est vide : dessine quelque chose d'abord.", "app", true); etat("Rien à tracer."); return; }
+    scene.objets = [o];
+    placerScene();
+    majTout(true);
+    etat("dessin — " + COURBES.length + " fonctions");
+    journal("Ton dessin est devenu " + COURBES.length + " fonctions.", "app");
+  }, 10);
+};
+
+/* --- reproches --- */
+function envoyerReproche(){
+  const champ = document.getElementById("reproche");
+  const txt = champ.value.trim();
+  if (!txt) return;
+  journal(txt, "moi");
+  champ.value = "";
+  etat("Je corrige…");
+  setTimeout(() => {
+    const r = appliquerReproche(txt);
+    majTout(false);
+    journal(r.message, "app", !r.ok);
+    etat(descriptionScene() + " — " + COURBES.length + " fonctions");
+  }, 10);
+}
+document.getElementById("btnReproche").onclick = envoyerReproche;
+document.getElementById("reproche").addEventListener("keydown", e => { if (e.key === "Enter") envoyerReproche(); });
+
+window.addEventListener("resize", redimensionner);
+
+/* --- démarrage --- */
+construireExemples();
+redimensionner();
+journal("Salut ! Demande-moi un dessin : « une maison », « un chat », « une fusée »… " +
+  "Je le trace avec des fonctions et je te donne toutes les équations.", "app");
+document.getElementById("demande").value = "une maison avec un sapin et un soleil";
+setTimeout(() => tracerDemande("une maison avec un sapin et un soleil", true), 30);
+
+// petit coup de main pour les tests automatiques
+window.FUNCORA = {
+  scene: scene, tracer: tracerDemande, reproche: appliquerReproche, courbes: () => COURBES,
+  export: texteExport, vectoriserMot: vectoriserMot, vectoriserContexte: vectoriserContexte,
+  evaluer: evaluer, echantillons: echantillonsCourbe, texte: texteEquation, modeles: MODELES,
+  majTout: majTout, emojiDisponible: emojiDisponible, placer: placerScene, bbox: bboxListe,
+  canvasMot: canvasMot, contours: extraireContours, masque: masqueAvantPlan, regler: regenererTout
+};
+</script>
+</body>
+</html>
