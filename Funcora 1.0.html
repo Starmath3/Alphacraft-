@@ -1,0 +1,2534 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Funcora 0.3</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --fond:#131722; --fond2:#1b2130; --fond3:#232b3d; --bord:#333d54;
+  --texte:#e8edf7; --texte2:#9aa6bf; --accent:#2d70f5; --accent2:#3ec46d;
+  --grille:#2a3244; --axe:#7d8aa5;
+}
+html,body{margin:0;padding:0;background:var(--fond);color:var(--texte);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px}
+body{padding:0 0 env(safe-area-inset-bottom,0px)}
+h1{margin:0;font-size:26px;letter-spacing:.5px}
+h1 span{color:var(--accent);font-weight:400}
+header{padding:16px 16px 6px}
+.sous{margin:6px 0 0;color:var(--texte2);font-size:13px;max-width:78ch;line-height:1.5}
+.petit{color:var(--texte2);font-size:12.5px;margin:6px 0 0}
+button{font-family:inherit;font-size:14px;cursor:pointer;border:1px solid var(--bord);
+  background:var(--fond3);color:var(--texte);padding:11px 16px;border-radius:10px}
+button:hover{background:#2c364c}
+button.principal{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.principal:hover{background:#245fd6}
+button:disabled{opacity:.5;cursor:default}
+
+/* --- accueil --- */
+/* Un sélecteur d'identifiant l'emporte sur [hidden] : sans ce !important,
+   #accueil{display:flex} laisse l'accueil affiché sous la zone de travail
+   alors qu'on vient de le masquer. */
+[hidden]{display:none!important}
+#accueil{padding:10px 16px 24px;display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+#depot{flex:1 1 420px;min-height:230px;border:2px dashed var(--bord);border-radius:16px;
+  background:var(--fond2);padding:26px 20px;text-align:center;transition:border-color .15s,background .15s}
+#depot.survol{border-color:var(--accent);background:#1f2941}
+#depot .gros{font-size:20px;font-weight:600;margin-bottom:6px}
+#depot .boutons{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+#zoneColler{margin:16px auto 0;max-width:460px;min-height:54px;border:1px solid var(--bord);
+  border-radius:10px;background:var(--fond3);color:var(--texte2);padding:10px;outline:none;
+  font-size:13px;overflow:hidden}
+#zoneColler:focus{border-color:var(--accent)}
+#zoneColler img{max-width:100%;max-height:120px}
+#aideColler{margin-top:6px}
+#niveaux{flex:0 1 330px}
+#niveaux>label{display:block;color:var(--texte2);font-size:12.5px;margin-bottom:8px;
+  text-transform:uppercase;letter-spacing:.4px}
+.paliers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.paliers button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 6px;font-size:13.5px}
+.paliers button span{color:var(--texte2);font-size:11.5px}
+.paliers button.actif{background:var(--accent);border-color:var(--accent);color:#fff}
+.paliers button.actif span{color:#dbe6ff}
+
+/* --- barre de travail --- */
+#barreTravail{display:flex;gap:12px;align-items:center;padding:10px 16px;flex-wrap:wrap}
+#chrono{font-variant-numeric:tabular-nums;font-size:22px;font-weight:600;min-width:104px}
+#phase{color:var(--texte2);font-size:13.5px}
+#compteurLive{color:var(--texte2);font-size:13.5px;margin-left:auto;font-variant-numeric:tabular-nums}
+#btnStop{background:#7a2f2f;border-color:#a04545;color:#fff}
+#progression{height:4px;background:var(--fond3);margin:0 16px;border-radius:3px;overflow:hidden}
+#barre{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .2s}
+
+main{display:flex;gap:12px;padding:12px 16px 0;align-items:stretch}
+#zoneGraphe{position:relative;flex:1;min-width:0;background:#0f131c;border:1px solid var(--bord);
+  border-radius:12px;overflow:hidden;height:min(64vh,620px)}
+#graphe{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#graphe.attrape{cursor:grabbing}
+#etat{position:absolute;left:10px;top:10px;background:#0b0f18cc;border:1px solid var(--bord);
+  padding:6px 10px;border-radius:8px;font-size:12.5px;color:var(--texte2);pointer-events:none;
+  max-width:72%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#loader{position:absolute;left:10px;top:44px;max-width:min(470px,84%);background:#0b0f18e8;
+  border:1px solid var(--bord);border-radius:10px;padding:8px 10px;font-size:12.5px;z-index:4;
+  max-height:72%;overflow:auto}
+#loader h3{margin:0 0 6px;font-size:12px;color:var(--texte2);font-weight:600;letter-spacing:.3px;
+  cursor:pointer;user-select:none;display:flex;gap:8px;align-items:baseline}
+#loader h3 .fleche{margin-left:auto;opacity:.7}
+/* une fois fini, le panneau se replie sur son titre : on vient de passer
+   du temps à faire un dessin, autant le voir. Un clic le rouvre. */
+#loader.replie{max-height:none;overflow:visible}
+#loader.replie h3{margin:0}
+#loader.replie .etape{display:none}
+.etape{display:flex;gap:7px;align-items:flex-start;padding:2px 0;line-height:1.35}
+.etape .marque{flex:0 0 14px;text-align:center}
+.etape.encours .marque{color:var(--accent)}
+.etape.ok .marque{color:var(--accent2)}
+.etape.rate .marque{color:#f0a860}
+.etape .txt{color:var(--texte)}
+.etape .det{color:var(--texte2)}
+.etape .ms{margin-left:auto;color:var(--texte2);font-variant-numeric:tabular-nums;padding-left:8px}
+#reglette{position:absolute;left:12px;right:12px;bottom:56px;display:flex;align-items:center;gap:10px;z-index:3}
+#reglette input{flex:1;accent-color:var(--accent)}
+#reglette .bulle{background:#0b0f18cc;border:1px solid var(--bord);border-radius:999px;
+  padding:3px 10px;font-size:12px;color:var(--texte2);white-space:nowrap}
+#outilsGraphe{position:absolute;right:10px;bottom:10px;display:flex;gap:6px}
+#outilsGraphe button{padding:8px 10px;font-size:12.5px;background:#0b0f18cc}
+
+#panneau{width:380px;flex:0 0 380px;background:var(--fond2);border:1px solid var(--bord);
+  border-radius:12px;display:flex;flex-direction:column;height:min(64vh,620px)}
+#entete{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px;border-bottom:1px solid var(--bord);flex-wrap:wrap}
+#compteur{font-size:13px;color:var(--texte2);white-space:nowrap}
+#compteur b{color:var(--texte);font-size:15px}
+.copie{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.copie select{background:var(--fond3);color:var(--texte);border:1px solid var(--bord);
+  border-radius:8px;padding:8px 6px;font-family:inherit;font-size:12.5px}
+.copie button{padding:9px 12px;font-size:13px}
+.copie button.mini{padding:9px 10px;color:var(--texte2)}
+#liste{flex:1;overflow:auto;padding:6px}
+.eq{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border-radius:8px;font-size:13.5px;line-height:1.45}
+.eq:hover{background:var(--fond3)}
+.eq.masquee .form{opacity:.42;text-decoration:line-through}
+.pastille{width:12px;height:12px;border-radius:50%;flex:0 0 12px;margin-top:4px}
+.form{font-family:"Cambria Math","Latin Modern Math",Georgia,serif;font-size:15px;word-break:break-word}
+.dom{color:var(--texte2)}
+.actes{margin-left:auto;display:flex;gap:2px;opacity:.25}
+.eq:hover .actes{opacity:1}
+.ico{border:0;background:transparent;color:var(--texte2);padding:2px 6px;font-size:14px;line-height:1;border-radius:6px}
+.ico:hover{background:var(--bord);color:var(--texte)}
+@media (hover:none){ .actes{opacity:.8} }
+#pagination{display:flex;gap:6px;align-items:center;justify-content:center;padding:8px;
+  border-top:1px solid var(--bord);font-size:12.5px;color:var(--texte2)}
+#pagination button{padding:6px 10px;font-size:12.5px}
+
+#bilan{display:flex;gap:10px;flex-wrap:wrap;padding:14px 16px 0}
+.carte{background:var(--fond2);border:1px solid var(--bord);border-radius:12px;padding:10px 14px;min-width:132px}
+.carte b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.carte span{color:var(--texte2);font-size:12px}
+#journal{padding:12px 16px 26px;display:flex;flex-direction:column;gap:6px;max-height:190px;overflow:auto}
+.msg{padding:8px 11px;border-radius:10px;font-size:13.5px;max-width:92%}
+.msg.moi{align-self:flex-end;background:var(--accent);color:#fff}
+.msg.app{align-self:flex-start;background:var(--fond2);border:1px solid var(--bord);color:var(--texte)}
+.msg.app.rate{border-color:#8a5a2b;color:#f0c890}
+
+@media (max-width:900px){
+  main{flex-direction:column}
+  #panneau{width:auto;flex:1 1 auto;height:min(52vh,430px)}
+  #zoneGraphe{height:min(48vh,430px)}
+  .paliers{grid-template-columns:repeat(3,1fr)}
+  #niveaux{flex:1 1 100%}
+  #chrono{font-size:19px;min-width:88px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Funcora <span>1.0</span></h1>
+  <p class="sous">Donne-lui une image : il la redessine avec des fonctions mathématiques et tourne
+    jusqu'à ce qu'on ne voie plus la différence, puis il élague pour en garder le moins possible.</p>
+</header>
+
+<section id="accueil">
+  <div id="depot">
+    <div class="gros">Dépose une image ici</div>
+    <div class="petit"><b>Ctrl + V</b> pour coller · clic droit → Coller dans le cadre ci-dessous · ou choisis un fichier</div>
+    <div class="boutons">
+      <button id="btnChoisir" class="principal">Choisir une image</button>
+      <button id="btnColler">Coller le presse-papier</button>
+      <input type="file" id="fichier" accept="image/*" hidden>
+    </div>
+    <div id="zoneColler" contenteditable="true" spellcheck="false" title="Clic droit ici puis Coller"></div>
+    <div class="petit" id="aideColler">clic droit dans ce cadre → Coller</div>
+  </div>
+  <div id="niveaux">
+    <label>Niveau de réflexion</label>
+    <div class="paliers" id="paliers"></div>
+    <p class="petit" id="expNiveau"></p>
+  </div>
+</section>
+
+<section id="travail" hidden>
+  <div id="barreTravail">
+    <span id="chrono">0,0 s</span>
+    <span id="phase">…</span>
+    <span id="compteurLive"></span>
+    <button id="btnStop">Arrêter</button>
+    <button id="btnNouvelle">Nouvelle image</button>
+  </div>
+  <div id="progression"><div id="barre"></div></div>
+
+  <main>
+    <section id="zoneGraphe">
+      <canvas id="graphe"></canvas>
+      <div id="etat">Prêt.</div>
+      <div id="loader" hidden><div id="etapesListe"></div></div>
+      <div id="reglette" hidden>
+        <input type="range" id="curseurComp" min="0" max="100" value="100">
+        <span class="bulle" id="bulleComp">tracé</span>
+      </div>
+      <div id="outilsGraphe">
+        <button id="btnRempli">Fil de fer</button>
+        <button id="btnZoomM">−</button>
+        <button id="btnZoomP">+</button>
+        <button id="btnRecadrer">Recadrer</button>
+      </div>
+    </section>
+    <aside id="panneau">
+      <div id="entete">
+        <span id="compteur"><b>0</b> fonction</span>
+        <span class="copie">
+          <select id="format" title="Format des équations copiées">
+            <option value="latex">LaTeX (Desmos)</option>
+            <option value="texte">texte simple</option>
+          </select>
+          <button id="btnCopier">Copier pour Desmos</button>
+          <button id="btnCopierTout" class="mini" title="Tout copier d'un coup" hidden>tout</button>
+          <button id="btnFichierTxt" class="mini" title="Télécharger toutes les équations">.txt</button>
+          <button id="btnPng" class="mini" title="Télécharger l'image obtenue">PNG</button>
+        </span>
+      </div>
+      <div id="liste"></div>
+      <div id="pagination"></div>
+    </aside>
+  </main>
+
+  <div id="bilan"></div>
+  <div id="journal"></div>
+</section>
+
+<script>
+"use strict";
+/* =======================================================================
+   FUNCORA 0.3
+   Un dessin -> des fonctions. Tout est calculé ici, hors ligne.
+   Nouveautés 0.1 : sortie LaTeX que Desmos lit sans broncher, contours
+   plus nets, coins francs, plus aucun doublon.
+   Nouveautés 0.2 : curseur « fonctions » de 10 à 10 000 et curseur
+   couleurs de 1 à 100, plus de 1000 mots reconnus, 36 modèles à trois
+   niveaux de détail, image PNG, animation du tracé, liste d'équations
+   cliquable.
+   Plan du fichier :
+     1. Outils généraux
+     2. Familles de courbes (paramètres, évaluation, écriture)
+     3. Transformations (échelle, déplacement, miroir, rotation)
+     4. Ajustement : un nuage de points -> une équation
+     5. Contours : pixels -> polygones (marching squares)
+     6. Vectoriseur : mot / emoji / image / dessin -> courbes
+     7. Lexique des mots et modèles paramétriques faits main
+     8. Scène : plusieurs objets, placement, historique
+     9. Reproches : corriger le dessin en français
+    10. Rendu du repère et panneau des équations
+    11. Interface
+   ======================================================================= */
+
+/* ---------- 1. Outils généraux ---------------------------------------- */
+
+const PALETTE = ["#2d70f5","#3ec46d","#f2c744","#f08a35","#c07cf5","#f27a9b","#e2564d","#48c7d0"];
+
+function borne(v, min, max){ return v < min ? min : (v > max ? max : v); }
+
+function arrondi(v, d){
+  if (!isFinite(v)) return 0;
+  const p = Math.pow(10, d === undefined ? 4 : d);
+  const r = Math.round(v * p) / p;
+  return Object.is(r, -0) ? 0 : r;
+}
+
+// Arrondi à un nombre de chiffres significatifs : garde la précision des
+// petits coefficients (0.00057) sans traîner 12 décimales sur les grands.
+function net(v, sig){
+  if (!isFinite(v)) return 0;
+  if (Math.abs(v) < 1e-9) return 0;     // résidu de calcul flottant, pas un vrai nombre
+  const r = Number(v.toPrecision(sig || 6));
+  return Object.is(r, -0) ? 0 : r;
+}
+
+// Nombre écrit pour être relu : jamais de notation scientifique,
+// Desmos ne comprend pas « 1e-7 ».
+function nb(v, sig){
+  const r = net(v, sig);
+  if (r === 0) return "0";
+  const t = String(r);
+  if (t.indexOf("e") < 0 && t.indexOf("E") < 0) return t;
+  const abs = Math.abs(r);
+  if (abs >= 1e20) return String(Math.round(r/1e6)*1e6).replace(/e.*$/, "");
+  let d = r.toFixed(20).replace(/0+$/, "").replace(/\.$/, "");
+  return d === "-0" ? "0" : d;
+}
+
+// "sans accents, en minuscules" pour comparer les mots
+function normaliser(txt){
+  return String(txt).toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ").trim();
+}
+
+function distanceCouleur(a, b){
+  const dr = a[0]-b[0], dg = a[1]-b[1], db = a[2]-b[2];
+  return dr*dr + dg*dg + db*db;
+}
+
+function rgbHex(c){
+  const h = v => borne(Math.round(v),0,255).toString(16).padStart(2,"0");
+  return "#" + h(c[0]) + h(c[1]) + h(c[2]);
+}
+
+// Une couleur trop sombre disparaît sur fond noir : on l'éclaircit un peu.
+function lisibleSurFonce(c){
+  const lum = 0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2];
+  if (lum >= 70) return c.slice();
+  const k = 70 / Math.max(lum, 6);
+  return [borne(c[0]*k + 30, 0, 255), borne(c[1]*k + 30, 0, 255), borne(c[2]*k + 30, 0, 255)];
+}
+
+/* ---------- 2. Familles de courbes ------------------------------------
+   Une courbe garde SES PARAMÈTRES, jamais un texte figé : on peut donc la
+   déplacer, l'agrandir, la retourner, et n'écrire l'équation qu'à la fin.
+     { fam, p, axe, dom, col }
+   axe "x" : y = f(x), le domaine porte sur x.
+   axe "y" : x = f(y), le domaine porte sur y (morceaux verticaux).
+------------------------------------------------------------------------ */
+
+const FAMILLES = {
+  // y = a t + b
+  droite: {
+    ev: (p,t) => p.a*t + p.b,
+    ecrire: (p,v,st) => p.a === 0 ? nb(p.b) : coef(st, p.a) + v + terme(st, p.b)
+  },
+  // y = a (t - h)^2 + k   (sommet visible : la forme la plus lisible)
+  parabole: {
+    ev: (p,t) => p.a*(t-p.h)*(t-p.h) + p.k,
+    ecrire: (p,v,st) => coef(st, p.a) + st.car(dedans(st, v, p.h)) + terme(st, p.k)
+  },
+  // y = a u^2 + b u + c  avec u = t - x0   (sommet lointain : forme développée,
+  // recentrée sur le morceau pour que les coefficients restent petits et exacts)
+  parabole2: {
+    ev: (p,t) => { const u = t - p.x0; return p.a*u*u + p.b*u + p.c; },
+    ecrire: (p,v,st) => {
+      const u = p.x0 === 0 ? v : dedans(st, v, p.x0);
+      let s = coef(st, p.a) + st.car(u);
+      if (p.b > 0) s += st.plus + (p.b === 1 ? "" : nb(p.b)) + u;
+      else if (p.b < 0) s += st.moins + (p.b === -1 ? "" : nb(-p.b)) + u;
+      return s + terme(st, p.c);
+    }
+  },
+  // y = k + s sqrt(r^2 - (t - h)^2)
+  arc: {
+    ev: (p,t) => {
+      const d = p.r*p.r - (t-p.h)*(t-p.h);
+      return d < 0 ? NaN : p.k + p.s*Math.sqrt(d);
+    },
+    ecrire: (p,v,st) => {
+      const rac = st.rac(nb(p.r*p.r) + st.moins + st.car(dedans(st, v, p.h)));
+      if (p.k === 0) return (p.s >= 0 ? "" : "-") + rac;
+      return nb(p.k) + (p.s >= 0 ? st.plus : st.moins) + rac;
+    }
+  },
+  // y = k + s ry sqrt(1 - ((t - h)/rx)^2)
+  ellipse: {
+    ev: (p,t) => {
+      const u = (t-p.h)/p.rx;
+      const d = 1 - u*u;
+      return d < 0 ? NaN : p.k + p.s*p.ry*Math.sqrt(d);
+    },
+    ecrire: (p,v,st) => {
+      const q = st.car(st.quotient(v + signeNb(st, -p.h), nb(p.rx)));
+      const corps = (net(p.ry) === 1 ? "" : nb(p.ry) + st.mul) + st.rac("1" + st.moins + q);
+      if (p.k === 0) return (p.s >= 0 ? "" : "-") + corps;
+      return nb(p.k) + (p.s >= 0 ? st.plus : st.moins) + corps;
+    }
+  },
+  // y = a |t - h| + k
+  absolue: {
+    ev: (p,t) => p.a*Math.abs(t-p.h) + p.k,
+    ecrire: (p,v,st) => coefFonction(st, p.a) + st.val(v + signeNb(st, -p.h)) + terme(st, p.k)
+  },
+  // y = A sin(w (t - ph)) + k
+  sinus: {
+    ev: (p,t) => p.A*Math.sin(p.w*(t-p.ph)) + p.k,
+    ecrire: (p,v,st) => {
+      const arg = (net(p.w) === 1 ? "" : nb(p.w)) + (p.ph === 0 ? v : dedans(st, v, p.ph));
+      return coefFonction(st, p.A) + st.fon("sin", arg) + terme(st, p.k);
+    }
+  },
+  // y = a e^(b (t - h)) + k
+  expo: {
+    ev: (p,t) => p.a*Math.exp(p.b*(t-p.h)) + p.k,
+    ecrire: (p,v,st) => {
+      const arg = (net(p.b) === 1 ? "" : nb(p.b)) + (p.h === 0 ? v : dedans(st, v, p.h));
+      return coefFonction(st, p.a) + st.exp(arg) + terme(st, p.k);
+    }
+  },
+  // cercle entier : (x - h)^2 + (y - k)^2 = r^2
+  cercle: { ev: null, ecrire: null },
+  // droite horizontale ou verticale : t = c
+  constante: { ev: (p) => p.c, ecrire: (p) => nb(p.c) }
+};
+
+/* --- Écriture des équations : trois styles, un seul jeu de formules ---
+   "uni"   : joli, pour le panneau (≤ √ ²)
+   "texte" : ASCII tapable à la main
+   "latex" : exactement ce que Desmos met dans le presse-papier quand on
+             copie une expression — le seul format qu'il relit sans erreur. */
+const STYLES = {
+  uni: {
+    mul: "",
+    plus: " + ", moins: " - ", eg: " = ", inf: " ≤ ",
+    par: s => "(" + s + ")",
+    car: s => s + "²",
+    rac: s => "√(" + s + ")",
+    val: s => "|" + s + "|",
+    fon: (f, s) => f + "(" + s + ")",
+    exp: s => "e^(" + s + ")",
+    quotient: (a, b) => "(" + (/[-+*\/]/.test(a) ? "(" + a + ")" : a) + "/" + b + ")",
+    acc: s => " {" + s + "}"
+  },
+  texte: {
+    mul: "*",
+    plus: "+", moins: "-", eg: "=", inf: "<=",
+    par: s => "(" + s + ")",
+    car: s => s + "^2",
+    rac: s => "sqrt(" + s + ")",
+    val: s => "abs(" + s + ")",
+    fon: (f, s) => f + "(" + s + ")",
+    exp: s => "e^(" + s + ")",
+    quotient: (a, b) => "(" + (/[-+*\/]/.test(a) ? "(" + a + ")" : a) + "/" + b + ")",
+    acc: s => "{" + s + "}"
+  },
+  latex: {
+    mul: "",
+    plus: "+", moins: "-", eg: "=", inf: "\\le ",
+    par: s => "\\left(" + s + "\\right)",
+    car: s => s + "^{2}",
+    rac: s => "\\sqrt{" + s + "}",
+    val: s => "\\left|" + s + "\\right|",
+    fon: (f, s) => "\\" + f + "\\left(" + s + "\\right)",
+    exp: s => "e^{" + s + "}",
+    quotient: (a, b) => "\\left(\\frac{" + a + "}{" + b + "}\\right)",
+    acc: s => "\\left\\{" + s + "\\right\\}"
+  }
+};
+
+function coef(st, a){            // le nombre devant : 1 et -1 ne s'écrivent pas
+  const n = net(a);
+  return n === 1 ? "" : (n === -1 ? "-" : nb(n));
+}
+// Devant une fonction (sqrt, sin, |…|), le style ASCII écrit le × en clair :
+// « 2.8*sqrt(...) » ne peut pas se lire comme un produit de lettres s·q·r·t.
+function coefFonction(st, a){
+  const c = coef(st, a);
+  return (c === "" || c === "-") ? c : c + st.mul;
+}
+function terme(st, v){           // le « + 4 » ou « - 4 » de la fin
+  const n = net(v);
+  if (n > 0) return st.plus + nb(n);
+  if (n < 0) return st.moins + nb(-n);
+  return "";
+}
+function signeNb(st, v){         // « - 3 » collé derrière une variable
+  const n = net(v);
+  if (n > 0) return st.plus + nb(n);
+  if (n < 0) return st.moins + nb(-n);
+  return "";
+}
+function dedans(st, v, h){       // (x - h), ou x tout seul si h vaut 0
+  return net(h) === 0 ? v : st.par(v + signeNb(st, -h));
+}
+
+function courbe(fam, p, axe, dom, col){
+  return { fam: fam, p: p, axe: axe || "x", dom: [dom[0], dom[1]], col: col || PALETTE[0] };
+}
+
+function evaluer(c, t){
+  const f = FAMILLES[c.fam];
+  return f && f.ev ? f.ev(c.p, t) : NaN;
+}
+
+function pointCourbe(c, t){
+  const v = evaluer(c, t);
+  return c.axe === "x" ? [t, v] : [v, t];
+}
+
+// Une courbe, transformée en suite de points à relier. Les arcs et les
+// ellipses sont échantillonnés plus serré aux extrémités, là où la pente
+// s'emballe : sinon le contour se coupe les coins.
+function echantillonsCourbe(c, n){
+  const out = [];
+  if (c.fam === "cercle"){
+    const N = Math.max(n, 28);
+    for (let i = 0; i <= N; i++){
+      const a = i*2*Math.PI/N;
+      out.push([c.p.h + c.p.r*Math.cos(a), c.p.k + c.p.r*Math.sin(a)]);
+    }
+    return out;
+  }
+  const t0 = Math.min(c.dom[0], c.dom[1]), t1 = Math.max(c.dom[0], c.dom[1]);
+  const serre = (c.fam === "arc" || c.fam === "ellipse");
+  const N = Math.max(2, n|0);
+  for (let i = 0; i <= N; i++){
+    const u = i/N;
+    const t = serre ? (t0+t1)/2 + (t1-t0)/2*Math.sin(Math.PI*(u-0.5)) : t0 + (t1-t0)*u;
+    const v = evaluer(c, t);
+    if (!isFinite(v)){ out.push(null); continue; }
+    out.push(c.axe === "x" ? [t, v] : [v, t]);
+  }
+  return out;
+}
+
+// Les paramètres écrits sont EXACTEMENT ceux qui servent au tracé :
+// on les arrondit une fois pour toutes, sinon l'équation et la courbe
+// affichée ne racontent pas la même chose.
+function normaliserCourbe(c){
+  const p = {};
+  for (const k in c.p) p[k] = typeof c.p[k] === "number" ? net(c.p[k], 6) : c.p[k];
+  const d = [net(c.dom[0], 6), net(c.dom[1], 6)];
+  return { fam: c.fam, p: p, axe: c.axe, dom: [Math.min(d[0],d[1]), Math.max(d[0],d[1])], col: c.col, part: c.part };
+}
+
+// Une courbe qu'on ne saurait ni tracer ni écrire proprement
+function courbeValide(c){
+  if (!c || !FAMILLES[c.fam]) return false;
+  for (const k in c.p){
+    const v = c.p[k];
+    if (typeof v === "number" && (!isFinite(v) || Math.abs(v) > 1e6)) return false;
+  }
+  if (!isFinite(c.dom[0]) || !isFinite(c.dom[1])) return false;
+  if ((c.fam === "arc" || c.fam === "cercle") && !(c.p.r > 0 && c.p.r < 5000)) return false;
+  if (c.fam === "ellipse" && !(c.p.rx > 0 && c.p.rx < 5000 && c.p.ry !== 0)) return false;
+  if (c.fam === "cercle") return true;
+  return Math.abs(c.dom[1] - c.dom[0]) > 1e-6;
+}
+
+function texteEquation(c, style){
+  const st = STYLES[style] || STYLES.uni;
+  const v = c.axe === "x" ? "x" : "y";
+  const sortie = c.axe === "x" ? "y" : "x";
+  const d0 = nb(Math.min(c.dom[0], c.dom[1])), d1 = nb(Math.max(c.dom[0], c.dom[1]));
+  const dom = st.acc(d0 + st.inf + v + st.inf + d1);
+
+  if (c.fam === "cercle"){
+    return st.car(dedans(st, "x", c.p.h)) + st.plus + st.car(dedans(st, "y", c.p.k)) +
+           st.eg + nb(c.p.r*c.p.r);
+  }
+  if (c.fam === "constante") return sortie + st.eg + nb(c.p.c) + dom;
+  return sortie + st.eg + FAMILLES[c.fam].ecrire(c.p, v, st) + dom;
+}
+
+/* --- Relecture des équations -----------------------------------------
+   Un petit analyseur du LaTeX que Funcora produit : chaque équation
+   exportée est relue puis recalculée, et si elle ne redonne pas la courbe
+   tracée, elle n'est pas proposée. Desmos lit exactement ce sous-ensemble
+   (\sqrt{}, \frac{}{}, \left \right, ^{}, \sin, \left| \right|, e^{}).  */
+/* Le style affiché à l'écran écrit « x² », « √(…) », « ≤ » ; le LaTeX de
+   Desmos écrit « x^{2} », « \sqrt{…} », « \le ». Le relecteur ne connaît que
+   la seconde écriture : on y ramène la première avant de lire, pour que ce
+   qui s'affiche dans la liste soit vérifié exactement comme ce qui s'exporte.
+   Les espaces partent aussi — « y = 2x » et « y=2x » sont la même équation. */
+function normaliserEcriture(src){
+  let t = src
+    .replace(/\u00b2/g, "^{2}")
+    .replace(/\u2264/g, "\\le")
+    .replace(/[\u00d7\u00b7]/g, "*")
+    .replace(/\u2212/g, "-")
+    .replace(/\s+/g, "");
+  // « √(…) » devient « \sqrt{…} ». Une expression régulière ne suffit pas :
+  // sous la racine d'un arc il y a d'autres parenthèses (√(6.25-(x-2)^{2})),
+  // il faut donc suivre le compte pour trouver la bonne fermante.
+  for (let i = t.indexOf("\u221a("); i >= 0; i = t.indexOf("\u221a(")){
+    let creux = 0, j = i + 1;
+    for (; j < t.length; j++){
+      if (t[j] === "(") creux++;
+      else if (t[j] === ")" && --creux === 0) break;
+    }
+    if (j >= t.length) break;          // parenthèse jamais refermée : on laisse tel quel
+    t = t.slice(0, i) + "\\sqrt{" + t.slice(i + 2, j) + "}" + t.slice(j + 1);
+  }
+  return t;
+}
+
+function lireExpression(src){
+  const t = normaliserEcriture(src).replace(/\\left/g, "").replace(/\\right/g, "");
+  let i = 0, dansValeur = 0;
+  const fini = () => i >= t.length;
+  function attendre(c){ if (t[i] !== c) throw new Error("attendu « " + c + " » en " + i); i++; }
+  function debutFacteur(){
+    if (fini()) return false;
+    const c = t[i];
+    if (c === "|") return dansValeur === 0;
+    return /[0-9.a-z(\\]/.test(c);
+  }
+  function motLettres(){
+    const d = i;
+    while (!fini() && /[a-z]/.test(t[i])) i++;
+    return t.slice(d, i);
+  }
+  function nombre(){
+    const d = i;
+    while (!fini() && /[0-9.]/.test(t[i])) i++;
+    const v = parseFloat(t.slice(d, i));
+    if (!isFinite(v)) throw new Error("nombre illisible");
+    return () => v;
+  }
+  function groupe(){ attendre("{"); const e = expression(); attendre("}"); return e; }
+  function primaire(){
+    if (fini()) throw new Error("fin inattendue");
+    const c = t[i];
+    if (c === "("){ i++; const e = expression(); attendre(")"); return e; }
+    if (c === "|"){ i++; dansValeur++; const e = expression(); dansValeur--; attendre("|"); return (x,y) => Math.abs(e(x,y)); }
+    if (c === "\\"){
+      if (t.startsWith("\\sqrt", i)){ i += 5; const e = groupe(); return (x,y) => Math.sqrt(e(x,y)); }
+      if (t.startsWith("\\frac", i)){ i += 5; const a = groupe(), b = groupe(); return (x,y) => a(x,y)/b(x,y); }
+      if (t.startsWith("\\sin", i)){ i += 4; const e = primaire(); return (x,y) => Math.sin(e(x,y)); }
+      if (t.startsWith("\\cos", i)){ i += 4; const e = primaire(); return (x,y) => Math.cos(e(x,y)); }
+      throw new Error("commande inconnue : " + t.slice(i, i+6));
+    }
+    if (/[a-z]/.test(c)){
+      const mot = motLettres();
+      if (mot === "x") return (x) => x;
+      if (mot === "y") return (x,y) => y;
+      if (mot === "e"){
+        if (t[i] === "^"){ i++; const e = t[i] === "{" ? groupe() : primaire(); return (x,y) => Math.exp(e(x,y)); }
+        return () => Math.E;
+      }
+      if (mot === "sqrt"){ const e = primaire(); return (x,y) => Math.sqrt(e(x,y)); }
+      if (mot === "abs"){ const e = primaire(); return (x,y) => Math.abs(e(x,y)); }
+      if (mot === "sin"){ const e = primaire(); return (x,y) => Math.sin(e(x,y)); }
+      if (mot === "cos"){ const e = primaire(); return (x,y) => Math.cos(e(x,y)); }
+      throw new Error("nom inconnu : " + mot);
+    }
+    if (/[0-9.]/.test(c)) return nombre();
+    throw new Error("caractère inattendu : " + c);
+  }
+  function puissance(){
+    let base = primaire();
+    while (!fini() && t[i] === "^"){
+      i++;
+      const e = t[i] === "{" ? groupe() : primaire();
+      const b = base;
+      base = (x,y) => Math.pow(b(x,y), e(x,y));
+    }
+    return base;
+  }
+  function facteur(){
+    if (!fini() && t[i] === "-"){ i++; const e = facteur(); return (x,y) => -e(x,y); }
+    if (!fini() && t[i] === "+"){ i++; return facteur(); }
+    return puissance();
+  }
+  function produit(){
+    let a = facteur();
+    for (;;){
+      if (!fini() && (t[i] === "*" || t[i] === "/")){
+        const op = t[i]; i++;
+        const b = facteur(), g = a;
+        a = op === "*" ? ((x,y) => g(x,y)*b(x,y)) : ((x,y) => g(x,y)/b(x,y));
+        continue;
+      }
+      if (debutFacteur()){                     // multiplication implicite : 2x, 0.4\sin(...)
+        const b = facteur(), g = a;
+        a = (x,y) => g(x,y)*b(x,y);
+        continue;
+      }
+      break;
+    }
+    return a;
+  }
+  function expression(){
+    let a = produit();
+    while (!fini() && (t[i] === "+" || t[i] === "-")){
+      const op = t[i]; i++;
+      const b = produit(), g = a;
+      a = op === "+" ? ((x,y) => g(x,y)+b(x,y)) : ((x,y) => g(x,y)-b(x,y));
+    }
+    return a;
+  }
+  const f = expression();
+  if (!fini()) throw new Error("morceau non lu : " + t.slice(i));
+  return f;
+}
+
+function relireEquation(brut){
+  // la restriction est en fin d'équation : \left\{a\le x\le b\right\}, {a<=x<=b}
+  // ou, à l'écran, {a ≤ x ≤ b}. L'accolade de « ^{2} » n'en est pas une : le
+  // motif est ancré sur la fin et doit contenir un signe de comparaison.
+  const texte = normaliserEcriture(brut);
+  let corps = texte, dom = null;
+  const mL = texte.match(/\\left\\\{(.*)\\right\\\}$/);
+  const mA = texte.match(/\{([^{}]*)\}$/);
+  const compare = x => /<=|\\le/.test(x);
+  const dedansAcc = mL ? mL[1] : (mA && compare(mA[1]) ? mA[1] : null);
+  if (dedansAcc !== null){
+    corps = texte.slice(0, texte.length - (mL ? mL[0].length : mA[0].length));
+    const morceaux = dedansAcc.split(/\\le/.test(dedansAcc) ? "\\le" : "<=");
+    if (morceaux.length !== 3) throw new Error("restriction illisible");
+    dom = [parseFloat(morceaux[0]), parseFloat(morceaux[2])];
+    if (!isFinite(dom[0]) || !isFinite(dom[1])) throw new Error("bornes illisibles");
+  }
+  const iEg = corps.indexOf("=");
+  if (iEg < 0) throw new Error("il manque le =");
+  const g = corps.slice(0, iEg), d = corps.slice(iEg + 1);
+  return {
+    gauche: lireExpression(g), droite: lireExpression(d),
+    simple: (g === "y" || g === "x") ? g : null, dom: dom
+  };
+}
+
+// Relit l'équation d'une courbe et vérifie qu'elle redonne bien la courbe tracée
+function verifierCourbe(c, style){
+  const txt = texteEquation(c, style || "latex");
+  try {
+    const eq = relireEquation(txt);
+    let ecart = 0;
+    if (eq.simple){
+      if (!eq.dom) throw new Error("domaine manquant");
+      for (let i = 0; i < 12; i++){
+        const t = c.dom[0] + (c.dom[1] - c.dom[0])*(i + 0.5)/12;
+        const attendu = evaluer(c, t);
+        if (!isFinite(attendu)) continue;
+        const obtenu = eq.simple === "y" ? eq.droite(t, 0) : eq.droite(0, t);
+        if (!isFinite(obtenu)) throw new Error("valeur impossible");
+        ecart = Math.max(ecart, Math.abs(attendu - obtenu));
+      }
+      ecart = Math.max(ecart, Math.abs(eq.dom[0] - c.dom[0]), Math.abs(eq.dom[1] - c.dom[1]));
+    } else {
+      for (const q of echantillonsCourbe(c, 12)){
+        if (!q) continue;
+        const g = eq.gauche(q[0], q[1]), d = eq.droite(q[0], q[1]);
+        if (!isFinite(g) || !isFinite(d)) throw new Error("valeur impossible");
+        ecart = Math.max(ecart, Math.abs(Math.sqrt(Math.max(g,0)) - Math.sqrt(Math.max(d,0))));
+      }
+    }
+    return { ok: ecart < 1e-3, ecart: ecart, txt: txt };
+  } catch (e){
+    return { ok: false, ecart: Infinity, txt: txt, raison: e.message };
+  }
+}
+
+/* ---------- 3. Transformations ---------------------------------------
+   Elles agissent sur les PARAMÈTRES, pour que les équations restent
+   propres après un déplacement ou un agrandissement.
+------------------------------------------------------------------------ */
+
+// Décale l'entrée : f(t) devient f(t - d)
+function decalerEntree(c, d){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite":  p.b = p.b - p.a*d; break;
+    case "parabole2": p.x0 = p.x0 + d; break;
+    case "parabole": case "absolue": p.h = p.h + d; break;
+    case "arc": case "ellipse": p.h = p.h + d; break;
+    case "sinus": p.ph = p.ph + d; break;
+    case "expo": p.h = p.h + d; break;
+    case "constante": break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: [c.dom[0]+d, c.dom[1]+d], col: c.col };
+}
+
+// Décale la sortie : f(t) devient f(t) + d
+function decalerSortie(c, d){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.b += d; break;
+    case "parabole2": p.c += d; break;
+    case "parabole": case "absolue": case "arc": case "ellipse": case "sinus": case "expo":
+      p.k += d; break;
+    case "constante": p.c += d; break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: c.dom.slice(), col: c.col };
+}
+
+// Inverse la sortie : f(t) devient -f(t)
+function opposerSortie(c){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.a = -p.a; p.b = -p.b; break;
+    case "parabole2": p.a = -p.a; p.b = -p.b; p.c = -p.c; break;
+    case "parabole": case "absolue": p.a = -p.a; p.k = -p.k; break;
+    case "arc": case "ellipse": p.k = -p.k; p.s = -p.s; break;
+    case "sinus": p.A = -p.A; p.k = -p.k; break;
+    case "expo": p.a = -p.a; p.k = -p.k; break;
+    case "constante": p.c = -p.c; break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: c.dom.slice(), col: c.col };
+}
+
+// Inverse l'entrée : f(t) devient f(-t)
+function opposerEntree(c){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.a = -p.a; break;
+    case "parabole2": p.x0 = -p.x0; p.b = -p.b; break;
+    case "parabole": case "absolue": p.h = -p.h; break;
+    case "arc": case "ellipse": p.h = -p.h; break;
+    case "sinus": p.A = -p.A; p.ph = -p.ph; break;
+    case "expo": p.b = -p.b; p.h = -p.h; break;
+    case "constante": break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: [-c.dom[1], -c.dom[0]], col: c.col };
+}
+
+function agrandir(c, s){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:c.p.h*s, k:c.p.k*s, r:c.p.r*s}, axe:c.axe, dom:[c.dom[0]*s, c.dom[1]*s], col:c.col };
+  }
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.b *= s; break;
+    case "parabole2": p.a = p.a/s; p.c *= s; p.x0 *= s; break;
+    case "parabole": p.a = p.a/s; p.h *= s; p.k *= s; break;
+    case "absolue": p.h *= s; p.k *= s; break;
+    case "arc": p.h *= s; p.k *= s; p.r *= s; break;
+    case "ellipse": p.h *= s; p.k *= s; p.rx *= s; p.ry *= s; break;
+    case "sinus": p.A *= s; p.w = p.w/s; p.ph *= s; p.k *= s; break;
+    case "expo": p.a *= s; p.b = p.b/s; p.h *= s; p.k *= s; break;
+    case "constante": p.c *= s; break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: [c.dom[0]*s, c.dom[1]*s], col: c.col };
+}
+
+function deplacer(c, dx, dy){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:c.p.h+dx, k:c.p.k+dy, r:c.p.r}, axe:c.axe, dom:c.dom.slice(), col:c.col };
+  }
+  const dEntree = c.axe === "x" ? dx : dy;
+  const dSortie = c.axe === "x" ? dy : dx;
+  return decalerSortie(decalerEntree(c, dEntree), dSortie);
+}
+
+// Miroir gauche/droite : (x, y) -> (-x, y)
+function miroirX(c){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:-c.p.h, k:c.p.k, r:c.p.r}, axe:c.axe, dom:c.dom.slice(), col:c.col };
+  }
+  return c.axe === "x" ? opposerEntree(c) : opposerSortie(c);
+}
+
+// Quart de tour : (x, y) -> (-y, x)
+function tourner90(c){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:-c.p.k, k:c.p.h, r:c.p.r}, axe:c.axe, dom:c.dom.slice(), col:c.col };
+  }
+  const o = opposerSortie(c);
+  return { fam:o.fam, p:o.p, axe: c.axe === "x" ? "y" : "x", dom:o.dom.slice(), col:o.col };
+}
+
+function transformerCourbe(c, t){
+  let r = c;
+  if (t.mir) r = miroirX(r);
+  if (t.rot){ for (let i = 0; i < ((t.rot % 4) + 4) % 4; i++) r = tourner90(r); }
+  if (t.s && t.s !== 1) r = agrandir(r, t.s);
+  if (t.dx || t.dy) r = deplacer(r, t.dx || 0, t.dy || 0);
+  if (r !== c){ r.part = c.part; r.niv = c.niv; }
+  return r;
+}
+
+function transformerListe(liste, t){
+  let out = liste;
+  if (t.mir)  out = out.map(miroirX);
+  if (t.rot){ for (let i = 0; i < ((t.rot % 4) + 4) % 4; i++) out = out.map(tourner90); }
+  if (t.s && t.s !== 1) out = out.map(c => agrandir(c, t.s));
+  if (t.dx || t.dy) out = out.map(c => deplacer(c, t.dx || 0, t.dy || 0));
+  return out;
+}
+
+/* ---------- 4. Ajustement : des points -> une équation ---------------- */
+
+// Résout un petit système linéaire (pivot de Gauss). m : n x (n+1).
+function resoudre(m){
+  const n = m.length;
+  for (let i = 0; i < n; i++){
+    let piv = i;
+    for (let r = i+1; r < n; r++) if (Math.abs(m[r][i]) > Math.abs(m[piv][i])) piv = r;
+    if (Math.abs(m[piv][i]) < 1e-12) return null;
+    const tmp = m[i]; m[i] = m[piv]; m[piv] = tmp;
+    for (let r = 0; r < n; r++){
+      if (r === i) continue;
+      const f = m[r][i]/m[i][i];
+      for (let ccc = i; ccc <= n; ccc++) m[r][ccc] -= f*m[i][ccc];
+    }
+  }
+  const sol = [];
+  for (let i = 0; i < n; i++) sol.push(m[i][n]/m[i][i]);
+  return sol;
+}
+
+// Erreur maximale d'une famille sur le morceau
+function erreurMax(ts, vs, f){
+  let e = 0;
+  for (let i = 0; i < ts.length; i++){
+    const d = Math.abs(vs[i] - f(ts[i]));
+    if (!isFinite(d)) return Infinity;
+    if (d > e) e = d;
+  }
+  return e;
+}
+
+function ajusterDroite(ts, vs){
+  const n = ts.length;
+  let st = 0, sv = 0, stt = 0, stv = 0;
+  for (let i = 0; i < n; i++){ st += ts[i]; sv += vs[i]; stt += ts[i]*ts[i]; stv += ts[i]*vs[i]; }
+  const den = n*stt - st*st;
+  if (Math.abs(den) < 1e-12) return null;
+  const a = (n*stv - st*sv)/den;
+  const b = (sv - a*st)/n;
+  return { a: a, b: b };
+}
+
+// Ajustement recentré sur le morceau (u = t - x0) : les coefficients restent
+// petits, donc justes une fois arrondis — c'est ce que Desmos relira.
+function ajusterParabole(ts, vs){
+  const n = ts.length;
+  const x0 = arrondi((ts[0] + ts[n-1])/2, 3);
+  let s = [0,0,0,0,0], sv = [0,0,0];
+  for (let i = 0; i < n; i++){
+    const u = ts[i] - x0, v = vs[i];
+    const u2 = u*u;
+    s[0] += 1; s[1] += u; s[2] += u2; s[3] += u2*u; s[4] += u2*u2;
+    sv[0] += v; sv[1] += v*u; sv[2] += v*u2;
+  }
+  const sol = resoudre([
+    [s[2], s[1], s[0], sv[0]],
+    [s[3], s[2], s[1], sv[1]],
+    [s[4], s[3], s[2], sv[2]]
+  ]);
+  if (!sol) return null;
+  const A = sol[0], B = sol[1], C = sol[2];        // v = A u^2 + B u + C
+  if (Math.abs(A) < 1e-9) return null;
+  const du = -B/(2*A);
+  return { A: A, B: B, C: C, x0: x0, h: x0 + du, k: C - A*du*du };
+}
+
+// Cercle par moindres carrés (méthode de Kåsa)
+function ajusterCercle(ts, vs){
+  const n = ts.length;
+  let stt = 0, svv = 0, stv = 0, st = 0, sv = 0, sq = 0, sqt = 0, sqv = 0;
+  for (let i = 0; i < n; i++){
+    const t = ts[i], v = vs[i], q = t*t + v*v;
+    stt += t*t; svv += v*v; stv += t*v; st += t; sv += v;
+    sq += q; sqt += q*t; sqv += q*v;
+  }
+  const sol = resoudre([
+    [stt, stv, st, sqt],
+    [stv, svv, sv, sqv],
+    [st,  sv,  n,  sq]
+  ]);
+  if (!sol) return null;
+  const h = sol[0]/2, k = sol[1]/2;
+  const r2 = sol[2] + h*h + k*k;
+  if (!(r2 > 0)) return null;
+  return { h: h, k: k, r: Math.sqrt(r2) };
+}
+
+// Le morceau est-il bien une fonction de t (t qui avance toujours) ?
+function monotone(ts){
+  const n = ts.length;
+  if (n < 3) return true;
+  const total = ts[n-1] - ts[0];
+  if (Math.abs(total) < 1e-9) return false;
+  const sens = Math.sign(total);
+  const pas = Math.abs(total)/(n-1)*0.35;
+  for (let i = 1; i < n; i++){
+    const d = (ts[i] - ts[i-1])*sens;
+    if (d < -pas) return false;
+  }
+  return true;
+}
+
+/* Coeur du vectoriseur : trouve l'équation qui colle au morceau.
+   Par défaut la plus simple qui tient dans la tolérance ; en mode « meilleur »
+   (petit budget, chaque fonction compte) celle qui colle vraiment le mieux —
+   un arc dit en une équation ce que cinq segments disent mal. */
+function ajusterMorceau(pts, tol, opts){
+  const n = pts.length;
+  if (n < 2) return null;
+  let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
+  for (let i = 0; i < n; i++){
+    const p = pts[i];
+    if (p[0] < xmin) xmin = p[0]; if (p[0] > xmax) xmax = p[0];
+    if (p[1] < ymin) ymin = p[1]; if (p[1] > ymax) ymax = p[1];
+  }
+  const axe = (xmax - xmin) >= (ymax - ymin) ? "x" : "y";
+  const ts = [], vs = [];
+  for (let i = 0; i < n; i++){
+    ts.push(axe === "x" ? pts[i][0] : pts[i][1]);
+    vs.push(axe === "x" ? pts[i][1] : pts[i][0]);
+  }
+  if (!monotone(ts)) return null;
+  const dom = [Math.min(ts[0], ts[n-1]), Math.max(ts[0], ts[n-1])];
+  if (dom[1] - dom[0] < 1e-9) return null;
+  const meilleur = opts && opts.meilleur;
+  let choix = null, choixErreur = Infinity;
+  const garder = (c, e) => { if (c && e < choixErreur){ choix = c; choixErreur = e; } };
+
+  // 1) une droite ?
+  const dr = ajusterDroite(ts, vs);
+  const errDroite = dr ? erreurMax(ts, vs, t => dr.a*t + dr.b) : Infinity;
+  if (dr && errDroite <= tol && !meilleur){
+    if (Math.abs(dr.a) < 1e-6) return courbe("constante", {c: arrondi(dr.b)}, axe, dom);
+    return courbe("droite", dr, axe, dom);
+  }
+  if (dr) garder(Math.abs(dr.a) < 1e-6 ? courbe("constante", {c: arrondi(dr.b)}, axe, dom)
+                                       : courbe("droite", dr, axe, dom), errDroite);
+  if (n < 5) return choixErreur <= tol || meilleur ? choix : null;
+
+  // 2) un arc de cercle ?
+  const ce = ajusterCercle(ts, vs);
+  if (ce && isFinite(ce.r) && ce.r < (dom[1]-dom[0])*25){
+    const milieu = vs[Math.floor(n/2)];
+    const s = milieu >= ce.k ? 1 : -1;
+    const p = { h: ce.h, k: ce.k, r: ce.r, s: s };
+    let bon = true;
+    for (let i = 0; i < n; i++){
+      if (Math.abs(ts[i] - ce.h) > ce.r*0.999){ bon = false; break; }
+      if ((vs[i] - ce.k)*s < -tol){ bon = false; break; }
+    }
+    if (bon){
+      const err = erreurMax(ts, vs, t => FAMILLES.arc.ev(p, t));
+      if (err <= tol && !meilleur) return courbe("arc", p, axe, dom);
+      garder(courbe("arc", p, axe, dom), err);
+    }
+  }
+
+  // 3) une parabole ?
+  const pa = ajusterParabole(ts, vs);
+  if (pa){
+    const p2 = { a: pa.A, b: pa.B, c: pa.C, x0: pa.x0 };
+    const err = erreurMax(ts, vs, t => FAMILLES.parabole2.ev(p2, t));
+    const span = dom[1] - dom[0];
+    // sommet dans le morceau (ou juste à côté) : forme sommet, plus lisible
+    const cp = (isFinite(pa.h) && pa.h > dom[0] - span && pa.h < dom[1] + span && Math.abs(pa.h) < 1e3)
+      ? courbe("parabole", { a: pa.A, h: pa.h, k: pa.k }, axe, dom)
+      : courbe("parabole2", p2, axe, dom);
+    if (err <= tol && !meilleur) return cp;
+    garder(cp, err);
+  }
+
+  if (meilleur && choix) return choix;          // la moins fausse, faute de mieux
+  return choixErreur <= tol ? choix : null;
+}
+
+/* Les vrais coins du dessin : un virage serré ne doit jamais être avalé
+   par un ajustement, sinon les toits et les étoiles s'arrondissent.   */
+function indicesCoins(pts, seuil, f){
+  const n = pts.length, out = [];
+  if (n < 2*f + 3) return out;
+  for (let i = f; i < n - f; i++){
+    const ax = pts[i][0]-pts[i-f][0], ay = pts[i][1]-pts[i-f][1];
+    const bx = pts[i+f][0]-pts[i][0], by = pts[i+f][1]-pts[i][1];
+    if ((ax*ax+ay*ay) < 1e-12 || (bx*bx+by*by) < 1e-12) continue;
+    const ang = Math.abs(Math.atan2(ax*by - ay*bx, ax*bx + ay*by));
+    if (ang > seuil){ out.push(i); i += f - 1; }
+  }
+  return out;
+}
+
+function fusionnerIndices(a, b){
+  const vus = new Set();
+  const out = [];
+  for (const liste of [a, b]) for (const i of liste) if (!vus.has(i)){ vus.add(i); out.push(i); }
+  out.sort((x, y) => x - y);
+  return out;
+}
+
+/* Découpe une polyligne en morceaux et donne la liste des courbes.
+   On part des sommets « importants » (Douglas-Peucker) plus les coins,
+   et on essaie d'aller le plus loin possible avec une seule équation. */
+function polyligneVersCourbes(pts, tol, opts){
+  opts = opts || {};
+  // La fenêtre de détection des coins suit la tolérance : en dessin grossier,
+  // seuls les virages vraiment francs comptent.
+  let somme = 0;
+  for (let i = 1; i < pts.length; i++) somme += Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]);
+  const pas = somme/Math.max(pts.length - 1, 1);
+  const fenetre = borne(Math.round(tol/Math.max(pas, 1e-9)), 3, 40);
+  const dp = indicesDouglasPeucker(pts, tol);
+  const anc = opts.coins === false ? dp
+    : fusionnerIndices(dp, indicesCoins(pts, opts.seuilCoin || 0.62, fenetre));
+  const out = [];
+  // Chemin rapide (mode Max) : un intervalle entre deux sommets = une équation,
+  // sans chercher à étendre. C'est ce qui rend les gros volumes tenables.
+  if (opts.rapide){
+    for (let k = 0; k + 1 < anc.length; k++){
+      const morceau = pts.slice(anc[k], anc[k+1] + 1);
+      const c = ajusterMorceau(morceau, tol, opts) || droiteEntre(pts[anc[k]], pts[anc[k+1]]);
+      if (c){ c._r = [anc[k], anc[k+1]]; out.push(c); }
+    }
+    return out;
+  }
+  let i = 0;
+  let garde = 0;
+  while (i < anc.length - 1 && garde++ < 20000){
+    let meilleur = null, meilleurJ = i + 1;
+    for (let j = i + 1; j < anc.length; j++){
+      const morceau = pts.slice(anc[i], anc[j] + 1);
+      if (morceau.length > 600) break;
+      const c = ajusterMorceau(morceau, tol, opts);
+      if (!c){ if (j > i + 1) break; else continue; }
+      meilleur = c; meilleurJ = j;
+    }
+    if (!meilleur){
+      const a = pts[anc[i]], b = pts[anc[i+1]];
+      meilleur = droiteEntre(a, b);
+      meilleurJ = i + 1;
+    }
+    if (meilleur){ meilleur._r = [anc[i], anc[meilleurJ]]; out.push(meilleur); }
+    i = meilleurJ;
+  }
+  return out;
+}
+
+function droiteEntre(a, b){
+  const dx = b[0]-a[0], dy = b[1]-a[1];
+  if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) return null;
+  if (Math.abs(dx) >= Math.abs(dy)){
+    const p = { a: dy/dx, b: a[1] - (dy/dx)*a[0] };
+    return courbe("droite", p, "x", [Math.min(a[0],b[0]), Math.max(a[0],b[0])]);
+  }
+  if (Math.abs(dx) < 1e-9)
+    return courbe("constante", {c: arrondi(a[0])}, "y", [Math.min(a[1],b[1]), Math.max(a[1],b[1])]);
+  const p = { a: dx/dy, b: a[0] - (dx/dy)*a[1] };
+  return courbe("droite", p, "y", [Math.min(a[1],b[1]), Math.max(a[1],b[1])]);
+}
+
+// Douglas-Peucker : garde les sommets qui comptent, renvoie leurs indices
+function indicesDouglasPeucker(pts, tol){
+  const n = pts.length;
+  if (n <= 2) return pts.map((_, i) => i);
+  const garder = new Uint8Array(n);
+  garder[0] = 1; garder[n-1] = 1;
+  const pile = [[0, n-1]];
+  while (pile.length){
+    const [d, f] = pile.pop();
+    if (f - d < 2) continue;
+    const ax = pts[d][0], ay = pts[d][1], bx = pts[f][0], by = pts[f][1];
+    const vx = bx-ax, vy = by-ay;
+    const long = Math.hypot(vx, vy);
+    let pire = -1, idx = -1;
+    for (let i = d+1; i < f; i++){
+      const px = pts[i][0]-ax, py = pts[i][1]-ay;
+      const dist = long < 1e-12 ? Math.hypot(px, py) : Math.abs(px*vy - py*vx)/long;
+      if (dist > pire){ pire = dist; idx = i; }
+    }
+    if (pire > tol && idx > 0){
+      garder[idx] = 1;
+      pile.push([d, idx]); pile.push([idx, f]);
+    }
+  }
+  const out = [];
+  for (let i = 0; i < n; i++) if (garder[i]) out.push(i);
+  return out;
+}
+
+/* ---------- 5. Contours : des pixels -> des polygones -----------------
+   Marching squares : on parcourt les cases entre pixels, on note les
+   petits segments de frontière, puis on les recolle en boucles.
+------------------------------------------------------------------------ */
+
+function extraireContours(masque, w, h, boite){
+  const val = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? 0 : masque[y*w + x];
+  const segs = [];
+  const T = (x,y) => [x+0.5, y], R = (x,y) => [x+1, y+0.5],
+        B = (x,y) => [x+0.5, y+1], L = (x,y) => [x, y+0.5];
+  // un calque n'occupe souvent qu'un coin de l'image : inutile de balayer le reste
+  const x0 = boite ? Math.max(-1, boite[0]-1) : -1, y0 = boite ? Math.max(-1, boite[1]-1) : -1;
+  const x1 = boite ? Math.min(w, boite[2]+1) : w,   y1 = boite ? Math.min(h, boite[3]+1) : h;
+  for (let y = y0; y < y1; y++){
+    for (let x = x0; x < x1; x++){
+      const a = val(x,y), b = val(x+1,y), c = val(x+1,y+1), d = val(x,y+1);
+      const code = a*8 + b*4 + c*2 + d;
+      if (code === 0 || code === 15) continue;
+      switch (code){
+        case 1:  segs.push([L(x,y), B(x,y)]); break;
+        case 2:  segs.push([B(x,y), R(x,y)]); break;
+        case 3:  segs.push([L(x,y), R(x,y)]); break;
+        case 4:  segs.push([T(x,y), R(x,y)]); break;
+        case 5:  segs.push([L(x,y), T(x,y)]); segs.push([B(x,y), R(x,y)]); break;
+        case 6:  segs.push([T(x,y), B(x,y)]); break;
+        case 7:  segs.push([L(x,y), T(x,y)]); break;
+        case 8:  segs.push([T(x,y), L(x,y)]); break;
+        case 9:  segs.push([T(x,y), B(x,y)]); break;
+        case 10: segs.push([T(x,y), R(x,y)]); segs.push([B(x,y), L(x,y)]); break;
+        case 11: segs.push([T(x,y), R(x,y)]); break;
+        case 12: segs.push([L(x,y), R(x,y)]); break;
+        case 13: segs.push([B(x,y), R(x,y)]); break;
+        case 14: segs.push([L(x,y), B(x,y)]); break;
+      }
+    }
+  }
+  // Recollage des petits segments en polylignes
+  const cle = p => (p[0]*2) + "," + (p[1]*2);
+  const adj = new Map();
+  segs.forEach((s, i) => {
+    for (const k of [cle(s[0]), cle(s[1])]){
+      if (!adj.has(k)) adj.set(k, []);
+      adj.get(k).push(i);
+    }
+  });
+  const pris = new Uint8Array(segs.length);
+  const polys = [];
+  for (let i = 0; i < segs.length; i++){
+    if (pris[i]) continue;
+    pris[i] = 1;
+    const poly = [segs[i][0], segs[i][1]];
+    // on avance par la fin
+    let boucle = false;
+    for (let sens = 0; sens < 2; sens++){
+      let garde = 0;
+      while (garde++ < 100000){
+        const bout = sens === 0 ? poly[poly.length-1] : poly[0];
+        const liste = adj.get(cle(bout)) || [];
+        let suiv = -1;
+        for (const j of liste) if (!pris[j]){ suiv = j; break; }
+        if (suiv < 0) break;
+        pris[suiv] = 1;
+        const s = segs[suiv];
+        const autre = (cle(s[0]) === cle(bout)) ? s[1] : s[0];
+        if (sens === 0) poly.push(autre); else poly.unshift(autre);
+        if (cle(autre) === cle(poly[sens === 0 ? 0 : poly.length-1])){ boucle = true; break; }
+      }
+      if (boucle) break;
+    }
+    if (poly.length >= 4) polys.push({ pts: poly, ferme: boucle });
+  }
+  return polys;
+}
+
+/* Aire, périmètre et centre d'un contour, en pixels. */
+function mesuresContour(pts){
+  let aire = 0, perim = 0, sx = 0, sy = 0;
+  for (let i = 0; i < pts.length - 1; i++){
+    const a = pts[i], b = pts[i+1];
+    aire += a[0]*b[1] - b[0]*a[1];
+    perim += Math.hypot(b[0]-a[0], b[1]-a[1]);
+    sx += a[0]; sy += a[1];
+  }
+  const n = Math.max(pts.length - 1, 1);
+  return { aire: Math.abs(aire)/2, perim: perim, cx: sx/n, cy: sy/n };
+}
+
+/* Largeur moyenne d'un contour fermé (aire / demi-périmètre), en pixels.
+   Les bandes d'anticrénelage entre deux couleurs sont des rubans de 1 à 2
+   pixels : elles ne sont pas des formes, seulement du bruit de rendu. */
+function largeurMoyenne(pts){
+  let aire = 0, perim = 0;
+  for (let i = 0; i < pts.length - 1; i++){
+    const a = pts[i], b = pts[i+1];
+    aire += a[0]*b[1] - b[0]*a[1];
+    perim += Math.hypot(b[0]-a[0], b[1]-a[1]);
+  }
+  aire = Math.abs(aire)/2;
+  return perim < 1e-9 ? 0 : 2*aire/perim;
+}
+
+// Adoucit l'escalier des pixels (moyenne glissante)
+function lisser(pts, passes, ferme){
+  let cur = pts;
+  for (let p = 0; p < passes; p++){
+    const n = cur.length;
+    const out = new Array(n);
+    for (let i = 0; i < n; i++){
+      let ia = i-1, ib = i+1;
+      if (ia < 0) ia = ferme ? n-2 : 0;
+      if (ib >= n) ib = ferme ? 1 : n-1;
+      out[i] = [(cur[ia][0] + 2*cur[i][0] + cur[ib][0])/4,
+                (cur[ia][1] + 2*cur[i][1] + cur[ib][1])/4];
+    }
+    if (ferme && n > 1) out[n-1] = out[0].slice();
+    cur = out;
+  }
+  return cur;
+}
+
+/* ---------- 6. Vectoriseur universel ----------------------------------
+   Le navigateur sait déjà dessiner presque tout (emoji, texte, image,
+   dessin à la main). Funcora récupère ces pixels et les retransforme en
+   équations : c'est ce qui lui permet de tracer n'importe quoi.
+------------------------------------------------------------------------ */
+
+const CUBE = 32768;
+function cleCube(r, g, b){ return ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3); }
+
+function histogrammeCube(data, fg, n){
+  const compte = new Int32Array(CUBE);
+  const sr = new Float64Array(CUBE), sg = new Float64Array(CUBE), sb = new Float64Array(CUBE);
+  const cases = [];
+  for (let i = 0; i < n; i++){
+    if (!fg[i]) continue;
+    const r = data[i*4], g = data[i*4+1], b = data[i*4+2];
+    const c = cleCube(r, g, b);
+    if (compte[c] === 0) cases.push(c);
+    compte[c]++; sr[c] += r; sg[c] += g; sb[c] += b;
+  }
+  return cases.map(c => ({ cle: c, n: compte[c],
+                           moy: [sr[c]/compte[c], sg[c]/compte[c], sb[c]/compte[c]] }))
+              .sort((a, b) => b.n - a.n);
+}
+
+// Peu de couleurs : k-moyennes sur les cases du cube, pondérées par leur poids
+function teintesMoyennes(cases, k){
+  if (cases.length <= k) return cases.map(c => c.moy.slice());
+  const cent = [cases[0].moy.slice()];
+  while (cent.length < k){
+    let best = null, bestD = -1;
+    for (const c of cases){
+      let d = Infinity;
+      for (const g of cent) d = Math.min(d, distanceCouleur(c.moy, g));
+      d *= Math.log(1 + c.n);           // une grande zone pèse plus qu'un pixel perdu
+      if (d > bestD){ bestD = d; best = c.moy; }
+    }
+    if (!best) break;
+    cent.push(best.slice());
+  }
+  for (let it = 0; it < 8; it++){
+    const som = cent.map(() => [0,0,0,0]);
+    for (const c of cases){
+      let bi = 0, bd = Infinity;
+      for (let j = 0; j < cent.length; j++){
+        const d = distanceCouleur(c.moy, cent[j]);
+        if (d < bd){ bd = d; bi = j; }
+      }
+      som[bi][0] += c.moy[0]*c.n; som[bi][1] += c.moy[1]*c.n;
+      som[bi][2] += c.moy[2]*c.n; som[bi][3] += c.n;
+    }
+    for (let j = 0; j < cent.length; j++)
+      if (som[j][3]) cent[j] = [som[j][0]/som[j][3], som[j][1]/som[j][3], som[j][2]/som[j][3]];
+  }
+  return cent;
+}
+
+// Beaucoup de couleurs : les teintes les plus présentes, sans doublons visuels
+function teintesDominantes(cases, k, total){
+  const seuil = Math.max(20, total*0.00004);
+  const fusion = k <= 64 ? Math.max(0, 520 - k*6) : 0;
+  const gardes = [];
+  for (const c of cases){
+    if (gardes.length >= k) break;
+    if (c.n < seuil) continue;
+    if (fusion && gardes.some(g => distanceCouleur(c.moy, g) < fusion)) continue;
+    gardes.push(c.moy.slice());
+  }
+  if (!gardes.length) gardes.push(cases[0].moy.slice());
+  return gardes;
+}
+
+function etendreBoite(b, x, y){
+  if (x < b[0]) b[0] = x;
+  if (y < b[1]) b[1] = y;
+  if (x > b[2]) b[2] = x;
+  if (y > b[3]) b[3] = y;
+}
+
+function calquesCouleur(data, fg, n, k, total, larg){
+  let teintes = null;
+  if (k > 1){
+    const cases = histogrammeCube(data, fg, n);
+    if (cases.length) teintes = k <= 16 ? teintesMoyennes(cases, k) : teintesDominantes(cases, k, total);
+  }
+  const calques = (teintes || [null]).map(t => ({ couleur: t, taille: 0, boite: [larg, larg, -1, -1] }));
+  const attribution = new Int16Array(n).fill(-1);
+  const lut = teintes ? new Int16Array(CUBE).fill(-1) : null;
+  for (let i = 0; i < n; i++){
+    if (!fg[i]) continue;
+    let j = 0;
+    if (teintes){
+      const c = cleCube(data[i*4], data[i*4+1], data[i*4+2]);
+      j = lut[c];
+      if (j < 0){
+        const p = [data[i*4], data[i*4+1], data[i*4+2]];
+        let bd = Infinity;
+        for (let q = 0; q < teintes.length; q++){
+          const d = distanceCouleur(p, teintes[q]);
+          if (d < bd){ bd = d; j = q; }
+        }
+        lut[c] = j;
+      }
+    }
+    attribution[i] = j;
+    const cq = calques[j];
+    cq.taille++;
+    etendreBoite(cq.boite, i % larg, (i/larg)|0);
+  }
+  return { attribution: attribution, calques: calques };
+}
+
+/* --- Étape 3 : ménage — paramètres écrits = paramètres tracés, pas de
+   doublon (deux calques voisins tracent deux fois la même frontière),
+   pas de courbe plus petite qu'un pixel. --- */
+function nettoyerCourbes(liste, unite, vus, rapide){
+  const grille = Math.max(unite*2.2, 1e-6);
+  vus = vus || new Set();
+  const out = [];
+  for (const brute of liste){
+    if (!brute) continue;
+    const c = normaliserCourbe(brute);
+    if (!courbeValide(c)) continue;
+    // en temps normal une courbe plus petite qu'un pixel et demi est du bruit ;
+    // en mode Max, c'est justement la matière qu'on cherche.
+    const minSpan = rapide ? unite*0.25 : unite*1.5;
+    if (c.fam !== "cercle" && Math.abs(c.dom[1] - c.dom[0]) < minSpan) continue;
+    if (rapide){ out.push(c); continue; }        // mode Max : pas de temps pour le ménage fin
+    const pts = echantillonsCourbe(c, 6).filter(Boolean);
+    if (pts.length < 2) continue;
+    // quatre grilles décalées : deux tracés séparés d'un pixel tombent
+    // forcément dans la même case pour l'une d'elles.
+    const cles = [];
+    for (const dx of [0, 0.5]) for (const dy of [0, 0.5]){
+      cles.push(c.fam + "#" + pts.map(q =>
+        Math.round(q[0]/grille + dx) + "," + Math.round(q[1]/grille + dy)).join(";"));
+    }
+    if (cles.some(k => vus.has(k))) continue;
+    cles.forEach(k => vus.add(k));
+    out.push(c);
+  }
+  return out;
+}
+
+/* ---------- 7. État, DOM, journal et loader ---------------------------- */
+
+/* Deux chiffres par niveau, et ce sont eux qui font toute la différence :
+   `h` la définition de travail, `seuil` la part de pixels qu'on s'autorise
+   à rater, `ecart` ce qu'un pixel a le droit de dévier avant de compter
+   comme raté (écart maximum sur une composante, sur 255). Plus on monte,
+   plus les deux se resserrent — sinon « oméga » ne serait que « élevé »
+   sur une plus grande image. */
+const NIVEAUX = [
+  { nom: "Faible", def: "360p",  h: 360,  seuil: 8.0, ecart: 32 },
+  { nom: "Moyen",  def: "480p",  h: 480,  seuil: 6.0, ecart: 24 },
+  { nom: "Élevé",  def: "720p",  h: 720,  seuil: 5.0, ecart: 18 },
+  { nom: "Extra",  def: "1080p", h: 1080, seuil: 4.0, ecart: 14 },
+  { nom: "Max",    def: "2K",    h: 1440, seuil: 3.5, ecart: 12 },
+  { nom: "Oméga",  def: "4K",    h: 2160, seuil: 3.0, ecart: 10 }
+];
+
+const T = {
+  image: null, nom: "", niveau: 2,
+  w: 0, h: 0, unite: 1,
+  dataSource: null, fgTous: null,
+  cvRendu: null, ctxRendu: null,
+  calques: [], courbes: [], fond: "#101010",
+  K: 6, tol: 3.2, nb: 0, diff: 100,
+  phase: "attente", iter: 0, t0: 0, minuteur: null, arret: false,
+  histoire: [], meilleur: null, rempli: true, comparaison: 100,
+  diffPixels: 100, diffZone: 100,
+  sale: false          // vrai quand le dessin en mémoire n'est plus celui des réglages gardés
+};
+
+function creerCanvas(w, h){
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h === undefined ? w : h;
+  return cv;
+}
+function contexteVide(cv){
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  return ctx;
+}
+
+const cvGraphe = document.getElementById("graphe");
+let ctxG = cvGraphe.getContext("2d");
+let tailleRendu = null;
+let COURBES = [], COURBE_SURVOL = null, page = 0;
+const PAR_PAGE = 200;
+const elListe = document.getElementById("liste");
+const elPagination = document.getElementById("pagination");
+const elCompteur = document.getElementById("compteur");
+const elJournal = document.getElementById("journal");
+const elEtat = document.getElementById("etat");
+
+function journal(texte, qui, rate){
+  const d = document.createElement("div");
+  d.className = "msg " + (qui === "moi" ? "moi" : "app") + (rate ? " rate" : "");
+  d.textContent = texte;
+  elJournal.appendChild(d);
+  elJournal.scrollTop = elJournal.scrollHeight;
+  while (elJournal.children.length > 30) elJournal.removeChild(elJournal.firstChild);
+}
+function etat(txt){ elEtat.textContent = txt; }
+
+/* --- Le loader : ce que Funcora est en train de faire, avec les durées --- */
+let ETAPES = [];
+const elLoader = document.getElementById("loader");
+const elEtapes = document.getElementById("etapesListe");
+
+function nouveauLoader(titre){
+  ETAPES = [];
+  elLoader.hidden = false;
+  elLoader.classList.remove("replie");
+  elEtapes.innerHTML = "";
+  const h = document.createElement("h3");
+  h.innerHTML = "<span class=\"titre\"></span><span class=\"fleche\">▾</span>";
+  h.querySelector(".titre").textContent = titre || "Ce que je fais";
+  h.title = "Replier / déplier le détail";
+  h.onclick = () => replierLoader(!elLoader.classList.contains("replie"));
+  elEtapes.appendChild(h);
+}
+
+function replierLoader(replier){
+  elLoader.classList.toggle("replie", replier);
+  const f = elEtapes.querySelector("h3 .fleche");
+  if (f) f.textContent = replier ? "▸" : "▾";
+  const t = elEtapes.querySelector("h3 .titre");
+  if (t && replier && ETAPES.length) t.textContent = t.textContent.replace(/ — \d+ étapes$/, "") +
+    " — " + ETAPES.length + " étapes";
+}
+function etapeDebut(texte){
+  const e = { texte: texte, t0: performance.now() };
+  e.el = document.createElement("div");
+  e.el.className = "etape encours";
+  e.el.innerHTML = "<span class=\"marque\">•</span><span class=\"txt\"></span><span class=\"ms\"></span>";
+  e.el.querySelector(".txt").textContent = texte;
+  elEtapes.appendChild(e.el);
+  elLoader.hidden = false;
+  elLoader.scrollTop = elLoader.scrollHeight;
+  ETAPES.push(e);
+  return e;
+}
+function etapeFin(e, ok, detail){
+  if (!e) return;
+  e.ms = Math.round(performance.now() - e.t0);
+  e.el.className = "etape " + (ok ? "ok" : "rate");
+  e.el.querySelector(".marque").textContent = ok ? "✓" : "✗";
+  const txt = e.el.querySelector(".txt");
+  txt.textContent = e.texte;
+  if (detail){
+    const d = document.createElement("span");
+    d.className = "det";
+    d.textContent = " — " + detail;
+    txt.appendChild(d);
+  }
+  e.el.querySelector(".ms").textContent = e.ms >= 1000 ? (e.ms/1000).toFixed(1) + " s" : e.ms + " ms";
+  elLoader.scrollTop = elLoader.scrollHeight;
+}
+function etapeFaite(texte, detail, ok){ const e = etapeDebut(texte); etapeFin(e, ok !== false, detail); return e; }
+
+/* Enchaîne des tâches lourdes en rendant la main entre chacune : c'est ce qui
+   permet au chronomètre de tourner en direct et au bouton Arrêter de répondre. */
+function enChaine(taches, fin){
+  let i = 0;
+  const pas = () => {
+    if (T.arret && fin){ fin(true); return; }
+    if (i >= taches.length){ if (fin) fin(false); return; }
+    const t = taches[i++];
+    try { t(); } catch (e){ console.error(e); journal("Erreur pendant le calcul : " + e.message, "app", true); }
+    setTimeout(pas, 0);
+  };
+  setTimeout(pas, 0);
+}
+
+/* ---------- 8. Le rendu : image remplie, fil de fer, comparateur -------- */
+
+let vue = { cx: 0, cy: 0, ppu: 40 };
+function dpr(){ return Math.min(window.devicePixelRatio || 1, 2); }
+function largeurVue(){ return tailleRendu ? tailleRendu[0] : cvGraphe.width/dpr(); }
+function hauteurVue(){ return tailleRendu ? tailleRendu[1] : cvGraphe.height/dpr(); }
+function versEcranX(x){ return largeurVue()/2 + (x - vue.cx)*vue.ppu; }
+function versEcranY(y){ return hauteurVue()/2 - (y - vue.cy)*vue.ppu; }
+function versRepereX(px){ return vue.cx + (px - largeurVue()/2)/vue.ppu; }
+function versRepereY(py){ return vue.cy - (py - hauteurVue()/2)/vue.ppu; }
+
+function redimensionner(){
+  const r = cvGraphe.getBoundingClientRect();
+  cvGraphe.width = Math.max(1, Math.round(r.width*dpr()));
+  cvGraphe.height = Math.max(1, Math.round(r.height*dpr()));
+  ctxG.setTransform(dpr(), 0, 0, dpr(), 0, 0);
+  dessiner();
+}
+
+// combien de points pour suivre une courbe sans la casser ni ramer
+function densite(c, echelle){
+  if (c.fam === "cercle") return 28;
+  return borne(Math.round(Math.abs(c.dom[1] - c.dom[0])*echelle/3), 3, 60);
+}
+
+/* Le coeur du rendu : chaque calque devient UN chemin (tous ses contours),
+   rempli avec la règle « pair-impair » — c'est elle qui creuse les trous,
+   un œil dans un visage, une fenêtre dans un mur. */
+function dessinerScene(ctx, projX, projY, larg, haut, echelle, rempli){
+  ctx.fillStyle = T.fond;
+  ctx.fillRect(0, 0, larg, haut);
+  const calques = T.calques.filter(cq => cq.formes && cq.formes.length);
+  for (const cq of calques){
+    ctx.beginPath();
+    for (const forme of cq.formes){
+      if (forme.off) continue;
+      let premier = true, px0 = 0, py0 = 0;
+      for (const c of forme.courbes){
+        // Une équation ne dit pas dans quel sens on la parcourt : « y = x²
+        // pour x entre 1 et 3 » se lit aussi bien de droite à gauche. Pour
+        // un trait c'est sans importance ; pour une forme pleine, repartir
+        // du mauvais bout coupe le remplissage d'une corde. On enchaîne
+        // donc par le bout le plus proche du crayon.
+        const ech = echantillonsCourbe(c, densite(c, echelle)).filter(Boolean);
+        if (!ech.length) continue;
+        if (!premier){
+          const a = ech[0], z = ech[ech.length - 1];
+          const da = (a[0]-px0)*(a[0]-px0) + (a[1]-py0)*(a[1]-py0);
+          const dz = (z[0]-px0)*(z[0]-px0) + (z[1]-py0)*(z[1]-py0);
+          if (dz < da) ech.reverse();
+        }
+        for (const q of ech){
+          const px = projX(q[0]), py = projY(q[1]);
+          if (premier){ ctx.moveTo(px, py); premier = false; } else ctx.lineTo(px, py);
+        }
+        px0 = ech[ech.length - 1][0]; py0 = ech[ech.length - 1][1];
+      }
+      if (!premier) ctx.closePath();
+    }
+    if (rempli){
+      ctx.fillStyle = cq.hex;
+      ctx.fill("evenodd");
+    } else {
+      ctx.strokeStyle = cq.hex;
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+    }
+  }
+}
+
+function dessiner(){
+  const W = largeurVue(), H = hauteurVue();
+  ctxG.save();
+  ctxG.clearRect(0, 0, W, H);
+  ctxG.fillStyle = "#0f131c";
+  ctxG.fillRect(0, 0, W, H);
+  if (T.calques.length)
+    dessinerScene(ctxG, versEcranX, versEcranY, W, H, vue.ppu, T.rempli);
+  // comparateur : l'image d'origine à gauche du curseur
+  if (T.image && T.comparaison < 100 && !tailleRendu){
+    const coupe = W*T.comparaison/100;
+    const larg = T.w*T.unite*vue.ppu, haut = T.h*T.unite*vue.ppu;
+    const x0 = versEcranX(-T.w*T.unite/2), y0 = versEcranY(T.h*T.unite/2);
+    ctxG.save();
+    ctxG.beginPath();
+    ctxG.rect(0, 0, coupe, H);
+    ctxG.clip();
+    ctxG.drawImage(T.image, x0, y0, larg, haut);
+    ctxG.restore();
+    ctxG.strokeStyle = "#ffffff88";
+    ctxG.lineWidth = 1;
+    ctxG.beginPath(); ctxG.moveTo(coupe, 0); ctxG.lineTo(coupe, H); ctxG.stroke();
+  }
+  if (COURBE_SURVOL){
+    ctxG.strokeStyle = "#ffffff";
+    ctxG.lineWidth = 3;
+    ctxG.beginPath();
+    let premier = true;
+    for (const q of echantillonsCourbe(COURBE_SURVOL, densite(COURBE_SURVOL, vue.ppu))){
+      if (!q){ premier = true; continue; }
+      const px = versEcranX(q[0]), py = versEcranY(q[1]);
+      if (premier){ ctxG.moveTo(px, py); premier = false; } else ctxG.lineTo(px, py);
+    }
+    ctxG.stroke();
+  }
+  ctxG.restore();
+}
+
+function recadrer(){
+  const W = largeurVue(), H = hauteurVue();
+  const larg = T.w*T.unite, haut = T.h*T.unite;
+  if (!larg || !haut){ vue = { cx: 0, cy: 0, ppu: 40 }; dessiner(); return; }
+  vue.ppu = Math.min(W/(larg*1.04), H/(haut*1.04));
+  vue.cx = 0; vue.cy = 0;
+  dessiner();
+}
+
+function majTout(recadre){
+  COURBES = T.courbes.filter(c => !c.supprime);
+  COURBE_SURVOL = null;
+  page = 0;
+  if (recadre) recadrer(); else dessiner();
+  majPanneau();
+}
+
+/* ---------- 9. Le moteur : converger, puis optimiser ------------------- */
+
+function seuilNiveau(){ return NIVEAUX[T.niveau].seuil; }
+
+function demarrerChrono(){
+  arreterChrono();
+  T.minuteur = setInterval(() => {
+    const s = (performance.now() - T.t0)/1000;
+    document.getElementById("chrono").textContent =
+      (s < 60 ? s.toFixed(1).replace(".", ",") + " s"
+              : Math.floor(s/60) + " min " + (s%60).toFixed(0).padStart(2, "0") + " s");
+  }, 100);
+}
+function arreterChrono(){ if (T.minuteur){ clearInterval(T.minuteur); T.minuteur = null; } }
+
+function majLive(){
+  document.getElementById("phase").textContent = T.phase;
+  document.getElementById("compteurLive").textContent =
+    T.nb ? T.nb.toLocaleString("fr-FR") + " fonctions · écart " + T.diff.toFixed(2) + " % (seuil " + seuilNiveau() + " %)" : "";
+  const p = T.diff > 0 ? borne(seuilNiveau()/Math.max(T.diff, 0.01)*100, 2, 100) : 100;
+  document.getElementById("barre").style.width = p.toFixed(1) + "%";
+}
+
+/* L'image, ramenée à la définition du niveau : c'est là-dessus qu'on
+   travaille ET qu'on mesure la ressemblance. */
+function preparerImage(){
+  const niv = NIVEAUX[T.niveau];
+  const ech = Math.min(1, niv.h/T.image.height);
+  T.h = Math.max(32, Math.round(T.image.height*ech));
+  T.w = Math.max(32, Math.round(T.image.width*ech));
+  const cv = creerCanvas(T.w, T.h);
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(T.image, 0, 0, T.w, T.h);
+  T.dataSource = ctx.getImageData(0, 0, T.w, T.h).data;
+  T.fgTous = new Uint8Array(T.w*T.h).fill(1);
+  T.unite = 20/T.w;                     // le dessin fait 20 unités de large
+  T.cvRendu = creerCanvas(T.w, T.h);
+  T.ctxRendu = T.cvRendu.getContext("2d", { willReadFrequently: true });
+  T.fond = rgbHex([T.dataSource[0], T.dataSource[1], T.dataSource[2]]);
+}
+
+const projMesureX = x => x/T.unite + T.w/2;
+const projMesureY = y => T.h/2 - y/T.unite;
+const versRepereMesure = q => [(q[0] - T.w/2)*T.unite, (T.h/2 - q[1])*T.unite];
+
+/* Découpe l'image en K aplats de couleur, puis suit le contour de chacun. */
+function analyserImage(K){
+  const n = T.w*T.h;
+  const r = calquesCouleur(T.dataSource, T.fgTous, n, K, n, T.w);
+  const masque = new Uint8Array(n);
+  const calques = [];
+  r.calques.forEach((cq, j) => {
+    if (cq.taille < 6) return;
+    const b = cq.boite;
+    if (b[2] < b[0] || b[3] < b[1]) return;
+    for (let y = b[1]; y <= b[3]; y++){
+      const base = y*T.w;
+      for (let x = b[0]; x <= b[2]; x++) masque[base + x] = r.attribution[base + x] === j ? 1 : 0;
+    }
+    const contours = [];
+    for (const poly of extraireContours(masque, T.w, T.h, b)){
+      if (poly.pts.length < 8) continue;
+      const mes = mesuresContour(poly.pts);
+      contours.push({ pts: poly.pts, ferme: poly.ferme, aire: mes.aire });
+    }
+    for (let y = b[1]; y <= b[3]; y++){
+      const base = y*T.w;
+      for (let x = b[0]; x <= b[2]; x++) masque[base + x] = 0;
+    }
+    if (contours.length)
+      calques.push({ hex: rgbHex(cq.couleur), taille: cq.taille, contours: contours, formes: [] });
+  });
+  calques.sort((a, b) => b.taille - a.taille);
+  if (calques.length) T.fond = calques[0].hex;
+  return calques;
+}
+
+/* Chaque contour devient une suite d'équations. */
+function tracerCalques(calques, tolPx){
+  const tol = tolPx*T.unite;
+  let total = 0;
+  const courbes = [];
+  for (const cq of calques){
+    cq.formes = [];
+    for (const ct of cq.contours){
+      const pts = lisser(ct.pts, 1, ct.ferme).map(versRepereMesure);
+      const brutes = polyligneVersCourbes(pts, tol, { coins: true });
+      const propres = nettoyerCourbes(brutes, T.unite, null, true);
+      if (propres.length < 2) continue;
+      for (const c of propres){ c.col = cq.hex; courbes.push(c); }
+      cq.formes.push({ courbes: propres, aire: ct.aire });
+      total += propres.length;
+    }
+  }
+  T.courbes = courbes;
+  T.nb = total;
+  return total;
+}
+
+/* La ressemblance. Compter les pixels ratés sur toute l'image ne suffit pas :
+   une maison entièrement ratée, c'est un demi pour cent de l'image — le compte
+   global ne bronche pas alors que l'œil, lui, ne voit que ça. On mesure donc
+   aussi par carreaux de 32 px et on retient le centième le plus mauvais (pas
+   le pire carreau : un seul coin biscornu ne doit pas condamner tout un
+   tracé). L'écart rendu est le plus sévère des deux, et c'est lui qui décide
+   quand on a fini et jusqu'où on peut élaguer. */
+const CARREAU = 32;
+
+function mesurerDiff(){
+  dessinerScene(T.ctxRendu, projMesureX, projMesureY, T.w, T.h, 1/T.unite, true);
+  const rendu = T.ctxRendu.getImageData(0, 0, T.w, T.h).data;
+  const src = T.dataSource;
+  const n = T.w*T.h;
+  const max = NIVEAUX[T.niveau].ecart;
+  const cw = Math.ceil(T.w/CARREAU), ch = Math.ceil(T.h/CARREAU);
+  const rates = new Int32Array(cw*ch), tailles = new Int32Array(cw*ch);
+
+  // 1. où ça ne colle pas
+  const mal = new Uint8Array(n);
+  for (let i = 0; i < n; i++){
+    const k = i*4;
+    if (Math.abs(src[k] - rendu[k]) > max ||
+        Math.abs(src[k+1] - rendu[k+1]) > max ||
+        Math.abs(src[k+2] - rendu[k+2]) > max) mal[i] = 1;
+  }
+
+  // 2. on jette le liseré. Le long de chaque frontière, un pixel ou deux
+  //    seront toujours en désaccord : l'original les a adoucis d'un côté, le
+  //    tracé de l'autre. Ça ne se voit pas, et à force de compter ça noyait
+  //    tout le reste. Ne comptent donc que les pixels ratés entourés de
+  //    pixels ratés — une vraie tache, pas un contour.
+  let mauvais = 0;
+  for (let y = 0; y < T.h; y++){
+    const ligne = ((y/CARREAU)|0)*cw, base = y*T.w;
+    for (let x = 0; x < T.w; x++){
+      const i = base + x, c = ligne + ((x/CARREAU)|0);
+      tailles[c]++;
+      if (!mal[i]) continue;
+      let voisins = 0;
+      for (let dy = -1; dy <= 1; dy++){
+        const yy = y + dy;
+        if (yy < 0 || yy >= T.h) continue;
+        for (let dx = -1; dx <= 1; dx++){
+          const xx = x + dx;
+          if ((!dx && !dy) || xx < 0 || xx >= T.w) continue;
+          voisins += mal[yy*T.w + xx];
+        }
+      }
+      if (voisins >= 5){ mauvais++; rates[c]++; }
+    }
+  }
+  const global = mauvais/n*100;
+  const taux = [];
+  for (let c = 0; c < rates.length; c++) if (tailles[c]) taux.push(rates[c]/tailles[c]*100);
+  taux.sort((a, b) => a - b);
+  const p99 = taux.length ? taux[Math.min(taux.length - 1, Math.floor(taux.length*0.99))] : 0;
+  T.diffPixels = global;
+  T.diffZone = p99;
+  // Le liseré retiré, un carreau reste toujours un peu plus mauvais que la
+  // moyenne : diviser par cinq met les deux mesures sur la même échelle.
+  return Math.max(global, p99/5);
+}
+
+function essaiComplet(fin){
+  enChaine([
+    () => { T.calques = analyserImage(T.K); },
+    () => { tracerCalques(T.calques, T.tol); },
+    () => { T.diff = mesurerDiff(); }
+  ], fin);
+}
+
+function lancerMoteur(){
+  T.arret = false; T.t0 = performance.now(); T.iter = 0; T.meilleur = null; T.histoire = [];
+  T.K = 6; T.tol = 3.2; T.nb = 0; T.diff = 100; T.sale = false;
+  T.diffPixels = 100; T.diffZone = 100;
+  T.phase = "je regarde l'image";
+  document.getElementById("btnStop").hidden = false;
+  demarrerChrono();
+  nouveauLoader("Niveau " + NIVEAUX[T.niveau].nom + " — " + NIVEAUX[T.niveau].def);
+  const e = etapeDebut("Je prépare l'image");
+  preparerImage();
+  etapeFin(e, true, T.image.width + " × " + T.image.height + " px, ramenée à " + T.w + " × " + T.h);
+  majLive();
+  boucleConvergence();
+}
+
+const K_MAX = 240;        // au-delà, les aplats sont plus fins que l'œil
+const TOL_MIN = 0.22;     // un quart de pixel : en dessous, on écrit du bruit
+
+/* Serre les réglages d'un cran. Les deux vont ensemble : plus il y a de
+   couleurs, plus les aplats sont minces, et des courbes trop lâches passent
+   au travers. Mesuré sur un paysage : 240 couleurs avec une finesse de
+   1,7 px donnent 16 % d'écart — pire qu'à 45 couleurs — alors que les mêmes
+   240 couleurs à 0,5 px tombent à 4,7 % et à 0,25 px à 1 %. On monte donc
+   les couleurs et on descend la finesse du même pas, puis on continue à
+   affiner seul. Renvoie false quand il n'y a plus rien à serrer. */
+function serrerReglages(){
+  if (T.K < K_MAX){
+    T.K = Math.min(K_MAX, Math.round(T.K*2.5) + 2);
+    T.tol = Math.max(TOL_MIN, T.tol*0.62);
+    return true;
+  }
+  if (T.tol > TOL_MIN){
+    T.tol = Math.max(TOL_MIN, T.tol*0.62);
+    return true;
+  }
+  return false;
+}
+
+function boucleConvergence(){
+  if (T.arret) return abandonner("arrêté à la main");
+  T.iter++;
+  T.phase = "j'essaie de coller à l'image (essai " + T.iter + ")";
+  majLive();
+  const e = etapeDebut("Essai " + T.iter + " — " + T.K + " couleurs, finesse " + T.tol.toFixed(2) + " px");
+  essaiComplet(coupe => {
+    if (coupe) return abandonner("arrêté à la main");
+    etapeFin(e, true, T.nb.toLocaleString("fr-FR") + " fonctions · écart " + T.diff.toFixed(2) + " %");
+    T.histoire.push({ K: T.K, tol: T.tol, nb: T.nb, diff: T.diff });
+    if (!T.meilleur || T.diff < T.meilleur.diff) T.meilleur = { K: T.K, tol: T.tol, nb: T.nb, diff: T.diff };
+    majLive();
+    majTout(T.iter === 1);
+    if (T.diff <= seuilNiveau()) return optimiser();
+    if (T.nb > 400000) return abandonner("ça devient trop lourd pour la machine");
+    // Pas de garde « ça stagne » : sur un dégradé l'écart peut rester plat,
+    // ou même remonter d'un cran, avant de s'effondrer une fois qu'il y a
+    // assez de couleurs. On va jusqu'au bout des réglages, et on garde le
+    // meilleur essai si le seuil n'est jamais atteint.
+    if (!serrerReglages()) return abandonner("je n'arrive pas plus près");
+    setTimeout(boucleConvergence, 0);
+  });
+}
+
+/* On n'a pas atteint le seuil : on revient au meilleur essai avant de rendre
+   la copie, sinon on montrerait le dernier — pas le meilleur. */
+function abandonner(raison){
+  // Arrêt à la main : on ne relance pas un calcul pour faire joli, on rend
+  // ce qui est à l'écran.
+  if (T.arret || !T.meilleur || (T.K === T.meilleur.K && T.tol === T.meilleur.tol))
+    return terminer(raison);
+  T.K = T.meilleur.K; T.tol = T.meilleur.tol;
+  const e = etapeDebut("Je reviens au meilleur essai (" + T.K + " couleurs, finesse " + T.tol.toFixed(2) + " px)");
+  essaiComplet(coupe => {
+    etapeFin(e, true, T.nb.toLocaleString("fr-FR") + " fonctions · écart " + T.diff.toFixed(2) + " %");
+    T.sale = false;
+    majLive(); majTout(false);
+    terminer(raison);
+  });
+}
+
+/* Cherche par dichotomie la valeur la plus économique d'un réglage qui garde
+   l'écart sous le seuil. `eco` dit de quel côté on économise : +1 quand plus
+   grand coûte moins cher (la finesse), -1 quand c'est plus petit (les
+   couleurs). Six essais suffisent à coincer la valeur à 3 % près. */
+function dichotomie(bas, haut, eco, entier, poser, libelle, apres){
+  const seuil = seuilNiveau();
+  const depart = eco > 0 ? bas : haut;
+  let gagnant = depart, dernier = depart, garde = 0;
+  const fini = () => {
+    poser(gagnant);
+    T.sale = (dernier !== gagnant);
+    rendreGeometrie(apres);
+  };
+  const pas = () => {
+    if (T.arret) return abandonner("arrêté à la main");
+    if (garde++ >= 6) return fini();
+    if (entier ? (haut - bas <= 1) : (haut/bas < 1.05)) return fini();
+    const m = entier ? Math.round((bas + haut)/2) : Math.sqrt(bas*haut);
+    poser(m); dernier = m;
+    const e = etapeDebut(libelle(m));
+    essaiComplet(coupe => {
+      if (coupe) return abandonner("arrêté à la main");
+      if (T.diff <= seuil){
+        etapeFin(e, true, "oui : " + T.nb.toLocaleString("fr-FR") + " fonctions, écart " + T.diff.toFixed(2) + " %");
+        gagnant = m;
+        if (eco > 0) bas = m; else haut = m;
+      } else {
+        etapeFin(e, false, "non : l'écart monterait à " + T.diff.toFixed(2) + " %");
+        if (eco > 0) haut = m; else bas = m;
+      }
+      majLive(); majTout(false);
+      setTimeout(pas, 0);
+    });
+  };
+  pas();
+}
+
+/* Optimisation : le moins de fonctions possible sans qu'on voie la différence.
+   Trois passes de dichotomie — on relâche la finesse, on retire des couleurs,
+   puis on relâche encore la finesse (moins de couleurs autorise des courbes
+   plus lâches) — et pour finir on jette les formes invisibles. */
+function optimiser(){
+  T.phase = "j'élague sans que ça se voie";
+  majLive();
+  const depart = T.nb;
+  const passeTol = (apres) => dichotomie(
+    T.tol, T.tol*8, +1, false,
+    v => { T.tol = v; },
+    v => "Et si je simplifiais les courbes (finesse " + v.toFixed(2) + " px) ?",
+    apres);
+  const passeK = (apres) => dichotomie(
+    2, T.K, -1, true,
+    v => { T.K = v; },
+    v => "Et si je me contentais de " + v + " couleurs ?",
+    apres);
+  passeTol(() => passeK(() => passeTol(() => elaguerPetits(depart))));
+}
+
+/* La dernière piste essayée a pu être refusée : dans ce cas les calques en
+   mémoire sont ceux du refus. On les refait avec les réglages qu'on garde,
+   sinon on élaguerait — et on exporterait — le mauvais dessin. */
+function rendreGeometrie(apres){
+  if (!T.sale) return apres();
+  essaiComplet(coupe => {
+    if (coupe) return terminer("arrêté à la main");
+    T.sale = false;
+    majTout(false);
+    apres();
+  });
+}
+
+/* Dernier ménage : les formes minuscules qui ne changent rien au regard. */
+function elaguerPetits(depart){
+  if (T.arret) return terminer("arrêté à la main");
+  const seuil = seuilNiveau();
+  const e = etapeDebut("Je retire les formes qu'on ne voit pas");
+  const formes = [];
+  for (const cq of T.calques) for (const f of (cq.formes || [])) formes.push(f);
+  formes.sort((a, b) => a.aire - b.aire);
+  let bas = 0, haut = formes.length, garde = 0, retenu = 0;
+  const essai = () => {
+    if (T.arret || garde++ > 7 || bas >= haut){
+      formes.forEach((f, j) => { f.off = j < retenu; });
+      recompterCourbes();
+      etapeFin(e, true, retenu ? retenu + " formes retirées, " + T.nb.toLocaleString("fr-FR") + " fonctions" : "aucune, tout compte");
+      return terminer(null, depart);
+    }
+    const m = Math.floor((bas + haut)/2);
+    formes.forEach((f, j) => { f.off = j < m; });
+    T.diff = mesurerDiff();
+    if (T.diff <= seuil){ retenu = m; bas = m + 1; } else haut = m;
+    setTimeout(essai, 0);
+  };
+  essai();
+}
+
+function recompterCourbes(){
+  const courbes = [];
+  for (const cq of T.calques) for (const f of (cq.formes || [])){
+    if (f.off) continue;
+    for (const c of f.courbes) courbes.push(c);
+  }
+  T.courbes = courbes;
+  T.nb = courbes.length;
+  T.diff = mesurerDiff();
+}
+
+function terminer(raison, depart){
+  T.arret = true;
+  arreterChrono();
+  document.getElementById("btnStop").hidden = true;
+  const secondes = (performance.now() - T.t0)/1000;
+  T.phase = raison ? raison : "terminé";
+  majLive();
+  majTout(true);
+  document.getElementById("reglette").hidden = false;
+  const atteint = T.diff <= seuilNiveau();
+  etapeFaite("Fini", T.nb.toLocaleString("fr-FR") + " fonctions · écart " + T.diff.toFixed(2) + " % · " +
+    secondes.toFixed(1) + " s", atteint);
+  replierLoader(true);        // le détail reste à un clic, le dessin passe devant
+  majBilan(secondes, depart);
+  journal((atteint ? "Objectif atteint : " : "Au plus près que j'ai pu : ") +
+    "ressemblance " + (100 - T.diff).toFixed(2) + " % avec " + T.nb.toLocaleString("fr-FR") +
+    " fonctions, en " + secondes.toFixed(1) + " s" +
+    (depart && depart > T.nb ? " (l'optimisation en a retiré " + (depart - T.nb).toLocaleString("fr-FR") + ")" : "") + ".",
+    "app", !atteint);
+  etat("Niveau " + NIVEAUX[T.niveau].nom + " — " + T.nb.toLocaleString("fr-FR") +
+    " fonctions, ressemblance " + (100 - T.diff).toFixed(2) + " %");
+}
+
+function majBilan(secondes, depart){
+  const b = document.getElementById("bilan");
+  const carte = (val, lib) => "<div class=\"carte\"><b>" + val + "</b><span>" + lib + "</span></div>";
+  b.innerHTML =
+    carte((100 - T.diff).toFixed(2) + " %", "ressemblance") +
+    carte(T.nb.toLocaleString("fr-FR"), "fonctions") +
+    carte(T.diffPixels.toFixed(2) + " %", "pixels qui s'écartent") +
+    carte(T.diffZone.toFixed(1) + " %", "dans la zone la plus fausse") +
+    carte(T.calques.length, "couleurs") +
+    carte(secondes.toFixed(1) + " s", "temps de réflexion") +
+    carte(NIVEAUX[T.niveau].def, "définition visée") +
+    (depart && depart > T.nb ? carte("-" + Math.round((1 - T.nb/depart)*100) + " %", "gagné à l'optimisation") : "");
+}
+
+/* --- L'image PNG : la vue courante redessinée en double résolution --- */
+function exporterPNG(){
+  const W = largeurVue(), H = hauteurVue(), k = 2;
+  const cv = document.createElement("canvas");
+  cv.width = Math.round(W*k); cv.height = Math.round(H*k);
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  const memoCtx = ctxG, memoTaille = tailleRendu, memoSurvol = COURBE_SURVOL;
+  ctxG = ctx; tailleRendu = [W, H]; COURBE_SURVOL = null;
+  try { dessiner(); } finally { ctxG = memoCtx; tailleRendu = memoTaille; COURBE_SURVOL = memoSurvol; }
+  const fini = (ok, url) => {
+    if (ok) journal("Image enregistrée : " + COURBES.length + " fonctions en PNG.", "app");
+    else if (url){ window.open(url, "_blank"); journal("Le téléchargement est bloqué ici : j'ai ouvert l'image dans un onglet, fais un clic droit pour l'enregistrer.", "app", true); }
+    else journal("Je n'arrive pas à fabriquer l'image sur cet appareil.", "app", true);
+  };
+  try {
+    cv.toBlob(blob => {
+      if (!blob){ fini(false, null); return; }
+      const url = URL.createObjectURL(blob);
+      try {
+        const a = document.createElement("a");
+        if (typeof a.download !== "string"){ fini(false, url); return; }
+        a.href = url;
+        a.download = "funcora-" + (T.nom || "dessin").replace(/[^a-z0-9]+/gi, "-").slice(0, 30) + ".png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        fini(true);
+      } catch (e){ fini(false, url); }
+      setTimeout(() => URL.revokeObjectURL(url), 8000);
+    }, "image/png");
+  } catch (e){ fini(false, null); }
+}
+
+/* --- panneau des équations --- */
+
+function majPanneau(){
+  const n = COURBES.length;
+  const masquees = COURBES.filter(c => c.cache).length;
+  elCompteur.innerHTML = "<b>" + n + "</b> fonction" + (n > 1 ? "s" : "") +
+    (masquees ? ", " + masquees + " masquée" + (masquees > 1 ? "s" : "") : "");
+  const pages = Math.max(1, Math.ceil(n/PAR_PAGE));
+  if (page >= pages) page = pages - 1;
+  const debut = page*PAR_PAGE, fin = Math.min(n, debut + PAR_PAGE);
+  const frag = document.createDocumentFragment();
+  for (let i = debut; i < fin; i++){
+    const c = COURBES[i];
+    const d = document.createElement("div");
+    d.className = "eq" + (c.cache ? " masquee" : "");
+    const past = document.createElement("span");
+    past.className = "pastille";
+    past.style.background = c.col || "#2d70f5";
+    const f = document.createElement("span");
+    f.className = "form";
+    const txt = texteEquation(c, "uni");
+    const coupe = txt.indexOf(" {");
+    if (coupe > 0){
+      f.appendChild(document.createTextNode(txt.slice(0, coupe)));
+      const dom = document.createElement("span");
+      dom.className = "dom";
+      dom.textContent = txt.slice(coupe);
+      f.appendChild(dom);
+    } else f.textContent = txt;
+    const actions = document.createElement("span");
+    actions.className = "actes";
+    const oeil = document.createElement("button");
+    oeil.className = "ico";
+    oeil.title = c.cache ? "Remontrer cette courbe" : "Masquer cette courbe";
+    oeil.textContent = c.cache ? "◌" : "◉";
+    oeil.onclick = e => {
+      e.stopPropagation();
+      c.cache = !c.cache;
+      dessiner();
+      majPanneau();
+    };
+    const gomme = document.createElement("button");
+    gomme.className = "ico";
+    gomme.title = "Supprimer cette équation";
+    gomme.textContent = "\u2715";
+    gomme.onclick = e => {
+      e.stopPropagation();
+      c.supprime = true;
+      COURBE_SURVOL = null;
+      COURBES = T.courbes.filter(x => !x.supprime);
+      dessiner();
+      majPanneau();
+      journal("Équation retirée de la liste et de l'export (le dessin rempli, lui, reste complet).", "app");
+    };
+    actions.appendChild(oeil); actions.appendChild(gomme);
+    d.appendChild(past); d.appendChild(f); d.appendChild(actions);
+    d.onmouseenter = () => { COURBE_SURVOL = c; dessiner(); };
+    d.onmouseleave = () => { if (COURBE_SURVOL === c){ COURBE_SURVOL = null; dessiner(); } };
+    frag.appendChild(d);
+  }
+  elListe.innerHTML = "";
+  elListe.appendChild(frag);
+  elListe.scrollTop = 0;
+  majBoutonCopie();
+  elPagination.innerHTML = "";
+  if (pages > 1){
+    const prec = document.createElement("button");
+    prec.textContent = "◀";
+    prec.disabled = page === 0;
+    prec.onclick = () => { page--; majPanneau(); };
+    const suiv = document.createElement("button");
+    suiv.textContent = "▶";
+    suiv.disabled = page >= pages - 1;
+    suiv.onclick = () => { page++; majPanneau(); };
+    const txt = document.createElement("span");
+    txt.textContent = "équations " + (debut+1) + " à " + fin + " sur " + n;
+    elPagination.appendChild(prec); elPagination.appendChild(txt); elPagination.appendChild(suiv);
+  } else if (n){
+    const txt = document.createElement("span");
+    txt.textContent = "toutes les équations sont affichées";
+    elPagination.appendChild(txt);
+  }
+}
+
+const LOT_COPIE = 200;
+let lotCopie = 0;
+
+function formatChoisi(){
+  const el = document.getElementById("format");
+  return el && el.value === "texte" ? "texte" : "latex";
+}
+
+// N'exporte que des équations relues et vérifiées : ce qui part dans Desmos
+// redonne exactement la courbe affichée. La relecture ne porte que sur le lot
+// demandé — vérifier dix mille lignes à chaque clic ne servirait à rien.
+function courbesVisibles(){ return COURBES.filter(c => !c.cache); }
+
+function equationsExport(style, debut, fin){
+  const source = courbesVisibles();
+  const d = debut || 0, f = (fin === undefined || fin === null) ? source.length : fin;
+  const lignes = [];
+  let refus = 0;
+  for (let i = d; i < Math.min(f, source.length); i++){
+    const v = verifierCourbe(source[i], style);
+    if (v.ok) lignes.push(v.txt); else refus++;
+  }
+  return { lignes: lignes, refus: refus, total: source.length };
+}
+
+function texteExport(style){ return equationsExport(style || formatChoisi()).lignes.join("\n"); }
+
+function majBoutonCopie(){
+  const b = document.getElementById("btnCopier");
+  const tout = document.getElementById("btnCopierTout");
+  if (!b) return;
+  const n = courbesVisibles().length;
+  if (n <= LOT_COPIE){
+    lotCopie = 0;
+    b.textContent = "Copier pour Desmos";
+    if (tout) tout.hidden = true;
+    return;
+  }
+  if (tout) tout.hidden = false;
+  if (lotCopie*LOT_COPIE >= n) lotCopie = 0;
+  const debut = lotCopie*LOT_COPIE + 1, fin = Math.min(n, (lotCopie + 1)*LOT_COPIE);
+  b.textContent = (lotCopie === 0 ? "Copier " : "Lot suivant ") + debut + "\u2013" + fin;
+}
+
+function copierTexte(texte, fini){
+  if (navigator.clipboard && navigator.clipboard.writeText)
+    navigator.clipboard.writeText(texte).then(() => fini(true), () => fini(copierRepli(texte)));
+  else fini(copierRepli(texte));
+}
+
+/* À ces volumes le presse-papier ne suit plus : on écrit un fichier. */
+function telechargerEquations(){
+  const style = formatChoisi();
+  const visibles = courbesVisibles();
+  if (!visibles.length){ journal("Il n'y a encore aucune équation.", "app", true); return; }
+  const morceaux = [];
+  const lot = 5000;
+  for (let i = 0; i < visibles.length; i += lot){
+    const bout = [];
+    for (let j = i; j < Math.min(i + lot, visibles.length); j++) bout.push(texteEquation(visibles[j], style));
+    morceaux.push(bout.join("\n") + "\n");
+  }
+  // on relit un échantillon : tout relire prendrait des minutes à un million
+  let ko = 0;
+  const pas = Math.max(1, Math.floor(visibles.length/300));
+  let testees = 0;
+  for (let i = 0; i < visibles.length; i += pas){ testees++; if (!verifierCourbe(visibles[i], style).ok) ko++; }
+  try {
+    const blob = new Blob(morceaux, { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "funcora-" + visibles.length + "-fonctions.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 8000);
+    journal("Fichier écrit : " + visibles.length.toLocaleString("fr-FR") + " équations " +
+      (style === "latex" ? "en LaTeX" : "en texte simple") + " (" + (ko ? ko + " douteuses sur " + testees + " relues" : testees + " relues au hasard, toutes justes") + ").", "app", ko > 0);
+  } catch (e){
+    journal("Impossible d'écrire le fichier ici : " + e.message, "app", true);
+  }
+}
+
+function copierPourDesmos(tout){
+  const style = formatChoisi();
+  const total = courbesVisibles().length;
+  if (!total){ journal("Il n'y a encore aucune équation à copier.", "app", true); return; }
+  let debut = 0, fin = total, parLot = false;
+  if (!tout && total > LOT_COPIE){
+    debut = lotCopie*LOT_COPIE;
+    if (debut >= total){ debut = 0; lotCopie = 0; }
+    fin = Math.min(total, debut + LOT_COPIE);
+    parLot = true;
+  }
+  const r = equationsExport(style, debut, fin);
+  if (!r.lignes.length){ journal("Aucune équation n'a passé la relecture dans ce lot.", "app", true); return; }
+  copierTexte(r.lignes.join("\n"), ok => {
+    if (!ok){ journal("Copie impossible ici : sélectionne les équations dans la liste.", "app", true); return; }
+    const nom = style === "latex" ? "en LaTeX" : "en texte simple";
+    let msg = parLot
+      ? "Lot copié " + nom + " : équations " + (debut + 1) + " à " + fin + " sur " + total +
+        ". Colle-les dans Desmos, puis reclique pour le lot suivant."
+      : "J'ai copié " + r.lignes.length + " équations " + nom + " : colle-les dans Desmos, une par ligne.";
+    if (r.refus) msg += " (" + r.refus + " écartée" + (r.refus > 1 ? "s" : "") + " : je ne les ai pas relues correctement.)";
+    journal(msg, "app");
+    if (parLot) lotCopie = fin >= total ? 0 : lotCopie + 1;
+    majBoutonCopie();
+  });
+}
+
+function copierRepli(texte){
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = texte;
+    ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e){ return false; }
+}
+
+
+/* ---------- 10. Interface ---------------------------------------------- */
+
+const elDepot = document.getElementById("depot");
+const elAccueil = document.getElementById("accueil");
+const elTravail = document.getElementById("travail");
+const elZoneColler = document.getElementById("zoneColler");
+
+function construireNiveaux(){
+  const box = document.getElementById("paliers");
+  NIVEAUX.forEach((n, i) => {
+    const b = document.createElement("button");
+    b.innerHTML = "";
+    b.appendChild(document.createTextNode(n.nom));
+    const sp = document.createElement("span");
+    sp.textContent = n.def;
+    b.appendChild(sp);
+    b.onclick = () => choisirNiveau(i);
+    box.appendChild(b);
+  });
+  choisirNiveau(T.niveau);
+}
+
+function choisirNiveau(i){
+  T.niveau = i;
+  const boutons = document.querySelectorAll("#paliers button");
+  boutons.forEach((b, j) => b.classList.toggle("actif", j === i));
+  const n = NIVEAUX[i];
+  document.getElementById("expNiveau").textContent =
+    "Il compare son tracé à ton image ramenée en " + n.def + " (" + n.h + " pixels de haut) et " +
+    "continue tant que plus de " + n.seuil + " % des pixels s'en écartent de plus de " +
+    n.ecart + " sur 255.";
+}
+
+/* --- Recevoir une image : fichier, collage, glisser-déposer --- */
+function accepterFichier(f){
+  if (!f){ journal("Je n'ai pas trouvé d'image là-dedans.", "app", true); return; }
+  if (!/^image\//.test(f.type || "")){
+    journal("Ce fichier n'est pas une image (" + (f.type || "type inconnu") + ").", "app", true);
+    return;
+  }
+  const lect = new FileReader();
+  lect.onload = () => accepterURL(lect.result, f.name);
+  lect.onerror = () => journal("Lecture impossible de ce fichier.", "app", true);
+  lect.readAsDataURL(f);
+}
+
+function accepterURL(url, nom){
+  const img = new Image();
+  img.onload = () => demarrerAvec(img, nom);
+  img.onerror = () => journal("Cette image n'a pas pu être ouverte.", "app", true);
+  img.src = url;
+}
+
+function demarrerAvec(img, nom){
+  T.image = img;
+  T.nom = (nom || "image").replace(/\.[^.]+$/, "");
+  T.calques = []; T.courbes = []; COURBES = [];
+  T.comparaison = 100;
+  document.getElementById("curseurComp").value = 100;
+  document.getElementById("bulleComp").textContent = "tracé";
+  document.getElementById("reglette").hidden = true;
+  elAccueil.hidden = true;
+  elTravail.hidden = false;
+  elZoneColler.innerHTML = "";
+  setTimeout(() => { redimensionner(); lancerMoteur(); }, 30);
+}
+
+function imageDuPressePapier(items){
+  for (const it of items || []){
+    if (it.kind === "file" && /^image\//.test(it.type)){ accepterFichier(it.getAsFile()); return true; }
+  }
+  return false;
+}
+
+document.addEventListener("paste", e => {
+  const dt = e.clipboardData;
+  if (!dt) return;
+  if (imageDuPressePapier(dt.items)){
+    e.preventDefault();
+    setTimeout(() => { elZoneColler.innerHTML = ""; }, 10);
+    return;
+  }
+  // certaines applications collent l'image comme un <img src="data:…"> en HTML
+  const html = dt.getData && dt.getData("text/html");
+  const m = html && html.match(/<img[^>]+src="([^"]+)"/i);
+  if (m && /^data:image\//.test(m[1])){
+    e.preventDefault();
+    accepterURL(m[1], "collage");
+    setTimeout(() => { elZoneColler.innerHTML = ""; }, 10);
+  }
+});
+
+document.getElementById("btnColler").onclick = async () => {
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.read){
+      journal("Ce navigateur ne me laisse pas lire le presse-papier : fais Ctrl+V, ou clic droit → Coller dans le cadre.", "app", true);
+      return;
+    }
+    const morceaux = await navigator.clipboard.read();
+    for (const m of morceaux){
+      const type = m.types.find(t => /^image\//.test(t));
+      if (type){
+        const blob = await m.getType(type);
+        accepterFichier(new File([blob], "collage.png", { type: type }));
+        return;
+      }
+    }
+    journal("Il n'y a pas d'image dans le presse-papier.", "app", true);
+  } catch (e){
+    journal("Le navigateur a refusé l'accès au presse-papier : fais Ctrl+V, ou clic droit → Coller dans le cadre.", "app", true);
+  }
+};
+
+document.getElementById("btnChoisir").onclick = () => document.getElementById("fichier").click();
+document.getElementById("fichier").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  accepterFichier(f);
+});
+
+["dragenter", "dragover"].forEach(ev => elDepot.addEventListener(ev, e => {
+  e.preventDefault(); elDepot.classList.add("survol");
+}));
+["dragleave", "drop"].forEach(ev => elDepot.addEventListener(ev, e => {
+  e.preventDefault(); elDepot.classList.remove("survol");
+}));
+elDepot.addEventListener("drop", e => {
+  const dt = e.dataTransfer;
+  if (!dt) return;
+  if (dt.files && dt.files.length) accepterFichier(dt.files[0]);
+  else if (!imageDuPressePapier(dt.items)) journal("Je n'ai pas trouvé d'image dans ce que tu as déposé.", "app", true);
+});
+document.addEventListener("dragover", e => e.preventDefault());
+document.addEventListener("drop", e => {
+  if (elTravail.hidden && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+    e.preventDefault();
+    accepterFichier(e.dataTransfer.files[0]);
+  }
+});
+
+/* --- Boutons de la zone de travail --- */
+document.getElementById("btnStop").onclick = () => {
+  T.arret = true;
+  journal("D'accord, j'arrête là et je garde ce que j'ai.", "app");
+};
+document.getElementById("btnNouvelle").onclick = () => {
+  T.arret = true;
+  arreterChrono();
+  elTravail.hidden = true;
+  elAccueil.hidden = false;
+  elLoader.hidden = true;
+};
+document.getElementById("btnRempli").onclick = e => {
+  T.rempli = !T.rempli;
+  e.target.textContent = T.rempli ? "Fil de fer" : "Rempli";
+  dessiner();
+};
+document.getElementById("btnRecadrer").onclick = recadrer;
+document.getElementById("btnZoomP").onclick = () => zoomer(1.25);
+document.getElementById("btnZoomM").onclick = () => zoomer(0.8);
+document.getElementById("btnCopier").onclick = () => copierPourDesmos(false);
+document.getElementById("btnCopierTout").onclick = () => copierPourDesmos(true);
+document.getElementById("btnFichierTxt").onclick = telechargerEquations;
+document.getElementById("btnPng").onclick = exporterPNG;
+document.getElementById("format").onchange = () => { lotCopie = 0; majBoutonCopie(); };
+
+const elComp = document.getElementById("curseurComp");
+elComp.addEventListener("input", () => {
+  T.comparaison = +elComp.value;
+  document.getElementById("bulleComp").textContent =
+    T.comparaison >= 99 ? "tracé" : (T.comparaison <= 1 ? "image d'origine" : "original " + T.comparaison + " %");
+  dessiner();
+});
+
+/* --- souris et doigts sur le dessin --- */
+function zoomer(facteur, clientX, clientY){
+  const r = cvGraphe.getBoundingClientRect();
+  const px = (clientX === undefined ? r.width/2 : clientX - r.left);
+  const py = (clientY === undefined ? r.height/2 : clientY - r.top);
+  const ax = versRepereX(px), ay = versRepereY(py);
+  vue.ppu = borne(vue.ppu*facteur, 1, 4000);
+  vue.cx = ax - (px - largeurVue()/2)/vue.ppu;
+  vue.cy = ay + (py - hauteurVue()/2)/vue.ppu;
+  dessiner();
+}
+
+(function interactions(){
+  let attrape = false, dernier = null, pincee = null;
+  cvGraphe.addEventListener("pointerdown", e => {
+    attrape = true; dernier = [e.clientX, e.clientY];
+    cvGraphe.classList.add("attrape");
+    cvGraphe.setPointerCapture(e.pointerId);
+  });
+  cvGraphe.addEventListener("pointermove", e => {
+    if (!attrape || !dernier) return;
+    const dx = e.clientX - dernier[0], dy = e.clientY - dernier[1];
+    dernier = [e.clientX, e.clientY];
+    vue.cx -= dx/vue.ppu; vue.cy += dy/vue.ppu;
+    dessiner();
+  });
+  const fin = () => { attrape = false; dernier = null; cvGraphe.classList.remove("attrape"); };
+  cvGraphe.addEventListener("pointerup", fin);
+  cvGraphe.addEventListener("pointercancel", fin);
+  cvGraphe.addEventListener("wheel", e => {
+    e.preventDefault();
+    zoomer(Math.pow(0.999, e.deltaY), e.clientX, e.clientY);
+  }, { passive: false });
+  cvGraphe.addEventListener("touchmove", e => {
+    if (e.touches.length !== 2) return;
+    e.preventDefault();
+    const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    if (pincee) zoomer(d/pincee, (e.touches[0].clientX + e.touches[1].clientX)/2,
+                                 (e.touches[0].clientY + e.touches[1].clientY)/2);
+    pincee = d;
+  }, { passive: false });
+  cvGraphe.addEventListener("touchend", () => { pincee = null; });
+})();
+
+window.addEventListener("resize", () => { if (!elTravail.hidden) redimensionner(); });
+
+/* --- démarrage --- */
+construireNiveaux();
+journal("Donne-moi une image : bouton, glisser-déposer, ou Ctrl+V. Je la redessine avec des fonctions " +
+  "jusqu'à ce que l'écart passe sous le seuil du niveau choisi, puis j'élague le plus possible.", "app");
+
+// petit coup de main pour les tests automatiques
+window.FUNCORA = {
+  T: T, niveaux: NIVEAUX, courbes: () => COURBES, texte: texteEquation, verifier: verifierCourbe,
+  equations: equationsExport, export: texteExport, mesurer: mesurerDiff, analyser: analyserImage,
+  tracer: tracerCalques, lancer: lancerMoteur, image: accepterURL, niveau: choisirNiveau,
+  etapes: () => ETAPES, dessiner: dessiner, recadrer: recadrer, majTout: majTout
+};
+</script>
+</body>
+</html>
