@@ -1,0 +1,4420 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Funcora 0.3</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --fond:#131722; --fond2:#1b2130; --fond3:#232b3d; --bord:#333d54;
+  --texte:#e8edf7; --texte2:#9aa6bf; --accent:#2d70f5; --accent2:#3ec46d;
+  --grille:#2a3244; --axe:#7d8aa5;
+}
+html,body{margin:0;padding:0;background:var(--fond);color:var(--texte);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px}
+body{padding:0 0 env(safe-area-inset-bottom,0px)}
+h1{margin:0;font-size:26px;letter-spacing:.5px}
+h1 span{color:var(--accent);font-weight:400}
+header{padding:14px 16px 8px}
+.sous{margin:4px 0 0;color:var(--texte2);font-size:13px}
+#barre{display:flex;gap:8px;padding:8px 16px}
+#demande,#reproche{flex:1;min-width:0;padding:12px 14px;border-radius:10px;border:1px solid var(--bord);
+  background:var(--fond2);color:var(--texte);font-size:16px;outline:none}
+#demande:focus,#reproche:focus{border-color:var(--accent)}
+button{font-family:inherit;font-size:14px;cursor:pointer;border:1px solid var(--bord);
+  background:var(--fond3);color:var(--texte);padding:11px 16px;border-radius:10px}
+button:hover{background:#2c364c}
+button.principal{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.principal:hover{background:#245fd6}
+button:disabled{opacity:.5;cursor:default}
+#exemples{display:flex;flex-wrap:wrap;gap:6px;padding:2px 16px 8px}
+.puce{background:var(--fond2);border:1px solid var(--bord);color:var(--texte2);
+  padding:6px 10px;border-radius:999px;font-size:12.5px;cursor:pointer}
+.puce:hover{color:var(--texte);border-color:var(--accent)}
+#outils{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:6px 16px 10px}
+.groupe{display:flex;align-items:center;gap:8px;background:var(--fond2);border:1px solid var(--bord);
+  border-radius:10px;padding:6px 10px}
+.groupe label{color:var(--texte2);font-size:12.5px;white-space:nowrap}
+.bascule{display:flex;border:1px solid var(--bord);border-radius:10px;overflow:hidden}
+.bascule button{border:0;border-radius:0;padding:10px 14px;background:var(--fond2)}
+.bascule button.actif{background:var(--accent);color:#fff;font-weight:600}
+input[type=range]{width:110px;accent-color:var(--accent)}
+.fichier{display:inline-block}
+.fichier input{display:none}
+main{display:flex;gap:12px;padding:0 16px;align-items:stretch}
+#zoneGraphe{position:relative;flex:1;min-width:0;background:var(--fond2);border:1px solid var(--bord);
+  border-radius:12px;overflow:hidden;height:min(62vh,560px)}
+#graphe{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#graphe.attrape{cursor:grabbing}
+#etat{position:absolute;left:10px;top:10px;background:#0b0f18cc;border:1px solid var(--bord);
+  padding:6px 10px;border-radius:8px;font-size:12.5px;color:var(--texte2);pointer-events:none;
+  max-width:72%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#loader{position:absolute;left:10px;top:44px;max-width:min(460px,80%);background:#0b0f18e8;
+  border:1px solid var(--bord);border-radius:10px;padding:8px 10px;font-size:12.5px;z-index:4;
+  max-height:70%;overflow:auto}
+#loader h3{margin:0 0 6px;font-size:12px;color:var(--texte2);font-weight:600;letter-spacing:.3px}
+.etape{display:flex;gap:7px;align-items:flex-start;padding:2px 0;line-height:1.35}
+.etape .marque{flex:0 0 14px;text-align:center}
+.etape.encours .marque{color:var(--accent)}
+.etape.ok .marque{color:var(--accent2)}
+.etape.rate .marque{color:#f0a860}
+.etape .txt{color:var(--texte)}
+.etape .det{color:var(--texte2)}
+.etape .ms{margin-left:auto;color:var(--texte2);font-variant-numeric:tabular-nums;padding-left:8px}
+#outilsGraphe{position:absolute;right:10px;bottom:10px;display:flex;gap:6px}
+#outilsGraphe button{padding:8px 10px;font-size:12.5px;background:#0b0f18cc}
+#panneau{width:380px;flex:0 0 380px;background:var(--fond2);border:1px solid var(--bord);
+  border-radius:12px;display:flex;flex-direction:column;height:min(62vh,560px)}
+#entete{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px;border-bottom:1px solid var(--bord)}
+#compteur{font-size:13px;color:var(--texte2);white-space:nowrap}
+.copie{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.copie select{background:var(--fond3);color:var(--texte);border:1px solid var(--bord);
+  border-radius:8px;padding:8px 6px;font-family:inherit;font-size:12.5px}
+.copie button{padding:9px 12px;font-size:13px}
+.copie button.mini{padding:9px 10px;color:var(--texte2)}
+.unite{color:var(--texte2);font-size:11.5px}
+.groupe.max{gap:6px}
+.groupe.max button{padding:8px 10px;font-size:12.5px}
+.groupe.max button.palier:hover{border-color:var(--accent);color:#fff}
+#btnStopMax{background:#7a2f2f;border-color:#a04545;color:#fff}
+.groupe span{min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
+#compteur b{color:var(--texte);font-size:15px}
+#liste{flex:1;overflow:auto;padding:6px}
+.eq{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border-radius:8px;font-size:13.5px;line-height:1.45}
+.eq:hover{background:var(--fond3)}
+.eq.masquee .form{opacity:.42;text-decoration:line-through}
+.actes{margin-left:auto;display:flex;gap:2px;opacity:.25}
+.eq:hover .actes{opacity:1}
+.ico{border:0;background:transparent;color:var(--texte2);padding:2px 6px;font-size:14px;line-height:1;border-radius:6px}
+.ico:hover{background:var(--bord);color:var(--texte)}
+@media (hover:none){ .actes{opacity:.8} }
+.pastille{width:12px;height:12px;border-radius:50%;flex:0 0 12px;margin-top:4px}
+.form{font-family:"Cambria Math","Latin Modern Math",Georgia,serif;font-size:15px;word-break:break-word}
+.dom{color:var(--texte2)}
+#pagination{display:flex;gap:6px;align-items:center;justify-content:center;padding:8px;
+  border-top:1px solid var(--bord);font-size:12.5px;color:var(--texte2)}
+#pagination button{padding:6px 10px;font-size:12.5px}
+#retouches{padding:12px 16px 20px}
+#journal{max-height:180px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.msg{padding:8px 11px;border-radius:10px;font-size:13.5px;max-width:92%}
+.msg.moi{align-self:flex-end;background:var(--accent);color:#fff}
+.msg.app{align-self:flex-start;background:var(--fond2);border:1px solid var(--bord);color:var(--texte)}
+.msg.app.rate{border-color:#8a5a2b;color:#f0c890}
+.barre2{display:flex;gap:8px}
+#modalDessin{position:fixed;inset:0;background:#0b0f18e8;z-index:50;display:flex;align-items:center;
+  justify-content:center;padding:16px}
+#modalDessin[hidden]{display:none}
+#modalDessin .carte{background:var(--fond2);border:1px solid var(--bord);border-radius:14px;padding:14px;
+  max-width:min(560px,94vw)}
+#modalDessin h2{margin:0 0 10px;font-size:18px}
+#toile{background:#fff;border-radius:10px;touch-action:none;display:block;width:min(500px,86vw);height:min(500px,86vw)}
+#modalDessin .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pied{padding:0 16px 22px;color:var(--texte2);font-size:12px;text-align:center}
+@media (max-width:860px){
+  main{flex-direction:column}
+  #panneau{width:auto;flex:1 1 auto;height:min(52vh,420px)}
+  #zoneGraphe{height:min(46vh,420px)}
+  header{padding:10px 14px 4px}
+  h1{font-size:22px}
+  .sous{font-size:12px}
+  #exemples,#outils{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:10px}
+  #exemples::-webkit-scrollbar,#outils::-webkit-scrollbar{display:none}
+  #exemples>*,#outils>*{flex:0 0 auto}
+  .puce{white-space:nowrap}
+  #etat{font-size:11px;padding:4px 8px;max-width:62%}
+  input[type=range]{width:90px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Funcora <span>0.3</span></h1>
+  <p class="sous">Écris ce que tu veux dessiner : Funcora le trace avec des fonctions mathématiques,
+    et te donne toutes les équations à copier.</p>
+</header>
+
+<div id="barre">
+  <input id="demande" placeholder="une maison avec un sapin et un soleil" autocomplete="off">
+  <button id="btnTracer" class="principal">Tracer</button>
+  <button id="btnRegen" title="Un autre dessin pour la même demande">Regénérer</button>
+</div>
+
+<div id="exemples"></div>
+
+<div id="outils">
+  <div class="bascule" id="modeBascule">
+    <button data-mode="formules" class="actif">Formules</button>
+    <button data-mode="tracage">Traçage</button>
+  </div>
+  <div class="groupe"><label for="detail">Fonctions</label><input type="range" id="detail" min="0" max="100" value="47"><span id="detailVal">250</span></div>
+  <div class="groupe"><label for="couleurs">Couleurs</label><input type="range" id="couleurs" min="0" max="100" value="54"><span id="couleursVal">12</span><span class="unite">calques</span></div>
+  <label class="fichier"><button type="button" onclick="this.parentNode.querySelector('input').click()">Importer une image</button><input type="file" id="fichier" accept="image/*"></label>
+  <button id="btnDessiner">Dessiner à la main</button>
+  <button id="btnRejouer">Rejouer</button>
+  <button id="btnPng">Image PNG</button>
+  <div class="groupe max">
+    <label>Max</label>
+    <button class="palier" data-max="10000">10 k</button>
+    <button class="palier" data-max="100000">100 k</button>
+    <button class="palier" data-max="1000000">1 M</button>
+    <button id="btnStopMax" hidden>Arrêter</button>
+  </div>
+</div>
+
+<main>
+  <section id="zoneGraphe">
+    <canvas id="graphe"></canvas>
+    <div id="etat">Prêt.</div>
+    <div id="loader" hidden><div id="etapesListe"></div></div>
+    <div id="outilsGraphe">
+      <button id="btnZoomM">−</button>
+      <button id="btnZoomP">+</button>
+      <button id="btnRecadrer">Recadrer</button>
+    </div>
+  </section>
+  <aside id="panneau">
+    <div id="entete">
+      <span id="compteur"><b>0</b> fonction</span>
+      <span class="copie">
+        <select id="format" title="Format des équations copiées">
+          <option value="latex">LaTeX (Desmos)</option>
+          <option value="texte">texte simple</option>
+        </select>
+        <button id="btnCopier">Copier pour Desmos</button>
+        <button id="btnCopierTout" class="mini" title="Tout copier d'un coup" hidden>tout</button>
+        <button id="btnFichier" class="mini" title="Télécharger toutes les équations en .txt">.txt</button>
+      </span>
+    </div>
+    <div id="liste"></div>
+    <div id="pagination"></div>
+  </aside>
+</main>
+
+<section id="retouches">
+  <div id="journal"></div>
+  <div class="barre2">
+    <input id="reproche" placeholder="fais-lui un reproche : « le toit est trop grand », « plus de détails »" autocomplete="off">
+    <button id="btnReproche">Corriger</button>
+  </div>
+</section>
+
+<p class="pied">Funcora 0.3 — tout se passe dans cette page, sans internet et sans compte.</p>
+
+<div id="modalDessin" hidden>
+  <div class="carte">
+    <h2>Dessine, Funcora en fera des fonctions</h2>
+    <canvas id="toile" width="512" height="512"></canvas>
+    <div class="actions">
+      <button id="btnToileValider" class="principal">Transformer en fonctions</button>
+      <button id="btnToileEffacer">Effacer</button>
+      <button id="btnToileFermer">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =======================================================================
+   FUNCORA 0.3
+   Un dessin -> des fonctions. Tout est calculé ici, hors ligne.
+   Nouveautés 0.1 : sortie LaTeX que Desmos lit sans broncher, contours
+   plus nets, coins francs, plus aucun doublon.
+   Nouveautés 0.2 : curseur « fonctions » de 10 à 10 000 et curseur
+   couleurs de 1 à 100, plus de 1000 mots reconnus, 36 modèles à trois
+   niveaux de détail, image PNG, animation du tracé, liste d'équations
+   cliquable.
+   Plan du fichier :
+     1. Outils généraux
+     2. Familles de courbes (paramètres, évaluation, écriture)
+     3. Transformations (échelle, déplacement, miroir, rotation)
+     4. Ajustement : un nuage de points -> une équation
+     5. Contours : pixels -> polygones (marching squares)
+     6. Vectoriseur : mot / emoji / image / dessin -> courbes
+     7. Lexique des mots et modèles paramétriques faits main
+     8. Scène : plusieurs objets, placement, historique
+     9. Reproches : corriger le dessin en français
+    10. Rendu du repère et panneau des équations
+    11. Interface
+   ======================================================================= */
+
+/* ---------- 1. Outils généraux ---------------------------------------- */
+
+const PALETTE = ["#2d70f5","#3ec46d","#f2c744","#f08a35","#c07cf5","#f27a9b","#e2564d","#48c7d0"];
+
+function borne(v, min, max){ return v < min ? min : (v > max ? max : v); }
+
+function arrondi(v, d){
+  if (!isFinite(v)) return 0;
+  const p = Math.pow(10, d === undefined ? 4 : d);
+  const r = Math.round(v * p) / p;
+  return Object.is(r, -0) ? 0 : r;
+}
+
+// Arrondi à un nombre de chiffres significatifs : garde la précision des
+// petits coefficients (0.00057) sans traîner 12 décimales sur les grands.
+function net(v, sig){
+  if (!isFinite(v)) return 0;
+  if (Math.abs(v) < 1e-9) return 0;     // résidu de calcul flottant, pas un vrai nombre
+  const r = Number(v.toPrecision(sig || 6));
+  return Object.is(r, -0) ? 0 : r;
+}
+
+// Nombre écrit pour être relu : jamais de notation scientifique,
+// Desmos ne comprend pas « 1e-7 ».
+function nb(v, sig){
+  const r = net(v, sig);
+  if (r === 0) return "0";
+  const t = String(r);
+  if (t.indexOf("e") < 0 && t.indexOf("E") < 0) return t;
+  const abs = Math.abs(r);
+  if (abs >= 1e20) return String(Math.round(r/1e6)*1e6).replace(/e.*$/, "");
+  let d = r.toFixed(20).replace(/0+$/, "").replace(/\.$/, "");
+  return d === "-0" ? "0" : d;
+}
+
+// "sans accents, en minuscules" pour comparer les mots
+function normaliser(txt){
+  return String(txt).toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ").trim();
+}
+
+function distanceCouleur(a, b){
+  const dr = a[0]-b[0], dg = a[1]-b[1], db = a[2]-b[2];
+  return dr*dr + dg*dg + db*db;
+}
+
+function rgbHex(c){
+  const h = v => borne(Math.round(v),0,255).toString(16).padStart(2,"0");
+  return "#" + h(c[0]) + h(c[1]) + h(c[2]);
+}
+
+// Une couleur trop sombre disparaît sur fond noir : on l'éclaircit un peu.
+function lisibleSurFonce(c){
+  const lum = 0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2];
+  if (lum >= 70) return c.slice();
+  const k = 70 / Math.max(lum, 6);
+  return [borne(c[0]*k + 30, 0, 255), borne(c[1]*k + 30, 0, 255), borne(c[2]*k + 30, 0, 255)];
+}
+
+/* ---------- 2. Familles de courbes ------------------------------------
+   Une courbe garde SES PARAMÈTRES, jamais un texte figé : on peut donc la
+   déplacer, l'agrandir, la retourner, et n'écrire l'équation qu'à la fin.
+     { fam, p, axe, dom, col }
+   axe "x" : y = f(x), le domaine porte sur x.
+   axe "y" : x = f(y), le domaine porte sur y (morceaux verticaux).
+------------------------------------------------------------------------ */
+
+const FAMILLES = {
+  // y = a t + b
+  droite: {
+    ev: (p,t) => p.a*t + p.b,
+    ecrire: (p,v,st) => p.a === 0 ? nb(p.b) : coef(st, p.a) + v + terme(st, p.b)
+  },
+  // y = a (t - h)^2 + k   (sommet visible : la forme la plus lisible)
+  parabole: {
+    ev: (p,t) => p.a*(t-p.h)*(t-p.h) + p.k,
+    ecrire: (p,v,st) => coef(st, p.a) + st.car(dedans(st, v, p.h)) + terme(st, p.k)
+  },
+  // y = a u^2 + b u + c  avec u = t - x0   (sommet lointain : forme développée,
+  // recentrée sur le morceau pour que les coefficients restent petits et exacts)
+  parabole2: {
+    ev: (p,t) => { const u = t - p.x0; return p.a*u*u + p.b*u + p.c; },
+    ecrire: (p,v,st) => {
+      const u = p.x0 === 0 ? v : dedans(st, v, p.x0);
+      let s = coef(st, p.a) + st.car(u);
+      if (p.b > 0) s += st.plus + (p.b === 1 ? "" : nb(p.b)) + u;
+      else if (p.b < 0) s += st.moins + (p.b === -1 ? "" : nb(-p.b)) + u;
+      return s + terme(st, p.c);
+    }
+  },
+  // y = k + s sqrt(r^2 - (t - h)^2)
+  arc: {
+    ev: (p,t) => {
+      const d = p.r*p.r - (t-p.h)*(t-p.h);
+      return d < 0 ? NaN : p.k + p.s*Math.sqrt(d);
+    },
+    ecrire: (p,v,st) => {
+      const rac = st.rac(nb(p.r*p.r) + st.moins + st.car(dedans(st, v, p.h)));
+      if (p.k === 0) return (p.s >= 0 ? "" : "-") + rac;
+      return nb(p.k) + (p.s >= 0 ? st.plus : st.moins) + rac;
+    }
+  },
+  // y = k + s ry sqrt(1 - ((t - h)/rx)^2)
+  ellipse: {
+    ev: (p,t) => {
+      const u = (t-p.h)/p.rx;
+      const d = 1 - u*u;
+      return d < 0 ? NaN : p.k + p.s*p.ry*Math.sqrt(d);
+    },
+    ecrire: (p,v,st) => {
+      const q = st.car(st.quotient(v + signeNb(st, -p.h), nb(p.rx)));
+      const corps = (net(p.ry) === 1 ? "" : nb(p.ry) + st.mul) + st.rac("1" + st.moins + q);
+      if (p.k === 0) return (p.s >= 0 ? "" : "-") + corps;
+      return nb(p.k) + (p.s >= 0 ? st.plus : st.moins) + corps;
+    }
+  },
+  // y = a |t - h| + k
+  absolue: {
+    ev: (p,t) => p.a*Math.abs(t-p.h) + p.k,
+    ecrire: (p,v,st) => coefFonction(st, p.a) + st.val(v + signeNb(st, -p.h)) + terme(st, p.k)
+  },
+  // y = A sin(w (t - ph)) + k
+  sinus: {
+    ev: (p,t) => p.A*Math.sin(p.w*(t-p.ph)) + p.k,
+    ecrire: (p,v,st) => {
+      const arg = (net(p.w) === 1 ? "" : nb(p.w)) + (p.ph === 0 ? v : dedans(st, v, p.ph));
+      return coefFonction(st, p.A) + st.fon("sin", arg) + terme(st, p.k);
+    }
+  },
+  // y = a e^(b (t - h)) + k
+  expo: {
+    ev: (p,t) => p.a*Math.exp(p.b*(t-p.h)) + p.k,
+    ecrire: (p,v,st) => {
+      const arg = (net(p.b) === 1 ? "" : nb(p.b)) + (p.h === 0 ? v : dedans(st, v, p.h));
+      return coefFonction(st, p.a) + st.exp(arg) + terme(st, p.k);
+    }
+  },
+  // cercle entier : (x - h)^2 + (y - k)^2 = r^2
+  cercle: { ev: null, ecrire: null },
+  // droite horizontale ou verticale : t = c
+  constante: { ev: (p) => p.c, ecrire: (p) => nb(p.c) }
+};
+
+/* --- Écriture des équations : trois styles, un seul jeu de formules ---
+   "uni"   : joli, pour le panneau (≤ √ ²)
+   "texte" : ASCII tapable à la main
+   "latex" : exactement ce que Desmos met dans le presse-papier quand on
+             copie une expression — le seul format qu'il relit sans erreur. */
+const STYLES = {
+  uni: {
+    mul: "",
+    plus: " + ", moins: " - ", eg: " = ", inf: " ≤ ",
+    par: s => "(" + s + ")",
+    car: s => s + "²",
+    rac: s => "√(" + s + ")",
+    val: s => "|" + s + "|",
+    fon: (f, s) => f + "(" + s + ")",
+    exp: s => "e^(" + s + ")",
+    quotient: (a, b) => "(" + (/[-+*\/]/.test(a) ? "(" + a + ")" : a) + "/" + b + ")",
+    acc: s => " {" + s + "}"
+  },
+  texte: {
+    mul: "*",
+    plus: "+", moins: "-", eg: "=", inf: "<=",
+    par: s => "(" + s + ")",
+    car: s => s + "^2",
+    rac: s => "sqrt(" + s + ")",
+    val: s => "abs(" + s + ")",
+    fon: (f, s) => f + "(" + s + ")",
+    exp: s => "e^(" + s + ")",
+    quotient: (a, b) => "(" + (/[-+*\/]/.test(a) ? "(" + a + ")" : a) + "/" + b + ")",
+    acc: s => "{" + s + "}"
+  },
+  latex: {
+    mul: "",
+    plus: "+", moins: "-", eg: "=", inf: "\\le ",
+    par: s => "\\left(" + s + "\\right)",
+    car: s => s + "^{2}",
+    rac: s => "\\sqrt{" + s + "}",
+    val: s => "\\left|" + s + "\\right|",
+    fon: (f, s) => "\\" + f + "\\left(" + s + "\\right)",
+    exp: s => "e^{" + s + "}",
+    quotient: (a, b) => "\\left(\\frac{" + a + "}{" + b + "}\\right)",
+    acc: s => "\\left\\{" + s + "\\right\\}"
+  }
+};
+
+function coef(st, a){            // le nombre devant : 1 et -1 ne s'écrivent pas
+  const n = net(a);
+  return n === 1 ? "" : (n === -1 ? "-" : nb(n));
+}
+// Devant une fonction (sqrt, sin, |…|), le style ASCII écrit le × en clair :
+// « 2.8*sqrt(...) » ne peut pas se lire comme un produit de lettres s·q·r·t.
+function coefFonction(st, a){
+  const c = coef(st, a);
+  return (c === "" || c === "-") ? c : c + st.mul;
+}
+function terme(st, v){           // le « + 4 » ou « - 4 » de la fin
+  const n = net(v);
+  if (n > 0) return st.plus + nb(n);
+  if (n < 0) return st.moins + nb(-n);
+  return "";
+}
+function signeNb(st, v){         // « - 3 » collé derrière une variable
+  const n = net(v);
+  if (n > 0) return st.plus + nb(n);
+  if (n < 0) return st.moins + nb(-n);
+  return "";
+}
+function dedans(st, v, h){       // (x - h), ou x tout seul si h vaut 0
+  return net(h) === 0 ? v : st.par(v + signeNb(st, -h));
+}
+
+function courbe(fam, p, axe, dom, col){
+  return { fam: fam, p: p, axe: axe || "x", dom: [dom[0], dom[1]], col: col || PALETTE[0] };
+}
+
+function evaluer(c, t){
+  const f = FAMILLES[c.fam];
+  return f && f.ev ? f.ev(c.p, t) : NaN;
+}
+
+function pointCourbe(c, t){
+  const v = evaluer(c, t);
+  return c.axe === "x" ? [t, v] : [v, t];
+}
+
+// Les paramètres écrits sont EXACTEMENT ceux qui servent au tracé :
+// on les arrondit une fois pour toutes, sinon l'équation et la courbe
+// affichée ne racontent pas la même chose.
+function normaliserCourbe(c){
+  const p = {};
+  for (const k in c.p) p[k] = typeof c.p[k] === "number" ? net(c.p[k], 6) : c.p[k];
+  const d = [net(c.dom[0], 6), net(c.dom[1], 6)];
+  return { fam: c.fam, p: p, axe: c.axe, dom: [Math.min(d[0],d[1]), Math.max(d[0],d[1])], col: c.col, part: c.part };
+}
+
+// Une courbe qu'on ne saurait ni tracer ni écrire proprement
+function courbeValide(c){
+  if (!c || !FAMILLES[c.fam]) return false;
+  for (const k in c.p){
+    const v = c.p[k];
+    if (typeof v === "number" && (!isFinite(v) || Math.abs(v) > 1e6)) return false;
+  }
+  if (!isFinite(c.dom[0]) || !isFinite(c.dom[1])) return false;
+  if ((c.fam === "arc" || c.fam === "cercle") && !(c.p.r > 0 && c.p.r < 5000)) return false;
+  if (c.fam === "ellipse" && !(c.p.rx > 0 && c.p.rx < 5000 && c.p.ry !== 0)) return false;
+  if (c.fam === "cercle") return true;
+  return Math.abs(c.dom[1] - c.dom[0]) > 1e-6;
+}
+
+function texteEquation(c, style){
+  const st = STYLES[style] || STYLES.uni;
+  const v = c.axe === "x" ? "x" : "y";
+  const sortie = c.axe === "x" ? "y" : "x";
+  const d0 = nb(Math.min(c.dom[0], c.dom[1])), d1 = nb(Math.max(c.dom[0], c.dom[1]));
+  const dom = st.acc(d0 + st.inf + v + st.inf + d1);
+
+  if (c.fam === "cercle"){
+    return st.car(dedans(st, "x", c.p.h)) + st.plus + st.car(dedans(st, "y", c.p.k)) +
+           st.eg + nb(c.p.r*c.p.r);
+  }
+  if (c.fam === "constante") return sortie + st.eg + nb(c.p.c) + dom;
+  return sortie + st.eg + FAMILLES[c.fam].ecrire(c.p, v, st) + dom;
+}
+
+/* --- Relecture des équations -----------------------------------------
+   Un petit analyseur du LaTeX que Funcora produit : chaque équation
+   exportée est relue puis recalculée, et si elle ne redonne pas la courbe
+   tracée, elle n'est pas proposée. Desmos lit exactement ce sous-ensemble
+   (\sqrt{}, \frac{}{}, \left \right, ^{}, \sin, \left| \right|, e^{}).  */
+function lireExpression(src){
+  const t = src.replace(/\\left/g, "").replace(/\\right/g, "").replace(/\s+/g, "");
+  let i = 0, dansValeur = 0;
+  const fini = () => i >= t.length;
+  function attendre(c){ if (t[i] !== c) throw new Error("attendu « " + c + " » en " + i); i++; }
+  function debutFacteur(){
+    if (fini()) return false;
+    const c = t[i];
+    if (c === "|") return dansValeur === 0;
+    return /[0-9.a-z(\\]/.test(c);
+  }
+  function motLettres(){
+    const d = i;
+    while (!fini() && /[a-z]/.test(t[i])) i++;
+    return t.slice(d, i);
+  }
+  function nombre(){
+    const d = i;
+    while (!fini() && /[0-9.]/.test(t[i])) i++;
+    const v = parseFloat(t.slice(d, i));
+    if (!isFinite(v)) throw new Error("nombre illisible");
+    return () => v;
+  }
+  function groupe(){ attendre("{"); const e = expression(); attendre("}"); return e; }
+  function primaire(){
+    if (fini()) throw new Error("fin inattendue");
+    const c = t[i];
+    if (c === "("){ i++; const e = expression(); attendre(")"); return e; }
+    if (c === "|"){ i++; dansValeur++; const e = expression(); dansValeur--; attendre("|"); return (x,y) => Math.abs(e(x,y)); }
+    if (c === "\\"){
+      if (t.startsWith("\\sqrt", i)){ i += 5; const e = groupe(); return (x,y) => Math.sqrt(e(x,y)); }
+      if (t.startsWith("\\frac", i)){ i += 5; const a = groupe(), b = groupe(); return (x,y) => a(x,y)/b(x,y); }
+      if (t.startsWith("\\sin", i)){ i += 4; const e = primaire(); return (x,y) => Math.sin(e(x,y)); }
+      if (t.startsWith("\\cos", i)){ i += 4; const e = primaire(); return (x,y) => Math.cos(e(x,y)); }
+      throw new Error("commande inconnue : " + t.slice(i, i+6));
+    }
+    if (/[a-z]/.test(c)){
+      const mot = motLettres();
+      if (mot === "x") return (x) => x;
+      if (mot === "y") return (x,y) => y;
+      if (mot === "e"){
+        if (t[i] === "^"){ i++; const e = t[i] === "{" ? groupe() : primaire(); return (x,y) => Math.exp(e(x,y)); }
+        return () => Math.E;
+      }
+      if (mot === "sqrt"){ const e = primaire(); return (x,y) => Math.sqrt(e(x,y)); }
+      if (mot === "abs"){ const e = primaire(); return (x,y) => Math.abs(e(x,y)); }
+      if (mot === "sin"){ const e = primaire(); return (x,y) => Math.sin(e(x,y)); }
+      if (mot === "cos"){ const e = primaire(); return (x,y) => Math.cos(e(x,y)); }
+      throw new Error("nom inconnu : " + mot);
+    }
+    if (/[0-9.]/.test(c)) return nombre();
+    throw new Error("caractère inattendu : " + c);
+  }
+  function puissance(){
+    let base = primaire();
+    while (!fini() && t[i] === "^"){
+      i++;
+      const e = t[i] === "{" ? groupe() : primaire();
+      const b = base;
+      base = (x,y) => Math.pow(b(x,y), e(x,y));
+    }
+    return base;
+  }
+  function facteur(){
+    if (!fini() && t[i] === "-"){ i++; const e = facteur(); return (x,y) => -e(x,y); }
+    if (!fini() && t[i] === "+"){ i++; return facteur(); }
+    return puissance();
+  }
+  function produit(){
+    let a = facteur();
+    for (;;){
+      if (!fini() && (t[i] === "*" || t[i] === "/")){
+        const op = t[i]; i++;
+        const b = facteur(), g = a;
+        a = op === "*" ? ((x,y) => g(x,y)*b(x,y)) : ((x,y) => g(x,y)/b(x,y));
+        continue;
+      }
+      if (debutFacteur()){                     // multiplication implicite : 2x, 0.4\sin(...)
+        const b = facteur(), g = a;
+        a = (x,y) => g(x,y)*b(x,y);
+        continue;
+      }
+      break;
+    }
+    return a;
+  }
+  function expression(){
+    let a = produit();
+    while (!fini() && (t[i] === "+" || t[i] === "-")){
+      const op = t[i]; i++;
+      const b = produit(), g = a;
+      a = op === "+" ? ((x,y) => g(x,y)+b(x,y)) : ((x,y) => g(x,y)-b(x,y));
+    }
+    return a;
+  }
+  const f = expression();
+  if (!fini()) throw new Error("morceau non lu : " + t.slice(i));
+  return f;
+}
+
+function relireEquation(texte){
+  // la restriction est en fin d'équation : \left\{a\le x\le b\right\} ou {a<=x<=b}
+  let corps = texte, dom = null;
+  const mL = texte.match(/\\left\\\{(.*)\\right\\\}$/);
+  const mA = texte.match(/\{([^{}]*)\}$/);
+  const dedansAcc = mL ? mL[1] : (mA && /<=/.test(mA[1]) ? mA[1] : null);
+  if (dedansAcc !== null){
+    corps = texte.slice(0, texte.length - (mL ? mL[0].length : mA[0].length));
+    const morceaux = dedansAcc.split(mL ? "\\le" : "<=");
+    if (morceaux.length !== 3) throw new Error("restriction illisible");
+    dom = [parseFloat(morceaux[0]), parseFloat(morceaux[2])];
+    if (!isFinite(dom[0]) || !isFinite(dom[1])) throw new Error("bornes illisibles");
+  }
+  const iEg = corps.indexOf("=");
+  if (iEg < 0) throw new Error("il manque le =");
+  const g = corps.slice(0, iEg), d = corps.slice(iEg + 1);
+  return {
+    gauche: lireExpression(g), droite: lireExpression(d),
+    simple: (g === "y" || g === "x") ? g : null, dom: dom
+  };
+}
+
+// Relit l'équation d'une courbe et vérifie qu'elle redonne bien la courbe tracée
+function verifierCourbe(c, style){
+  const txt = texteEquation(c, style || "latex");
+  try {
+    const eq = relireEquation(txt);
+    let ecart = 0;
+    if (eq.simple){
+      if (!eq.dom) throw new Error("domaine manquant");
+      for (let i = 0; i < 12; i++){
+        const t = c.dom[0] + (c.dom[1] - c.dom[0])*(i + 0.5)/12;
+        const attendu = evaluer(c, t);
+        if (!isFinite(attendu)) continue;
+        const obtenu = eq.simple === "y" ? eq.droite(t, 0) : eq.droite(0, t);
+        if (!isFinite(obtenu)) throw new Error("valeur impossible");
+        ecart = Math.max(ecart, Math.abs(attendu - obtenu));
+      }
+      ecart = Math.max(ecart, Math.abs(eq.dom[0] - c.dom[0]), Math.abs(eq.dom[1] - c.dom[1]));
+    } else {
+      for (const q of echantillonsCourbe(c, 12)){
+        if (!q) continue;
+        const g = eq.gauche(q[0], q[1]), d = eq.droite(q[0], q[1]);
+        if (!isFinite(g) || !isFinite(d)) throw new Error("valeur impossible");
+        ecart = Math.max(ecart, Math.abs(Math.sqrt(Math.max(g,0)) - Math.sqrt(Math.max(d,0))));
+      }
+    }
+    return { ok: ecart < 1e-3, ecart: ecart, txt: txt };
+  } catch (e){
+    return { ok: false, ecart: Infinity, txt: txt, raison: e.message };
+  }
+}
+
+/* ---------- 3. Transformations ---------------------------------------
+   Elles agissent sur les PARAMÈTRES, pour que les équations restent
+   propres après un déplacement ou un agrandissement.
+------------------------------------------------------------------------ */
+
+// Décale l'entrée : f(t) devient f(t - d)
+function decalerEntree(c, d){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite":  p.b = p.b - p.a*d; break;
+    case "parabole2": p.x0 = p.x0 + d; break;
+    case "parabole": case "absolue": p.h = p.h + d; break;
+    case "arc": case "ellipse": p.h = p.h + d; break;
+    case "sinus": p.ph = p.ph + d; break;
+    case "expo": p.h = p.h + d; break;
+    case "constante": break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: [c.dom[0]+d, c.dom[1]+d], col: c.col };
+}
+
+// Décale la sortie : f(t) devient f(t) + d
+function decalerSortie(c, d){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.b += d; break;
+    case "parabole2": p.c += d; break;
+    case "parabole": case "absolue": case "arc": case "ellipse": case "sinus": case "expo":
+      p.k += d; break;
+    case "constante": p.c += d; break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: c.dom.slice(), col: c.col };
+}
+
+// Inverse la sortie : f(t) devient -f(t)
+function opposerSortie(c){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.a = -p.a; p.b = -p.b; break;
+    case "parabole2": p.a = -p.a; p.b = -p.b; p.c = -p.c; break;
+    case "parabole": case "absolue": p.a = -p.a; p.k = -p.k; break;
+    case "arc": case "ellipse": p.k = -p.k; p.s = -p.s; break;
+    case "sinus": p.A = -p.A; p.k = -p.k; break;
+    case "expo": p.a = -p.a; p.k = -p.k; break;
+    case "constante": p.c = -p.c; break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: c.dom.slice(), col: c.col };
+}
+
+// Inverse l'entrée : f(t) devient f(-t)
+function opposerEntree(c){
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.a = -p.a; break;
+    case "parabole2": p.x0 = -p.x0; p.b = -p.b; break;
+    case "parabole": case "absolue": p.h = -p.h; break;
+    case "arc": case "ellipse": p.h = -p.h; break;
+    case "sinus": p.A = -p.A; p.ph = -p.ph; break;
+    case "expo": p.b = -p.b; p.h = -p.h; break;
+    case "constante": break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: [-c.dom[1], -c.dom[0]], col: c.col };
+}
+
+function agrandir(c, s){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:c.p.h*s, k:c.p.k*s, r:c.p.r*s}, axe:c.axe, dom:[c.dom[0]*s, c.dom[1]*s], col:c.col };
+  }
+  const p = Object.assign({}, c.p);
+  switch (c.fam){
+    case "droite": p.b *= s; break;
+    case "parabole2": p.a = p.a/s; p.c *= s; p.x0 *= s; break;
+    case "parabole": p.a = p.a/s; p.h *= s; p.k *= s; break;
+    case "absolue": p.h *= s; p.k *= s; break;
+    case "arc": p.h *= s; p.k *= s; p.r *= s; break;
+    case "ellipse": p.h *= s; p.k *= s; p.rx *= s; p.ry *= s; break;
+    case "sinus": p.A *= s; p.w = p.w/s; p.ph *= s; p.k *= s; break;
+    case "expo": p.a *= s; p.b = p.b/s; p.h *= s; p.k *= s; break;
+    case "constante": p.c *= s; break;
+  }
+  return { fam: c.fam, p: p, axe: c.axe, dom: [c.dom[0]*s, c.dom[1]*s], col: c.col };
+}
+
+function deplacer(c, dx, dy){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:c.p.h+dx, k:c.p.k+dy, r:c.p.r}, axe:c.axe, dom:c.dom.slice(), col:c.col };
+  }
+  const dEntree = c.axe === "x" ? dx : dy;
+  const dSortie = c.axe === "x" ? dy : dx;
+  return decalerSortie(decalerEntree(c, dEntree), dSortie);
+}
+
+// Miroir gauche/droite : (x, y) -> (-x, y)
+function miroirX(c){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:-c.p.h, k:c.p.k, r:c.p.r}, axe:c.axe, dom:c.dom.slice(), col:c.col };
+  }
+  return c.axe === "x" ? opposerEntree(c) : opposerSortie(c);
+}
+
+// Quart de tour : (x, y) -> (-y, x)
+function tourner90(c){
+  if (c.fam === "cercle"){
+    return { fam:"cercle", p:{h:-c.p.k, k:c.p.h, r:c.p.r}, axe:c.axe, dom:c.dom.slice(), col:c.col };
+  }
+  const o = opposerSortie(c);
+  return { fam:o.fam, p:o.p, axe: c.axe === "x" ? "y" : "x", dom:o.dom.slice(), col:o.col };
+}
+
+function transformerCourbe(c, t){
+  let r = c;
+  if (t.mir) r = miroirX(r);
+  if (t.rot){ for (let i = 0; i < ((t.rot % 4) + 4) % 4; i++) r = tourner90(r); }
+  if (t.s && t.s !== 1) r = agrandir(r, t.s);
+  if (t.dx || t.dy) r = deplacer(r, t.dx || 0, t.dy || 0);
+  if (r !== c){ r.part = c.part; r.niv = c.niv; }
+  return r;
+}
+
+function transformerListe(liste, t){
+  let out = liste;
+  if (t.mir)  out = out.map(miroirX);
+  if (t.rot){ for (let i = 0; i < ((t.rot % 4) + 4) % 4; i++) out = out.map(tourner90); }
+  if (t.s && t.s !== 1) out = out.map(c => agrandir(c, t.s));
+  if (t.dx || t.dy) out = out.map(c => deplacer(c, t.dx || 0, t.dy || 0));
+  return out;
+}
+
+/* ---------- 4. Ajustement : des points -> une équation ---------------- */
+
+// Résout un petit système linéaire (pivot de Gauss). m : n x (n+1).
+function resoudre(m){
+  const n = m.length;
+  for (let i = 0; i < n; i++){
+    let piv = i;
+    for (let r = i+1; r < n; r++) if (Math.abs(m[r][i]) > Math.abs(m[piv][i])) piv = r;
+    if (Math.abs(m[piv][i]) < 1e-12) return null;
+    const tmp = m[i]; m[i] = m[piv]; m[piv] = tmp;
+    for (let r = 0; r < n; r++){
+      if (r === i) continue;
+      const f = m[r][i]/m[i][i];
+      for (let ccc = i; ccc <= n; ccc++) m[r][ccc] -= f*m[i][ccc];
+    }
+  }
+  const sol = [];
+  for (let i = 0; i < n; i++) sol.push(m[i][n]/m[i][i]);
+  return sol;
+}
+
+// Erreur maximale d'une famille sur le morceau
+function erreurMax(ts, vs, f){
+  let e = 0;
+  for (let i = 0; i < ts.length; i++){
+    const d = Math.abs(vs[i] - f(ts[i]));
+    if (!isFinite(d)) return Infinity;
+    if (d > e) e = d;
+  }
+  return e;
+}
+
+function ajusterDroite(ts, vs){
+  const n = ts.length;
+  let st = 0, sv = 0, stt = 0, stv = 0;
+  for (let i = 0; i < n; i++){ st += ts[i]; sv += vs[i]; stt += ts[i]*ts[i]; stv += ts[i]*vs[i]; }
+  const den = n*stt - st*st;
+  if (Math.abs(den) < 1e-12) return null;
+  const a = (n*stv - st*sv)/den;
+  const b = (sv - a*st)/n;
+  return { a: a, b: b };
+}
+
+// Ajustement recentré sur le morceau (u = t - x0) : les coefficients restent
+// petits, donc justes une fois arrondis — c'est ce que Desmos relira.
+function ajusterParabole(ts, vs){
+  const n = ts.length;
+  const x0 = arrondi((ts[0] + ts[n-1])/2, 3);
+  let s = [0,0,0,0,0], sv = [0,0,0];
+  for (let i = 0; i < n; i++){
+    const u = ts[i] - x0, v = vs[i];
+    const u2 = u*u;
+    s[0] += 1; s[1] += u; s[2] += u2; s[3] += u2*u; s[4] += u2*u2;
+    sv[0] += v; sv[1] += v*u; sv[2] += v*u2;
+  }
+  const sol = resoudre([
+    [s[2], s[1], s[0], sv[0]],
+    [s[3], s[2], s[1], sv[1]],
+    [s[4], s[3], s[2], sv[2]]
+  ]);
+  if (!sol) return null;
+  const A = sol[0], B = sol[1], C = sol[2];        // v = A u^2 + B u + C
+  if (Math.abs(A) < 1e-9) return null;
+  const du = -B/(2*A);
+  return { A: A, B: B, C: C, x0: x0, h: x0 + du, k: C - A*du*du };
+}
+
+// Cercle par moindres carrés (méthode de Kåsa)
+function ajusterCercle(ts, vs){
+  const n = ts.length;
+  let stt = 0, svv = 0, stv = 0, st = 0, sv = 0, sq = 0, sqt = 0, sqv = 0;
+  for (let i = 0; i < n; i++){
+    const t = ts[i], v = vs[i], q = t*t + v*v;
+    stt += t*t; svv += v*v; stv += t*v; st += t; sv += v;
+    sq += q; sqt += q*t; sqv += q*v;
+  }
+  const sol = resoudre([
+    [stt, stv, st, sqt],
+    [stv, svv, sv, sqv],
+    [st,  sv,  n,  sq]
+  ]);
+  if (!sol) return null;
+  const h = sol[0]/2, k = sol[1]/2;
+  const r2 = sol[2] + h*h + k*k;
+  if (!(r2 > 0)) return null;
+  return { h: h, k: k, r: Math.sqrt(r2) };
+}
+
+// Le morceau est-il bien une fonction de t (t qui avance toujours) ?
+function monotone(ts){
+  const n = ts.length;
+  if (n < 3) return true;
+  const total = ts[n-1] - ts[0];
+  if (Math.abs(total) < 1e-9) return false;
+  const sens = Math.sign(total);
+  const pas = Math.abs(total)/(n-1)*0.35;
+  for (let i = 1; i < n; i++){
+    const d = (ts[i] - ts[i-1])*sens;
+    if (d < -pas) return false;
+  }
+  return true;
+}
+
+/* Coeur du vectoriseur : trouve l'équation qui colle au morceau.
+   Par défaut la plus simple qui tient dans la tolérance ; en mode « meilleur »
+   (petit budget, chaque fonction compte) celle qui colle vraiment le mieux —
+   un arc dit en une équation ce que cinq segments disent mal. */
+function ajusterMorceau(pts, tol, opts){
+  const n = pts.length;
+  if (n < 2) return null;
+  let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
+  for (let i = 0; i < n; i++){
+    const p = pts[i];
+    if (p[0] < xmin) xmin = p[0]; if (p[0] > xmax) xmax = p[0];
+    if (p[1] < ymin) ymin = p[1]; if (p[1] > ymax) ymax = p[1];
+  }
+  const axe = (xmax - xmin) >= (ymax - ymin) ? "x" : "y";
+  const ts = [], vs = [];
+  for (let i = 0; i < n; i++){
+    ts.push(axe === "x" ? pts[i][0] : pts[i][1]);
+    vs.push(axe === "x" ? pts[i][1] : pts[i][0]);
+  }
+  if (!monotone(ts)) return null;
+  const dom = [Math.min(ts[0], ts[n-1]), Math.max(ts[0], ts[n-1])];
+  if (dom[1] - dom[0] < 1e-9) return null;
+  const meilleur = opts && opts.meilleur;
+  let choix = null, choixErreur = Infinity;
+  const garder = (c, e) => { if (c && e < choixErreur){ choix = c; choixErreur = e; } };
+
+  // 1) une droite ?
+  const dr = ajusterDroite(ts, vs);
+  const errDroite = dr ? erreurMax(ts, vs, t => dr.a*t + dr.b) : Infinity;
+  if (dr && errDroite <= tol && !meilleur){
+    if (Math.abs(dr.a) < 1e-6) return courbe("constante", {c: arrondi(dr.b)}, axe, dom);
+    return courbe("droite", dr, axe, dom);
+  }
+  if (dr) garder(Math.abs(dr.a) < 1e-6 ? courbe("constante", {c: arrondi(dr.b)}, axe, dom)
+                                       : courbe("droite", dr, axe, dom), errDroite);
+  if (n < 5) return choixErreur <= tol || meilleur ? choix : null;
+
+  // 2) un arc de cercle ?
+  const ce = ajusterCercle(ts, vs);
+  if (ce && isFinite(ce.r) && ce.r < (dom[1]-dom[0])*25){
+    const milieu = vs[Math.floor(n/2)];
+    const s = milieu >= ce.k ? 1 : -1;
+    const p = { h: ce.h, k: ce.k, r: ce.r, s: s };
+    let bon = true;
+    for (let i = 0; i < n; i++){
+      if (Math.abs(ts[i] - ce.h) > ce.r*0.999){ bon = false; break; }
+      if ((vs[i] - ce.k)*s < -tol){ bon = false; break; }
+    }
+    if (bon){
+      const err = erreurMax(ts, vs, t => FAMILLES.arc.ev(p, t));
+      if (err <= tol && !meilleur) return courbe("arc", p, axe, dom);
+      garder(courbe("arc", p, axe, dom), err);
+    }
+  }
+
+  // 3) une parabole ?
+  const pa = ajusterParabole(ts, vs);
+  if (pa){
+    const p2 = { a: pa.A, b: pa.B, c: pa.C, x0: pa.x0 };
+    const err = erreurMax(ts, vs, t => FAMILLES.parabole2.ev(p2, t));
+    const span = dom[1] - dom[0];
+    // sommet dans le morceau (ou juste à côté) : forme sommet, plus lisible
+    const cp = (isFinite(pa.h) && pa.h > dom[0] - span && pa.h < dom[1] + span && Math.abs(pa.h) < 1e3)
+      ? courbe("parabole", { a: pa.A, h: pa.h, k: pa.k }, axe, dom)
+      : courbe("parabole2", p2, axe, dom);
+    if (err <= tol && !meilleur) return cp;
+    garder(cp, err);
+  }
+
+  if (meilleur && choix) return choix;          // la moins fausse, faute de mieux
+  return choixErreur <= tol ? choix : null;
+}
+
+/* Les vrais coins du dessin : un virage serré ne doit jamais être avalé
+   par un ajustement, sinon les toits et les étoiles s'arrondissent.   */
+function indicesCoins(pts, seuil, f){
+  const n = pts.length, out = [];
+  if (n < 2*f + 3) return out;
+  for (let i = f; i < n - f; i++){
+    const ax = pts[i][0]-pts[i-f][0], ay = pts[i][1]-pts[i-f][1];
+    const bx = pts[i+f][0]-pts[i][0], by = pts[i+f][1]-pts[i][1];
+    if ((ax*ax+ay*ay) < 1e-12 || (bx*bx+by*by) < 1e-12) continue;
+    const ang = Math.abs(Math.atan2(ax*by - ay*bx, ax*bx + ay*by));
+    if (ang > seuil){ out.push(i); i += f - 1; }
+  }
+  return out;
+}
+
+function fusionnerIndices(a, b){
+  const vus = new Set();
+  const out = [];
+  for (const liste of [a, b]) for (const i of liste) if (!vus.has(i)){ vus.add(i); out.push(i); }
+  out.sort((x, y) => x - y);
+  return out;
+}
+
+/* Découpe une polyligne en morceaux et donne la liste des courbes.
+   On part des sommets « importants » (Douglas-Peucker) plus les coins,
+   et on essaie d'aller le plus loin possible avec une seule équation. */
+function polyligneVersCourbes(pts, tol, opts){
+  opts = opts || {};
+  // La fenêtre de détection des coins suit la tolérance : en dessin grossier,
+  // seuls les virages vraiment francs comptent.
+  let somme = 0;
+  for (let i = 1; i < pts.length; i++) somme += Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]);
+  const pas = somme/Math.max(pts.length - 1, 1);
+  const fenetre = borne(Math.round(tol/Math.max(pas, 1e-9)), 3, 40);
+  const dp = indicesDouglasPeucker(pts, tol);
+  const anc = opts.coins === false ? dp
+    : fusionnerIndices(dp, indicesCoins(pts, opts.seuilCoin || 0.62, fenetre));
+  const out = [];
+  // Chemin rapide (mode Max) : un intervalle entre deux sommets = une équation,
+  // sans chercher à étendre. C'est ce qui rend les gros volumes tenables.
+  if (opts.rapide){
+    for (let k = 0; k + 1 < anc.length; k++){
+      const morceau = pts.slice(anc[k], anc[k+1] + 1);
+      const c = ajusterMorceau(morceau, tol, opts) || droiteEntre(pts[anc[k]], pts[anc[k+1]]);
+      if (c){ c._r = [anc[k], anc[k+1]]; out.push(c); }
+    }
+    return out;
+  }
+  let i = 0;
+  let garde = 0;
+  while (i < anc.length - 1 && garde++ < 20000){
+    let meilleur = null, meilleurJ = i + 1;
+    for (let j = i + 1; j < anc.length; j++){
+      const morceau = pts.slice(anc[i], anc[j] + 1);
+      if (morceau.length > 600) break;
+      const c = ajusterMorceau(morceau, tol, opts);
+      if (!c){ if (j > i + 1) break; else continue; }
+      meilleur = c; meilleurJ = j;
+    }
+    if (!meilleur){
+      const a = pts[anc[i]], b = pts[anc[i+1]];
+      meilleur = droiteEntre(a, b);
+      meilleurJ = i + 1;
+    }
+    if (meilleur){ meilleur._r = [anc[i], anc[meilleurJ]]; out.push(meilleur); }
+    i = meilleurJ;
+  }
+  return out;
+}
+
+function droiteEntre(a, b){
+  const dx = b[0]-a[0], dy = b[1]-a[1];
+  if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) return null;
+  if (Math.abs(dx) >= Math.abs(dy)){
+    const p = { a: dy/dx, b: a[1] - (dy/dx)*a[0] };
+    return courbe("droite", p, "x", [Math.min(a[0],b[0]), Math.max(a[0],b[0])]);
+  }
+  if (Math.abs(dx) < 1e-9)
+    return courbe("constante", {c: arrondi(a[0])}, "y", [Math.min(a[1],b[1]), Math.max(a[1],b[1])]);
+  const p = { a: dx/dy, b: a[0] - (dx/dy)*a[1] };
+  return courbe("droite", p, "y", [Math.min(a[1],b[1]), Math.max(a[1],b[1])]);
+}
+
+// Douglas-Peucker : garde les sommets qui comptent, renvoie leurs indices
+function indicesDouglasPeucker(pts, tol){
+  const n = pts.length;
+  if (n <= 2) return pts.map((_, i) => i);
+  const garder = new Uint8Array(n);
+  garder[0] = 1; garder[n-1] = 1;
+  const pile = [[0, n-1]];
+  while (pile.length){
+    const [d, f] = pile.pop();
+    if (f - d < 2) continue;
+    const ax = pts[d][0], ay = pts[d][1], bx = pts[f][0], by = pts[f][1];
+    const vx = bx-ax, vy = by-ay;
+    const long = Math.hypot(vx, vy);
+    let pire = -1, idx = -1;
+    for (let i = d+1; i < f; i++){
+      const px = pts[i][0]-ax, py = pts[i][1]-ay;
+      const dist = long < 1e-12 ? Math.hypot(px, py) : Math.abs(px*vy - py*vx)/long;
+      if (dist > pire){ pire = dist; idx = i; }
+    }
+    if (pire > tol && idx > 0){
+      garder[idx] = 1;
+      pile.push([d, idx]); pile.push([idx, f]);
+    }
+  }
+  const out = [];
+  for (let i = 0; i < n; i++) if (garder[i]) out.push(i);
+  return out;
+}
+
+/* ---------- 5. Contours : des pixels -> des polygones -----------------
+   Marching squares : on parcourt les cases entre pixels, on note les
+   petits segments de frontière, puis on les recolle en boucles.
+------------------------------------------------------------------------ */
+
+function extraireContours(masque, w, h, boite){
+  const val = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? 0 : masque[y*w + x];
+  const segs = [];
+  const T = (x,y) => [x+0.5, y], R = (x,y) => [x+1, y+0.5],
+        B = (x,y) => [x+0.5, y+1], L = (x,y) => [x, y+0.5];
+  // un calque n'occupe souvent qu'un coin de l'image : inutile de balayer le reste
+  const x0 = boite ? Math.max(-1, boite[0]-1) : -1, y0 = boite ? Math.max(-1, boite[1]-1) : -1;
+  const x1 = boite ? Math.min(w, boite[2]+1) : w,   y1 = boite ? Math.min(h, boite[3]+1) : h;
+  for (let y = y0; y < y1; y++){
+    for (let x = x0; x < x1; x++){
+      const a = val(x,y), b = val(x+1,y), c = val(x+1,y+1), d = val(x,y+1);
+      const code = a*8 + b*4 + c*2 + d;
+      if (code === 0 || code === 15) continue;
+      switch (code){
+        case 1:  segs.push([L(x,y), B(x,y)]); break;
+        case 2:  segs.push([B(x,y), R(x,y)]); break;
+        case 3:  segs.push([L(x,y), R(x,y)]); break;
+        case 4:  segs.push([T(x,y), R(x,y)]); break;
+        case 5:  segs.push([L(x,y), T(x,y)]); segs.push([B(x,y), R(x,y)]); break;
+        case 6:  segs.push([T(x,y), B(x,y)]); break;
+        case 7:  segs.push([L(x,y), T(x,y)]); break;
+        case 8:  segs.push([T(x,y), L(x,y)]); break;
+        case 9:  segs.push([T(x,y), B(x,y)]); break;
+        case 10: segs.push([T(x,y), R(x,y)]); segs.push([B(x,y), L(x,y)]); break;
+        case 11: segs.push([T(x,y), R(x,y)]); break;
+        case 12: segs.push([L(x,y), R(x,y)]); break;
+        case 13: segs.push([B(x,y), R(x,y)]); break;
+        case 14: segs.push([L(x,y), B(x,y)]); break;
+      }
+    }
+  }
+  // Recollage des petits segments en polylignes
+  const cle = p => (p[0]*2) + "," + (p[1]*2);
+  const adj = new Map();
+  segs.forEach((s, i) => {
+    for (const k of [cle(s[0]), cle(s[1])]){
+      if (!adj.has(k)) adj.set(k, []);
+      adj.get(k).push(i);
+    }
+  });
+  const pris = new Uint8Array(segs.length);
+  const polys = [];
+  for (let i = 0; i < segs.length; i++){
+    if (pris[i]) continue;
+    pris[i] = 1;
+    const poly = [segs[i][0], segs[i][1]];
+    // on avance par la fin
+    let boucle = false;
+    for (let sens = 0; sens < 2; sens++){
+      let garde = 0;
+      while (garde++ < 100000){
+        const bout = sens === 0 ? poly[poly.length-1] : poly[0];
+        const liste = adj.get(cle(bout)) || [];
+        let suiv = -1;
+        for (const j of liste) if (!pris[j]){ suiv = j; break; }
+        if (suiv < 0) break;
+        pris[suiv] = 1;
+        const s = segs[suiv];
+        const autre = (cle(s[0]) === cle(bout)) ? s[1] : s[0];
+        if (sens === 0) poly.push(autre); else poly.unshift(autre);
+        if (cle(autre) === cle(poly[sens === 0 ? 0 : poly.length-1])){ boucle = true; break; }
+      }
+      if (boucle) break;
+    }
+    if (poly.length >= 4) polys.push({ pts: poly, ferme: boucle });
+  }
+  return polys;
+}
+
+/* Aire, périmètre et centre d'un contour, en pixels. */
+function mesuresContour(pts){
+  let aire = 0, perim = 0, sx = 0, sy = 0;
+  for (let i = 0; i < pts.length - 1; i++){
+    const a = pts[i], b = pts[i+1];
+    aire += a[0]*b[1] - b[0]*a[1];
+    perim += Math.hypot(b[0]-a[0], b[1]-a[1]);
+    sx += a[0]; sy += a[1];
+  }
+  const n = Math.max(pts.length - 1, 1);
+  return { aire: Math.abs(aire)/2, perim: perim, cx: sx/n, cy: sy/n };
+}
+
+/* Largeur moyenne d'un contour fermé (aire / demi-périmètre), en pixels.
+   Les bandes d'anticrénelage entre deux couleurs sont des rubans de 1 à 2
+   pixels : elles ne sont pas des formes, seulement du bruit de rendu. */
+function largeurMoyenne(pts){
+  let aire = 0, perim = 0;
+  for (let i = 0; i < pts.length - 1; i++){
+    const a = pts[i], b = pts[i+1];
+    aire += a[0]*b[1] - b[0]*a[1];
+    perim += Math.hypot(b[0]-a[0], b[1]-a[1]);
+  }
+  aire = Math.abs(aire)/2;
+  return perim < 1e-9 ? 0 : 2*aire/perim;
+}
+
+// Adoucit l'escalier des pixels (moyenne glissante)
+function lisser(pts, passes, ferme){
+  let cur = pts;
+  for (let p = 0; p < passes; p++){
+    const n = cur.length;
+    const out = new Array(n);
+    for (let i = 0; i < n; i++){
+      let ia = i-1, ib = i+1;
+      if (ia < 0) ia = ferme ? n-2 : 0;
+      if (ib >= n) ib = ferme ? 1 : n-1;
+      out[i] = [(cur[ia][0] + 2*cur[i][0] + cur[ib][0])/4,
+                (cur[ia][1] + 2*cur[i][1] + cur[ib][1])/4];
+    }
+    if (ferme && n > 1) out[n-1] = out[0].slice();
+    cur = out;
+  }
+  return cur;
+}
+
+/* ---------- 6. Vectoriseur universel ----------------------------------
+   Le navigateur sait déjà dessiner presque tout (emoji, texte, image,
+   dessin à la main). Funcora récupère ces pixels et les retransforme en
+   équations : c'est ce qui lui permet de tracer n'importe quoi.
+------------------------------------------------------------------------ */
+
+const TAILLE_MAX = 1536;
+const POLICE_EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","EmojiOne Color","Twemoji Mozilla","Android Emoji",sans-serif';
+
+const CIBLE_MIN = 10, CIBLE_MAX = 10000, COULEURS_MAX = 100;
+const MAX_ABSOLU = 1000000;      // le mode Max va jusqu'au million, si la machine suit
+
+// Plus on veut de fonctions, plus l'image de départ doit être fine...
+const TAILLES = [512, 1024, 1536, 2048, 3072, 4096];
+const MAX_PALIERS = [10000, 100000, 1000000];
+function tailleMax(cible){
+  const memoire = (typeof navigator !== "undefined" && navigator.deviceMemory) || 8;
+  if (cible >= 500000) return memoire >= 8 ? 6144 : 4096;
+  if (cible >= 60000) return 4096;
+  return 2560;
+}
+function tailleSource(cible, cran){
+  const base = cible > 3000 ? 3 : (cible > 700 ? 2 : (cible > 200 ? 1 : 0));
+  return TAILLES[borne(base + (cran || 0), 0, TAILLES.length - 1)];
+}
+
+// ...et moins on doit brider la finesse. Sans ça, trois garde-fous (lissage,
+// plancher de tolérance, rejet des petits contours) plafonnent le dessin
+// vers un millier de fonctions quelle que soit la demande.
+function finesse(cible, cran, max){
+  if (max) return { lisse: 0, plancher: 0.02, mini: 3 };   // mode Max : tout ce qui se voit
+  let r;
+  if (cible > 3000) r = { lisse: 1, plancher: 0.12, mini: 8 };
+  else if (cible > 700) r = { lisse: 2, plancher: 0.25, mini: 10 };
+  else if (cible > 200) r = { lisse: 2, plancher: 0.35, mini: 14 };
+  else r = { lisse: 2, plancher: 0.45, mini: 14 };
+  // « cran » : on remonte en finesse quand le dessin a saturé au tour d'avant
+  for (let i = 0; i < (cran || 0); i++){
+    r = { lisse: Math.max(1, r.lisse - 1), plancher: r.plancher*0.55, mini: Math.max(6, r.mini - 3) };
+  }
+  return r;
+}
+
+function creerCanvas(taille){
+  const cv = document.createElement("canvas");
+  cv.width = taille; cv.height = taille;
+  return cv;
+}
+
+function contexteVide(cv){
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  return ctx;
+}
+
+function dessinerEmoji(ctx, emoji, taille){
+  ctx.save();
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#111";
+  let px = Math.round(taille*0.74);
+  ctx.font = px + "px " + POLICE_EMOJI;
+  const l = ctx.measureText(emoji).width;
+  if (l > taille*0.92) { px = Math.round(px*taille*0.9/l); ctx.font = px + "px " + POLICE_EMOJI; }
+  ctx.fillText(emoji, taille/2, taille/2);
+  ctx.restore();
+}
+
+function dessinerTexte(ctx, texte, taille){
+  ctx.save();
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#111";
+  const mots = texte.split(/\s+/).filter(Boolean);
+  const lignes = [];
+  let ligne = "";
+  for (const m of mots){
+    const essai = ligne ? ligne + " " + m : m;
+    if (essai.length > 9 && ligne){ lignes.push(ligne); ligne = m; } else ligne = essai;
+  }
+  if (ligne) lignes.push(ligne);
+  const plusLong = lignes.reduce((a,b) => a.length >= b.length ? a : b, "");
+  let px = Math.round(taille*0.8);
+  ctx.font = "bold " + px + 'px Georgia,"Times New Roman",serif';
+  const l = Math.max(ctx.measureText(plusLong).width, 1);
+  px = Math.min(px, Math.round(px*taille*0.86/l), Math.round(taille*0.9/lignes.length));
+  ctx.font = "bold " + px + 'px Georgia,"Times New Roman",serif';
+  const h = px*1.12;
+  const y0 = taille/2 - (lignes.length-1)*h/2;
+  lignes.forEach((t, i) => ctx.fillText(t, taille/2, y0 + i*h));
+  ctx.restore();
+}
+
+// Les emojis sont-ils vraiment dessinés sur cet appareil ?
+let _emojiOk = null;
+function emojiDisponible(){
+  if (_emojiOk !== null) return _emojiOk;
+  try {
+    const masque = (txt) => {
+      const cv = creerCanvas(64);
+      const ctx = contexteVide(cv);
+      dessinerEmoji(ctx, txt, 64);
+      const d = ctx.getImageData(0,0,64,64).data;
+      const m = new Uint8Array(64*64);
+      let n = 0;
+      for (let i = 0; i < 64*64; i++){ m[i] = d[i*4+3] > 100 ? 1 : 0; n += m[i]; }
+      return { m: m, n: n };
+    };
+    const a = masque("🏠");          // maison
+    const b = masque("􏿽");          // caractère inexistant -> carré vide
+    if (a.n < 40) { _emojiOk = false; return _emojiOk; }
+    let inter = 0, union = 0;
+    for (let i = 0; i < a.m.length; i++){
+      if (a.m[i] && b.m[i]) inter++;
+      if (a.m[i] || b.m[i]) union++;
+    }
+    _emojiOk = union === 0 ? false : (inter/union) < 0.8;
+  } catch (e){ _emojiOk = false; }
+  return _emojiOk;
+}
+
+/* --- Séparation fond / dessin --- */
+function masqueAvantPlan(data, w, h){
+  const n = w*h;
+  const fg = new Uint8Array(n);
+  let transp = 0;
+  for (let i = 0; i < n; i++) if (data[i*4+3] < 128) transp++;
+  if (transp > n*0.02){
+    for (let i = 0; i < n; i++) fg[i] = data[i*4+3] >= 128 ? 1 : 0;
+    return fg;
+  }
+  // Image opaque : le fond est la couleur des bords
+  const bords = [];
+  for (let x = 0; x < w; x += 4){ bords.push([data[x*4], data[x*4+1], data[x*4+2]]);
+    const j = ((h-1)*w + x)*4; bords.push([data[j], data[j+1], data[j+2]]); }
+  for (let y = 0; y < h; y += 4){ const a = (y*w)*4, b = (y*w + w-1)*4;
+    bords.push([data[a], data[a+1], data[a+2]]); bords.push([data[b], data[b+1], data[b+2]]); }
+  const med = k => { const v = bords.map(c => c[k]).sort((p,q) => p-q); return v[Math.floor(v.length/2)] || 0; };
+  const fond = [med(0), med(1), med(2)];
+  for (let i = 0; i < n; i++){
+    const c = [data[i*4], data[i*4+1], data[i*4+2]];
+    fg[i] = distanceCouleur(c, fond) > 3200 ? 1 : 0;
+  }
+  return fg;
+}
+
+/* --- Couleurs dominantes (k-moyennes allégé) --- */
+/* --- Les calques de couleur ---
+   Une seule carte d'attribution (un numéro de calque par pixel) plutôt qu'un
+   masque par calque : à 3072 px, cent masques séparés pèseraient un Go.
+   Les teintes sont choisies sur un histogramme de cube RGB (5 bits par canal),
+   puis chaque case du cube est envoyée vers la teinte la plus proche. */
+const CUBE = 32768;
+function cleCube(r, g, b){ return ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3); }
+
+function histogrammeCube(data, fg, n){
+  const compte = new Int32Array(CUBE);
+  const sr = new Float64Array(CUBE), sg = new Float64Array(CUBE), sb = new Float64Array(CUBE);
+  const cases = [];
+  for (let i = 0; i < n; i++){
+    if (!fg[i]) continue;
+    const r = data[i*4], g = data[i*4+1], b = data[i*4+2];
+    const c = cleCube(r, g, b);
+    if (compte[c] === 0) cases.push(c);
+    compte[c]++; sr[c] += r; sg[c] += g; sb[c] += b;
+  }
+  return cases.map(c => ({ cle: c, n: compte[c],
+                           moy: [sr[c]/compte[c], sg[c]/compte[c], sb[c]/compte[c]] }))
+              .sort((a, b) => b.n - a.n);
+}
+
+// Peu de couleurs : k-moyennes sur les cases du cube, pondérées par leur poids
+function teintesMoyennes(cases, k){
+  if (cases.length <= k) return cases.map(c => c.moy.slice());
+  const cent = [cases[0].moy.slice()];
+  while (cent.length < k){
+    let best = null, bestD = -1;
+    for (const c of cases){
+      let d = Infinity;
+      for (const g of cent) d = Math.min(d, distanceCouleur(c.moy, g));
+      d *= Math.log(1 + c.n);           // une grande zone pèse plus qu'un pixel perdu
+      if (d > bestD){ bestD = d; best = c.moy; }
+    }
+    if (!best) break;
+    cent.push(best.slice());
+  }
+  for (let it = 0; it < 8; it++){
+    const som = cent.map(() => [0,0,0,0]);
+    for (const c of cases){
+      let bi = 0, bd = Infinity;
+      for (let j = 0; j < cent.length; j++){
+        const d = distanceCouleur(c.moy, cent[j]);
+        if (d < bd){ bd = d; bi = j; }
+      }
+      som[bi][0] += c.moy[0]*c.n; som[bi][1] += c.moy[1]*c.n;
+      som[bi][2] += c.moy[2]*c.n; som[bi][3] += c.n;
+    }
+    for (let j = 0; j < cent.length; j++)
+      if (som[j][3]) cent[j] = [som[j][0]/som[j][3], som[j][1]/som[j][3], som[j][2]/som[j][3]];
+  }
+  return cent;
+}
+
+// Beaucoup de couleurs : les teintes les plus présentes, sans doublons visuels
+function teintesDominantes(cases, k, total){
+  const seuil = Math.max(20, total*0.00004);
+  const fusion = k <= 64 ? Math.max(0, 520 - k*6) : 0;
+  const gardes = [];
+  for (const c of cases){
+    if (gardes.length >= k) break;
+    if (c.n < seuil) continue;
+    if (fusion && gardes.some(g => distanceCouleur(c.moy, g) < fusion)) continue;
+    gardes.push(c.moy.slice());
+  }
+  if (!gardes.length) gardes.push(cases[0].moy.slice());
+  return gardes;
+}
+
+function etendreBoite(b, x, y){
+  if (x < b[0]) b[0] = x;
+  if (y < b[1]) b[1] = y;
+  if (x > b[2]) b[2] = x;
+  if (y > b[3]) b[3] = y;
+}
+
+function calquesCouleur(data, fg, n, k, total, larg){
+  let teintes = null;
+  if (k > 1){
+    const cases = histogrammeCube(data, fg, n);
+    if (cases.length) teintes = k <= 16 ? teintesMoyennes(cases, k) : teintesDominantes(cases, k, total);
+  }
+  const calques = (teintes || [null]).map(t => ({ couleur: t, taille: 0, boite: [larg, larg, -1, -1] }));
+  const attribution = new Int16Array(n).fill(-1);
+  const lut = teintes ? new Int16Array(CUBE).fill(-1) : null;
+  for (let i = 0; i < n; i++){
+    if (!fg[i]) continue;
+    let j = 0;
+    if (teintes){
+      const c = cleCube(data[i*4], data[i*4+1], data[i*4+2]);
+      j = lut[c];
+      if (j < 0){
+        const p = [data[i*4], data[i*4+1], data[i*4+2]];
+        let bd = Infinity;
+        for (let q = 0; q < teintes.length; q++){
+          const d = distanceCouleur(p, teintes[q]);
+          if (d < bd){ bd = d; j = q; }
+        }
+        lut[c] = j;
+      }
+    }
+    attribution[i] = j;
+    const cq = calques[j];
+    cq.taille++;
+    etendreBoite(cq.boite, i % larg, (i/larg)|0);
+  }
+  return { attribution: attribution, calques: calques };
+}
+
+/* --- Étape 1 : de l'image aux contours (le plus coûteux, fait une seule fois) --- */
+function preparerContours(ctx, taille, opts){
+  const reg = opts.finesse || finesse(opts.cible || 250, opts.cran, opts.max);
+  const img = ctx.getImageData(0, 0, taille, taille);
+  const data = img.data;
+  const n = taille*taille;
+  const fg = masqueAvantPlan(data, taille, taille);
+
+  let bx0 = taille, by0 = taille, bx1 = -1, by1 = -1, total = 0;
+  for (let y = 0; y < taille; y++) for (let x = 0; x < taille; x++)
+    if (fg[y*taille + x]){ total++;
+      if (x < bx0) bx0 = x; if (x > bx1) bx1 = x;
+      if (y < by0) by0 = y; if (y > by1) by1 = y; }
+  if (total < 30) return { morceaux: [], vide: true, calques: 0, unite: 1, reg: reg };
+
+  const bw = Math.max(bx1-bx0+1, 1), bh = Math.max(by1-by0+1, 1);
+  const unite = (opts.hauteur || 10) / Math.max(bw, bh);   // un pixel, en unités du repère
+  const cx = bx0 + bw/2, cy = by0 + bh/2;
+  const versRepere = q => [(q[0]-cx)*unite, (cy-q[1])*unite];
+
+  const rendu = calquesCouleur(data, fg, n, borne(opts.couleurs || 1, 1, COULEURS_MAX), total, taille);
+  const attribution = rendu.attribution;
+  const masque = new Uint8Array(n);      // un seul masque, réutilisé calque après calque
+  const morceaux = [];
+  let calquesUtiles = 0;
+
+  rendu.calques.forEach((cq, j) => {
+    const b = cq.boite;
+    if (cq.taille < 12 || b[2] - b[0] < 2 || b[3] - b[1] < 2) return;
+    calquesUtiles++;
+    for (let y = b[1]; y <= b[3]; y++){
+      const base = y*taille;
+      for (let x = b[0]; x <= b[2]; x++) masque[base + x] = attribution[base + x] === j ? 1 : 0;
+    }
+    for (const poly of extraireContours(masque, taille, taille, b)){
+      if (poly.pts.length < reg.mini) continue;
+      // ruban d'anticrénelage : du bruit en temps normal, de la matière en mode Max
+      if (!opts.max && poly.ferme && largeurMoyenne(poly.pts) < 2.5) continue;
+      const mes = mesuresContour(poly.pts);
+      // Importance : ce qui fait le dessin d'abord. Une grande forme centrale
+      // compte plus qu'un petit détail dans un coin — c'est elle qu'on sert
+      // en premier quand il n'y a que dix fonctions à distribuer.
+      const dist = Math.hypot(mes.cx - taille/2, mes.cy - taille/2)/(taille*0.71);
+      const pts = lisser(poly.pts, reg.lisse, poly.ferme).map(versRepere);
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const q of pts){
+        if (q[0] < x0) x0 = q[0]; if (q[0] > x1) x1 = q[0];
+        if (q[1] < y0) y0 = q[1]; if (q[1] > y1) y1 = q[1];
+      }
+      morceaux.push({
+        pts: pts,
+        taille: poly.pts.length,
+        ferme: poly.ferme,
+        bb: [x0, y0, x1, y1],
+        imp: (Math.sqrt(mes.aire) + 0.35*mes.perim)*(1.25 - 0.45*borne(dist, 0, 1)),
+        col: cq.couleur ? rgbHex(lisibleSurFonce(cq.couleur)) : null
+      });
+    }
+    for (let y = b[1]; y <= b[3]; y++){
+      const base = y*taille;
+      for (let x = b[0]; x <= b[2]; x++) masque[base + x] = 0;
+    }
+  });
+  morceaux.sort((a, b) => b.imp - a.imp);
+  return { morceaux: morceaux, unite: unite, calques: calquesUtiles, vide: !morceaux.length, reg: reg };
+}
+
+/* --- Étape 2 : répartir le budget, puis ajuster contour par contour ---
+   Le nombre de fonctions demandé est un vrai budget. Chaque contour en reçoit
+   une part selon son importance, avec un minimum vital : en dessous de six
+   équations une forme fermée ne veut plus rien dire. Dix fonctions donnent
+   donc UNE silhouette complète, pas dix fragments. */
+const MINI_FORME = 6;
+
+function repartirBudget(servis, cible){
+  const total = servis.reduce((s, m) => s + m.imp, 0) || 1;
+  // avec un ou deux contours, l'un d'eux a le droit de prendre tout le budget
+  const plafond = Math.max(MINI_FORME, Math.round(cible*(servis.length <= 2 ? 1 : 0.6)));
+  let parts = servis.map(m => borne(Math.round(cible*m.imp/total), MINI_FORME, plafond));
+  // on recale la somme sur le budget, en commençant par les plus importants
+  let somme = parts.reduce((a, b) => a + b, 0);
+  let garde = 0;
+  while (somme !== cible && garde++ < 500){
+    const sens = somme < cible ? 1 : -1;
+    let bouge = false;
+    for (let i = 0; i < parts.length && somme !== cible; i++){
+      const j = sens > 0 ? i : parts.length - 1 - i;
+      const v = parts[j] + sens;
+      if (v < MINI_FORME || v > plafond) continue;
+      parts[j] = v; somme += sens; bouge = true;
+    }
+    if (!bouge) break;
+  }
+  return parts;
+}
+
+/* Ajuste un contour pour qu'il tienne dans SA part : dichotomie sur sa propre
+   tolérance. C'est ce qui fait que le total colle au budget demandé. */
+function ajusterAuBudget(m, part, tolMin, opts){
+  const diag = Math.hypot(m.bb[2] - m.bb[0], m.bb[3] - m.bb[1]) || 1;
+  let lo = tolMin, hi = Math.max(diag/2.5, tolMin*8);
+  let best = null, ecartBest = Infinity;
+  const petit = part <= 40;
+  // À dix fonctions, un virage franc ne doit pas imposer sa coupure : sinon le
+  // contour sort en vingt morceaux quoi qu'on demande.
+  const reglage = { meilleur: petit, rapide: opts && opts.rapide,
+                    coins: part > 25, seuilCoin: part <= 60 ? 1.15 : 0.62 };
+  for (let i = 0; i < 7; i++){
+    const tol = Math.sqrt(lo*hi);
+    const cs = polyligneVersCourbes(m.pts, tol, reglage);
+    const ecart = Math.abs(cs.length - part);
+    if (ecart < ecartBest){ ecartBest = ecart; best = cs; }
+    if (!cs.length) break;
+    if (cs.length === part) break;
+    if (cs.length > part) lo = tol; else hi = tol;
+    if (hi/lo < 1.03) break;
+  }
+  // toujours finir par un essai au plancher : c'est le maximum que ce contour
+  // peut donner, et c'est lui qui dit s'il sature vraiment.
+  if (!best || best.length < part){
+    const cs = polyligneVersCourbes(m.pts, tolMin, reglage);
+    if (!best || Math.abs(cs.length - part) < Math.abs(best.length - part)) best = cs;
+  }
+  best = (best || []).slice();
+  /* Finition : tant qu'il manque des fonctions, on coupe en deux le morceau de
+     contour le plus long et on ajuste les deux moitiés. Chaque coupe ajoute
+     exactement une équation — c'est comme ça qu'on tombe pile à dix. */
+  let garde = 0;
+  while (best.length < part && garde++ < part*2 + 20){
+    let bi = -1, bl = 3;
+    for (let i = 0; i < best.length; i++){
+      const r = best[i] && best[i]._r;
+      if (!r) continue;
+      if (r[1] - r[0] > bl){ bl = r[1] - r[0]; bi = i; }
+    }
+    if (bi < 0) break;
+    const r = best[bi]._r;
+    const mid = Math.round((r[0] + r[1])/2);
+    const gauche = ajusterMorceau(m.pts.slice(r[0], mid + 1), 1e9, { meilleur: true }) ||
+                   droiteEntre(m.pts[r[0]], m.pts[mid]);
+    const droite = ajusterMorceau(m.pts.slice(mid, r[1] + 1), 1e9, { meilleur: true }) ||
+                   droiteEntre(m.pts[mid], m.pts[r[1]]);
+    if (!gauche || !droite) break;
+    gauche._r = [r[0], mid]; droite._r = [mid, r[1]];
+    best.splice(bi, 1, gauche, droite);
+  }
+  return { courbes: best, sature: best.length < part*0.95 };
+}
+
+/* --- Étape 3 : ménage — paramètres écrits = paramètres tracés, pas de
+   doublon (deux calques voisins tracent deux fois la même frontière),
+   pas de courbe plus petite qu'un pixel. --- */
+function nettoyerCourbes(liste, unite, vus, rapide){
+  const grille = Math.max(unite*2.2, 1e-6);
+  vus = vus || new Set();
+  const out = [];
+  for (const brute of liste){
+    if (!brute) continue;
+    const c = normaliserCourbe(brute);
+    if (!courbeValide(c)) continue;
+    // en temps normal une courbe plus petite qu'un pixel et demi est du bruit ;
+    // en mode Max, c'est justement la matière qu'on cherche.
+    const minSpan = rapide ? unite*0.25 : unite*1.5;
+    if (c.fam !== "cercle" && Math.abs(c.dom[1] - c.dom[0]) < minSpan) continue;
+    if (rapide){ out.push(c); continue; }        // mode Max : pas de temps pour le ménage fin
+    const pts = echantillonsCourbe(c, 6).filter(Boolean);
+    if (pts.length < 2) continue;
+    // quatre grilles décalées : deux tracés séparés d'un pixel tombent
+    // forcément dans la même case pour l'une d'elles.
+    const cles = [];
+    for (const dx of [0, 0.5]) for (const dy of [0, 0.5]){
+      cles.push(c.fam + "#" + pts.map(q =>
+        Math.round(q[0]/grille + dx) + "," + Math.round(q[1]/grille + dy)).join(";"));
+    }
+    if (cles.some(k => vus.has(k))) continue;
+    cles.forEach(k => vus.add(k));
+    out.push(c);
+  }
+  return out;
+}
+
+/* --- Le passage pixels -> courbes, piloté par le budget de fonctions --- */
+function vectoriserContexte(ctx, taille, opts){
+  const plafond = opts.max ? MAX_ABSOLU : CIBLE_MAX;
+  const cible = borne(Math.round(opts.cible || 250), CIBLE_MIN, plafond);
+  const prep = preparerContours(ctx, taille, opts);
+  if (prep.vide) return { courbes: [], vide: true, calques: 0, servis: 0, sature: false, cible: cible };
+
+  const tolMin = prep.reg.plancher*prep.unite;
+  const rapide = !!(opts.max && cible > 20000);
+  const reglage = { rapide: rapide };
+
+  /* Mode Max : on ne répartit plus rien, on prend tout ce que le dessin peut
+     donner, au plancher de finesse et par le chemin rapide, jusqu'au compte
+     demandé. C'est l'inverse exact du budget — et c'est assumé. */
+  if (opts.max){
+    const out = [];
+    for (const m of prep.morceaux){
+      for (const c of polyligneVersCourbes(m.pts, tolMin, { rapide: true, coins: false })){
+        if (!c) continue;
+        c.col = m.col;
+        out.push(c);
+      }
+      if (out.length >= cible) break;
+    }
+    const propres = nettoyerCourbes(out.length > cible ? out.slice(0, cible) : out, prep.unite, null, true);
+    return { courbes: propres, vide: !propres.length, calques: prep.calques,
+             servis: prep.morceaux.length, contours: prep.morceaux.length,
+             cible: cible, sature: propres.length < cible*0.9, max: true };
+  }
+  /* Combien de contours peut-on servir décemment ? On n'en ajoute un que si sa
+     part proportionnelle atteint le minimum vital : sinon, à trente fonctions,
+     trois moustaches mangeraient le budget de la silhouette. */
+  const nMax = Math.max(1, Math.floor(cible/MINI_FORME));
+  const servis = [];
+  let sommeImp = 0;
+  for (const m of prep.morceaux){
+    const s2 = sommeImp + m.imp;
+    if (servis.length && cible*m.imp/s2 < MINI_FORME) break;
+    servis.push(m); sommeImp = s2;
+    if (servis.length >= nMax) break;
+  }
+  const parts = repartirBudget(servis, cible);
+  const resultats = servis.map((m, i) => ajusterAuBudget(m, parts[i], tolMin, reglage));
+  // On compte ce qui reste APRÈS le ménage : sinon le dédoublonnage rogne le
+  // budget sans qu'on s'en aperçoive.
+  const compter = () => {
+    const vus = new Set();
+    let total = 0;
+    servis.forEach((m, i) => {
+      for (const c of resultats[i].courbes) if (c) c.col = m.col;
+      resultats[i].propres = nettoyerCourbes(resultats[i].courbes, prep.unite, vus, rapide);
+      total += resultats[i].propres.length;
+    });
+    return total;
+  };
+
+  /* On ajuste jusqu'à tomber sur le budget : d'abord en servant des contours
+     laissés de côté, ensuite en rendant aux non-saturés ce que les saturés
+     n'ont pas pu prendre. Quatre passes suffisent, et si le dessin ne peut pas
+     donner davantage, on s'arrête et on le dira. */
+  for (let passe = 0; passe < 6; passe++){
+    const manque = cible - compter();
+    if (manque <= Math.max(4, cible*0.03)) break;
+    let gagne = 0;
+    while (servis.length < prep.morceaux.length && manque - gagne >= MINI_FORME){
+      const m = prep.morceaux[servis.length];
+      const part = Math.max(MINI_FORME, manque - gagne);
+      const r = ajusterAuBudget(m, part, tolMin, reglage);
+      servis.push(m); parts.push(part); resultats.push(r);
+      gagne += r.courbes.length;
+    }
+    if (gagne > 0) continue;
+    const libres = [];
+    resultats.forEach((r, i) => { if (!r.sature) libres.push(i); });
+    if (!libres.length) break;
+    const bonus = Math.ceil(manque/libres.length);
+    let bouge = false;
+    for (const i of libres){
+      const r = ajusterAuBudget(servis[i], parts[i] + bonus, tolMin, reglage);
+      if (r.courbes.length > resultats[i].courbes.length){
+        resultats[i] = r; parts[i] += bonus; bouge = true;
+      }
+    }
+    if (!bouge) break;
+  }
+
+  // trop-plein : on resserre les contours les moins importants
+  if (compter() > cible*1.08){
+    for (let i = resultats.length - 1; i >= 0 && compter() > cible*1.03; i--){
+      const trop = compter() - cible;
+      const cherche = Math.max(MINI_FORME, resultats[i].courbes.length - trop);
+      if (cherche >= resultats[i].courbes.length) continue;
+      const r = ajusterAuBudget(servis[i], cherche, tolMin, reglage);
+      if (r.courbes.length < resultats[i].courbes.length){ resultats[i] = r; parts[i] = cherche; }
+    }
+  }
+
+  const totalFinal = compter();
+  const courbes = [];
+  for (const r of resultats){
+    const liste = r.propres || [];
+    for (let i = 0; i < liste.length; i++) courbes.push(liste[i]);
+  }
+
+  return {
+    courbes: courbes,
+    vide: courbes.length === 0,
+    calques: prep.calques,
+    servis: servis.length,
+    contours: prep.morceaux.length,
+    cible: cible,
+    sature: totalFinal < cible*0.9
+  };
+}
+
+// Dessine un mot dans un canvas : son emoji si l'appareil en a un, sinon le mot écrit
+function canvasMot(mot, taille){
+  taille = taille || 512;
+  const cv = creerCanvas(taille);
+  const ctx = contexteVide(cv);
+  const emo = emojiPour(mot);
+  if (emo && emojiDisponible()){ dessinerEmoji(ctx, emo, taille); cv.source = "emoji"; }
+  else { dessinerTexte(ctx, mot, taille); cv.source = "texte"; }
+  return cv;
+}
+
+/* Si le dessin sature (il ne peut pas donner le nombre de fonctions demandé),
+   on recommence avec une image de départ plus fine — jusqu'à deux crans. */
+function vectoriserAvecCrans(faireCanvas, opts){
+  let meilleur = null;
+  for (let cran = 0; cran <= 2; cran++){
+    const taille = tailleSource(opts.cible || 250, cran);
+    const cv = faireCanvas(taille);
+    const reg = Object.assign({}, opts, { cran: cran });
+    const r = vectoriserContexte(cv.getContext("2d", { willReadFrequently: true }), cv.width, reg);
+    r.source = cv.source || r.source;
+    r.cran = cran;
+    if (!meilleur || r.courbes.length > meilleur.courbes.length) meilleur = r;
+    if (!r.sature || opts.max || (opts.cible || 250) < 60) break;
+    if (taille >= TAILLES[TAILLES.length - 1]) break;
+  }
+  return meilleur;
+}
+
+// Trace un mot puis le vectorise
+function vectoriserMot(mot, opts){
+  return vectoriserAvecCrans(taille => canvasMot(mot, taille), opts);
+}
+
+// Réduit une source déjà dessinée à la taille voulue (jamais d'agrandissement :
+// on ne gagne aucun détail à étirer des pixels).
+/* Redessine une image dans un canvas carré de la taille voulue. Garder
+   l'original permet au mode Max de repartir de la pleine résolution. */
+function dessinerDansCanvas(img, taille){
+  const cv = creerCanvas(taille);
+  const ctx = contexteVide(cv);
+  const ech = Math.min(taille/img.width, taille/img.height)*0.98;
+  const w = img.width*ech, h = img.height*ech;
+  ctx.drawImage(img, (taille-w)/2, (taille-h)/2, w, h);
+  cv.original = img;
+  return cv;
+}
+
+function canvasAjuste(src, taille){
+  // on a gardé l'image d'origine : on peut remonter en résolution
+  if (src.original && src.width < taille) return dessinerDansCanvas(src.original, taille);
+  if (src.width <= taille) return src;
+  const cv = creerCanvas(taille);
+  const ctx = contexteVide(cv);
+  ctx.drawImage(src, 0, 0, taille, taille);
+  return cv;
+}
+
+function vectoriserSource(src, opts){
+  return vectoriserAvecCrans(taille => canvasAjuste(src, taille), opts);
+}
+
+/* ---------- 6b. Chercher un dessin sur internet, sans clé ni compte ------
+   Wikimedia Commons répond en CORS ouvert avec origin=*, et sait rendre un
+   SVG en PNG transparent (iiurlwidth) : exactement ce qu'il faut pour suivre
+   des contours. On traduit d'abord le mot en anglais via Wikipédia, parce que
+   Commons est indexé en anglais.
+   Rien de tout ça ne marche depuis un fichier local : Chrome interdit à une
+   page file:// d'aller sur le réseau. Dans ce cas on le dit et on se rabat
+   sur la bibliothèque intégrée.                                            */
+const API_COMMONS = (function(){
+  try { return new URLSearchParams(location.search).get("api") ||
+               "https://commons.wikimedia.org/w/api.php"; }
+  catch (e){ return "https://commons.wikimedia.org/w/api.php"; }
+})();
+const API_WIKI = (function(){
+  try { return new URLSearchParams(location.search).get("wiki") ||
+               "https://fr.wikipedia.org/w/api.php"; }
+  catch (e){ return "https://fr.wikipedia.org/w/api.php"; }
+})();
+const RESEAU_POSSIBLE = (location.protocol === "http:" || location.protocol === "https:");
+const CACHE_RECHERCHE = {};
+
+function jsonDistant(url, fin){
+  let coupe = null;
+  const ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+  if (ctrl) coupe = setTimeout(() => ctrl.abort(), 9000);
+  fetch(url, { mode: "cors", credentials: "omit", signal: ctrl ? ctrl.signal : undefined })
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))
+    .then(d => { if (coupe) clearTimeout(coupe); fin(d, null); })
+    .catch(e => { if (coupe) clearTimeout(coupe); fin(null, (e && e.message) || "réseau injoignable"); });
+}
+
+function chargerImage(url, fin){
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => fin(img, null);
+  img.onerror = () => fin(null, "image illisible");
+  img.src = url;
+}
+
+// Wikipédia donne le mot anglais : « chat » -> « cat »
+function traduireMot(mot, fin){
+  const url = API_WIKI + "?action=query&format=json&origin=*&redirects=1&prop=langlinks&lllang=en&titles=" +
+    encodeURIComponent(mot);
+  jsonDistant(url, (d, err) => {
+    if (err || !d || !d.query || !d.query.pages) return fin(null);
+    for (const k in d.query.pages){
+      const li = d.query.pages[k].langlinks;
+      if (li && li.length && li[0]["*"]) return fin(li[0]["*"]);
+    }
+    fin(null);
+  });
+}
+
+function noterResultat(p, terme){
+  const titre = (p.title || "").toLowerCase();
+  const info = (p.imageinfo && p.imageinfo[0]) || {};
+  let note = 0;
+  if (info.mime === "image/svg+xml") note += 6;
+  if (/silhouette|icon|pictogram|symbol|logo|outline|clipart|drawing/.test(titre)) note += 4;
+  if (titre.indexOf(terme.toLowerCase()) >= 0) note += 2;
+  if (info.width && info.height){
+    const r = info.width/info.height;
+    if (r > 0.5 && r < 2) note += 1;
+  }
+  if (/map|flag|chart|graph|diagram|seal|coat of arms/.test(titre)) note -= 5;
+  return note;
+}
+
+function requeteCommons(terme, dessin, fin){
+  const base = API_COMMONS + "?action=query&format=json&origin=*&generator=search&gsrnamespace=6" +
+    "&gsrlimit=20&prop=imageinfo&iiprop=url|mime|size|extmetadata&iiurlwidth=2048&gsrsearch=";
+  const essais = dessin
+    ? ["filemime:image/svg+xml " + terme + " silhouette",
+       "filemime:image/svg+xml " + terme + " icon",
+       "filemime:image/svg+xml " + terme,
+       terme + " silhouette"]
+    : [terme, terme + " drawing"];
+  let i = 0;
+  const suite = () => {
+    if (i >= essais.length){ fin([], "aucun dessin trouvé"); return; }
+    const requete = essais[i++];
+    jsonDistant(base + encodeURIComponent(requete), (d, err) => {
+      if (err){ fin([], err); return; }
+      const pages = (d && d.query && d.query.pages) ? Object.keys(d.query.pages).map(k => d.query.pages[k]) : [];
+      const bons = pages.filter(p => p.imageinfo && p.imageinfo[0] &&
+        (p.imageinfo[0].thumburl || p.imageinfo[0].url) &&
+        /^image\/(svg\+xml|png|jpeg|gif)$/.test(p.imageinfo[0].mime || ""));
+      if (!bons.length){ suite(); return; }
+      bons.forEach(p => { p._note = noterResultat(p, terme); });
+      bons.sort((a, b) => b._note - a._note);
+      fin(bons, null);
+    });
+  };
+  suite();
+}
+
+function creditDe(p){
+  const meta = (p.imageinfo[0].extmetadata) || {};
+  const nettoie = v => v ? String(v.value).replace(/<[^>]*>/g, "").trim().slice(0, 60) : "";
+  const auteur = nettoie(meta.Artist) || "auteur inconnu";
+  const licence = nettoie(meta.LicenseShortName) || "licence Commons";
+  return { auteur: auteur, licence: licence };
+}
+
+/* Cherche un dessin pour un mot et le prépare en canvas prêt à vectoriser.
+   « tirage » fait varier le choix : un autre chat à chaque essai. */
+function chercherDessin(mot, tirage, fin){
+  const cache = CACHE_RECHERCHE[mot];
+  const utiliser = (liste, terme, traduit) => {
+    if (!liste.length){ fin(null, "aucun dessin trouvé"); return; }
+    CACHE_RECHERCHE[mot] = { liste: liste, terme: terme, traduit: traduit };
+    const choix = liste[((tirage || 0) % Math.min(liste.length, 6) + liste.length) % Math.min(liste.length, 6)];
+    const info = choix.imageinfo[0];
+    chargerImage(info.thumburl || info.url, (img, err) => {
+      if (err){ fin(null, err); return; }
+      let cv;
+      try { cv = dessinerDansCanvas(img, TAILLE_MAX); }
+      catch (e){ fin(null, "image refusée par le navigateur"); return; }
+      const cr = creditDe(choix);
+      fin({ canvas: cv, titre: (choix.title || "").replace(/^File:/, ""),
+            auteur: cr.auteur, licence: cr.licence, terme: terme, traduit: traduit,
+            nombre: liste.length }, null);
+    });
+  };
+  if (cache){ utiliser(cache.liste, cache.terme, cache.traduit); return; }
+  traduireMot(mot, (en) => {
+    const terme = en || mot;
+    requeteCommons(terme, true, (liste, err) => {
+      if (liste.length){ utiliser(liste, terme, en && en !== mot ? en : null); return; }
+      requeteCommons(terme, false, (liste2, err2) => utiliser(liste2, terme, en && en !== mot ? en : null));
+    });
+  });
+}
+
+/* ---------- 7a. Lexique : un mot -> un emoji --------------------------
+   La police emoji de l'appareil sert de bibliothèque de dessins : des
+   milliers de sujets, sans un octet téléchargé. Si le mot n'est pas là,
+   Funcora trace le mot écrit — il ne renonce jamais.
+------------------------------------------------------------------------ */
+
+/* Un emoji, tous ses noms. Le format « emoji nom nom nom » tient plus de
+   mille mots en quelques milliers de caractères, et se relit d'un coup d'œil. */
+const LEXIQUE = [
+// animaux
+"\ud83d\udc31 chat chaton minou matou felin", "\ud83d\udc36 chien chiot toutou cabot clebs",
+"\ud83d\udc2d souris mulot rongeur", "\ud83d\udc30 lapin lapereau lievre",
+"\ud83e\udd8a renard goupil", "\ud83d\udc3b ours ourson nounours", "\ud83d\udc3c panda",
+"\ud83d\udc28 koala", "\ud83d\udc2f tigre tigresse", "\ud83e\udd81 lion lionne roi des animaux",
+"\ud83d\udc2e vache veau boeuf taureau", "\ud83d\udc37 cochon porc truie goret",
+"\ud83d\udc38 grenouille crapaud", "\ud83d\udc35 singe chimpanze macaque",
+"\ud83d\udc14 poule coq poulet", "\ud83d\udc25 poussin", "\ud83d\udc26 oiseau moineau piaf mouette",
+"\ud83d\udd4a colombe pigeon", "\ud83e\udd86 canard cane caneton", "\ud83e\udd85 aigle rapace faucon",
+"\ud83e\udd89 hibou chouette", "\ud83e\udd87 chauve souris", "\ud83d\udc3a loup louve",
+"\ud83d\udc17 sanglier marcassin", "\ud83d\udc34 cheval jument poney poulain",
+"\ud83e\udd84 licorne", "\ud83d\udc1d abeille bourdon guepe", "\ud83d\udc1b chenille ver",
+"\ud83e\udd8b papillon", "\ud83d\udc0c escargot limace", "\ud83d\udc1e coccinelle bete a bon dieu",
+"\ud83d\udc1c fourmi", "\ud83e\udd97 criquet sauterelle grillon", "\ud83d\udd77 araignee",
+"\ud83e\udd82 scorpion", "\ud83d\udc22 tortue", "\ud83d\udc0d serpent vipere cobra python",
+"\ud83e\udd8e lezard gecko iguane", "\ud83e\udd96 dinosaure tyrannosaure trex",
+"\ud83e\udd95 brontosaure diplodocus", "\ud83d\udc19 pieuvre poulpe", "\ud83e\udd91 calmar",
+"\ud83e\udd90 crevette gambas", "\ud83e\udd80 crabe tourteau", "\ud83d\udc1f poisson",
+"\ud83d\udc20 poisson tropical", "\ud83d\udc21 poisson globe",
+"\ud83d\udc2c dauphin", "\ud83d\udc33 baleine cachalot", "\ud83e\udd88 requin",
+"\ud83d\udc0a crocodile alligator caiman", "\ud83d\udc06 leopard guepard jaguar panthere",
+"\ud83e\udd93 zebre", "\ud83e\udd8d gorille", "\ud83d\udc18 elephant", "\ud83e\uddac bison buffle",
+"\ud83e\udd8f rhinoceros", "\ud83d\udc2a chameau dromadaire", "\ud83e\udd92 girafe",
+"\ud83d\udc11 mouton brebis agneau belier", "\ud83d\udc10 chevre bouc biquette",
+"\ud83e\udd8c cerf biche renne faon", "\ud83e\udd94 herisson", "\ud83e\uddab chauve",
+"\ud83e\udda6 paresseux", "\ud83e\udd98 kangourou", "\ud83e\udd83 dinde",
+"\ud83e\udd9a paon", "\ud83e\udd9c perroquet ara", "\ud83d\udc27 pingouin manchot",
+"\ud83e\udeb1 ver de terre lombric", "\ud83d\udc3e patte empreinte trace",
+// fruits, legumes, nourriture
+"\ud83c\udf4e pomme", "\ud83c\udf50 poire", "\ud83c\udf4a orange mandarine clementine",
+"\ud83c\udf4b citron", "\ud83c\udf4c banane", "\ud83c\udf49 pasteque",
+"\ud83c\udf47 raisin grappe", "\ud83c\udf53 fraise", "\ud83e\uded0 myrtille",
+"\ud83c\udf48 melon", "\ud83c\udf52 cerise cerises", "\ud83c\udf51 peche",
+"\ud83e\udd6d mangue", "\ud83c\udf4d ananas", "\ud83e\udd65 noix de coco coco",
+"\ud83e\udd5d kiwi", "\ud83c\udf45 tomate", "\ud83c\udf46 aubergine", "\ud83e\udd51 avocat",
+"\ud83e\udd66 brocoli", "\ud83e\udd6c salade laitue", "\ud83e\udd52 concombre cornichon",
+"\ud83c\udf36 piment", "\ud83c\udf3d mais epi de mais", "\ud83e\udd55 carotte",
+"\ud83e\uddc4 ail", "\ud83e\uddc5 oignon", "\ud83e\udd54 patate pomme de terre",
+"\ud83c\udf60 patate douce", "\ud83c\udf44 champignon cepe", "\ud83e\udd50 croissant",
+"\ud83e\udd56 baguette pain", "\ud83c\udf5e pain de mie brioche", "\ud83e\uddc0 fromage gruyere",
+"\ud83e\udd5a oeuf", "\ud83c\udf73 oeuf au plat omelette", "\ud83e\udd5e crepe pancake",
+"\ud83e\uddc7 gaufre", "\ud83e\udd53 bacon lard", "\ud83c\udf54 burger hamburger",
+"\ud83c\udf5f frites", "\ud83c\udf55 pizza", "\ud83c\udf2d hot dog saucisse",
+"\ud83e\udd6a sandwich", "\ud83c\udf2e taco", "\ud83c\udf2f burrito wrap",
+"\ud83e\udd57 salade composee", "\ud83c\udf7f popcorn pop corn", "\ud83e\uddc8 beurre",
+"\ud83c\udf5d pates spaghetti", "\ud83c\udf5c nouilles ramen soupe", "\ud83c\udf63 sushi",
+"\ud83c\udf64 tempura beignet de crevette", "\ud83c\udf5a riz bol de riz",
+"\ud83c\udf66 glace creme glacee", "\ud83c\udf69 donut beignet", "\ud83c\udf6a cookie biscuit",
+"\ud83c\udf82 gateau anniversaire", "\ud83e\uddc1 cupcake muffin", "\ud83c\udf6b chocolat tablette",
+"\ud83c\udf6c bonbon", "\ud83c\udf6d sucette", "\ud83c\udf6f miel pot de miel",
+"\ud83c\udf7c biberon", "\ud83e\udd5b lait verre de lait", "\u2615 cafe tasse",
+"\ud83c\udf75 the matcha", "\ud83e\uddc3 jus brique de jus", "\ud83e\udd64 soda boisson",
+"\ud83c\udf7a biere chope", "\ud83c\udf77 vin verre de vin", "\ud83c\udf7e champagne",
+"\ud83e\udd44 cuillere", "\ud83c\udf74 fourchette couteau couverts", "\ud83c\udf7d assiette",
+// nature et meteo
+"\ud83c\udf33 arbre chene feuillu", "\ud83c\udf32 sapin conifere epicea arbre de noel",
+"\ud83c\udf34 palmier cocotier", "\ud83c\udf35 cactus", "\ud83c\udf31 pousse germe plante",
+"\ud83c\udf40 trefle porte bonheur", "\ud83c\udf41 feuille erable",
+"\ud83c\udf42 feuille morte automne", "\ud83c\udf3f herbe brindille",
+"\ud83c\udf3e ble epi de ble", "\ud83c\udf3b tournesol", "\ud83c\udf39 rose",
+"\ud83c\udf37 tulipe", "\ud83c\udf3c marguerite paquerette", "\ud83c\udf38 fleur de cerisier sakura",
+"\ud83d\udc90 bouquet fleurs", "\ud83c\udf0d terre planete monde globe",
+"\ud83c\udf15 pleine lune", "\ud83c\udf19 lune croissant de lune", "\u2b50 etoile",
+"\ud83c\udf1f etoile brillante", "\u2728 etincelles paillettes magie", "\u2600 soleil",
+"\ud83c\udf24 eclaircie", "\u2601 nuage", "\ud83c\udf27 pluie averse",
+"\u26c8 orage tempete", "\u2744 flocon neige", "\u26c4 bonhomme de neige",
+"\ud83c\udf08 arc en ciel", "\ud83d\udca7 goutte eau", "\ud83c\udf0a vague mer ocean",
+"\ud83d\udd25 feu flamme", "\u26a1 eclair foudre", "\ud83c\udf0b volcan eruption",
+"\u26f0 montagne sommet pic", "\ud83c\udfdd ile", "\ud83c\udfd6 plage bord de mer",
+"\ud83c\udfdc desert dune", "\ud83e\ude90 planete saturne", "\u2604 comete",
+"\ud83c\udf0c galaxie voie lactee", "\ud83e\udea8 caillou pierre rocher",
+// transports
+"\ud83d\ude97 voiture auto bagnole caisse", "\ud83d\ude95 taxi", "\ud83d\ude8c bus autobus car",
+"\ud83d\ude93 police voiture de police", "\ud83d\ude91 ambulance",
+"\ud83d\ude92 camion de pompiers pompier", "\ud83d\ude9a camion poids lourd",
+"\ud83d\ude9c tracteur", "\ud83c\udfce formule 1 voiture de course bolide",
+"\ud83c\udfcd moto", "\ud83d\udeb2 velo bicyclette", "\ud83d\udef4 trottinette",
+"\ud83d\udef9 skateboard planche", "\ud83d\ude82 train locomotive",
+"\ud83d\ude84 tgv train rapide", "\ud83d\ude81 helicoptere", "\u2708 avion",
+"\ud83d\ude80 fusee navette", "\ud83d\udef8 soucoupe ovni", "\u26f5 bateau voilier barque",
+"\ud83d\udea2 paquebot navire ferry", "\u2693 ancre", "\ud83e\ude82 parachute",
+"\ud83c\udf88 ballon baudruche", "\ud83c\udfa0 manege carrousel",
+// batiments et lieux
+"\ud83c\udfe0 maison chalet baraque demeure pavillon villa",
+"\ud83c\udfe1 maison avec jardin", "\ud83c\udfe2 immeuble bureau tour",
+"\ud83c\udfeb ecole college lycee", "\ud83c\udfe5 hopital clinique", "\ud83c\udfe6 banque",
+"\ud83c\udfe8 hotel", "\ud83c\udfea superette magasin epicerie", "\ud83c\udfed usine",
+"\ud83c\udff0 chateau fort donjon", "\ud83d\uddfc tour eiffel",
+"\ud83d\uddfd statue de la liberte", "\u26ea eglise chapelle", "\ud83d\udd4c mosquee",
+"\ud83d\uded5 temple", "\u26fa tente camping", "\ud83c\udf09 pont",
+"\ud83c\udfdf stade arene",
+// objets
+"\ud83d\udca1 ampoule idee", "\ud83d\udd26 lampe torche", "\ud83d\udd6f bougie chandelle",
+"\ud83d\udd11 cle", "\ud83d\udd12 cadenas", "\ud83d\udeaa porte", "\ud83e\ude9f fenetre",
+"\ud83d\udecf lit", "\ud83d\udecb canape sofa", "\ud83e\ude91 chaise", "\ud83d\udebd toilettes",
+"\ud83d\udebf douche", "\ud83d\udec1 baignoire", "\ud83e\uddfc savon",
+"\ud83e\uddf9 balai", "\ud83e\uddfa panier corbeille", "\ud83e\uddf8 peluche ours en peluche",
+"\ud83c\udf81 cadeau paquet", "\ud83c\udf80 noeud ruban", "\ud83c\udf89 fete cotillon",
+"\ud83e\ude81 cerf volant", "\ud83c\udfae manette jeu video", "\ud83d\udd79 joystick",
+"\ud83c\udfb2 des a jouer", "\u265f pion echecs", "\ud83e\udde9 puzzle piece de puzzle",
+"\ud83c\udfaf cible flechettes", "\ud83c\udfa8 palette peinture", "\ud83d\udd8c pinceau",
+"\u270f crayon", "\ud83d\udd8a stylo", "\ud83d\udcd5 livre roman", "\ud83d\udcda livres bibliotheque",
+"\ud83d\udcd3 cahier carnet", "\ud83d\udcd0 equerre", "\ud83d\udccf regle",
+"\u2702 ciseaux", "\ud83d\udcce trombone", "\ud83d\udccc punaise", "\ud83d\udd0d loupe",
+"\ud83d\udd2c microscope", "\ud83d\udd2d telescope", "\ud83e\udded boussole",
+"\u23f0 reveil", "\u231a montre", "\ud83d\udd50 horloge pendule",
+"\ud83d\udcf1 telephone portable smartphone", "\ud83d\udcbb ordinateur portable",
+"\ud83d\udda5 ecran moniteur", "\u2328 clavier", "\ud83d\uddb1 souris d ordinateur",
+"\ud83d\udda8 imprimante", "\ud83d\udcf7 appareil photo camera", "\ud83d\udcfa television tele",
+"\ud83d\udcfb radio", "\ud83c\udfa7 casque ecouteurs", "\ud83c\udfa4 micro microphone",
+"\ud83c\udfb8 guitare", "\ud83c\udfb9 piano clavier", "\ud83e\udd41 batterie tambour",
+"\ud83c\udfba trompette", "\ud83c\udfbb violon", "\ud83c\udfb7 saxophone",
+"\ud83e\ude95 banjo", "\ud83c\udfb5 note de musique musique", "\ud83c\udfbc partition",
+"\ud83d\udd14 cloche", "\ud83d\udce2 megaphone porte voix", "\ud83d\udcb0 argent sac d argent",
+"\ud83d\udcb5 billet", "\ud83e\ude99 piece monnaie", "\ud83d\udc8e diamant bijou",
+"\ud83d\udc51 couronne", "\ud83c\udfc6 trophee coupe", "\ud83e\udd47 medaille or",
+"\u26bd ballon de foot football", "\ud83c\udfc0 basket ballon de basket",
+"\ud83c\udfc8 football americain", "\u26be baseball", "\ud83c\udfbe tennis balle de tennis",
+"\ud83c\udfd0 volley", "\ud83c\udfd3 ping pong tennis de table", "\ud83c\udff8 badminton",
+"\ud83e\udd4a boxe gant de boxe", "\ud83d\udee1 bouclier", "\u2694 epee epees",
+"\ud83d\udde1 dague poignard", "\ud83c\udff9 arc fleche", "\ud83e\ude93 hache",
+"\ud83d\udd28 marteau", "\ud83d\udd27 cle a molette", "\ud83d\udd29 vis boulon",
+"\u2699 engrenage rouage", "\ud83e\uddf2 aimant", "\ud83d\udd0b pile batterie",
+"\ud83d\udd0c prise cable", "\ud83e\uddef extincteur", "\ud83d\udea6 feu tricolore",
+"\ud83d\udea7 chantier travaux", "\ud83d\uded2 caddie chariot",
+"\ud83c\udf92 sac a dos cartable", "\ud83d\udc5c sac a main", "\ud83d\udc53 lunettes",
+"\ud83d\udd76 lunettes de soleil", "\ud83d\udc55 tee shirt maillot",
+"\ud83d\udc56 jean pantalon", "\ud83d\udc57 robe", "\ud83d\udc60 chaussure a talon",
+"\ud83d\udc5f basket chaussure de sport", "\ud83e\udde2 casquette",
+"\ud83c\udfa9 chapeau haut de forme", "\ud83e\udde4 gants", "\ud83e\udde3 echarpe",
+"\u2602 parapluie", "\u26f1 parasol", "\ud83e\udea9 poupee",
+"\ud83d\udea9 drapeau", "\ud83c\udfc1 drapeau a damier arrivee", "\ud83e\uddf3 valise bagage",
+"\ud83d\udd6f lanterne", "\ud83e\udeb5 buche bois", "\ud83e\ude9c echelle",
+// visages, personnages, symboles
+"\ud83d\ude00 sourire visage content", "\ud83d\ude02 rire mdr",
+"\ud83d\ude22 triste pleure larme", "\ud83d\ude0d amoureux coeur dans les yeux",
+"\ud83d\ude0e cool lunettes noires", "\ud83d\ude21 colere fache",
+"\ud83d\ude34 dort sommeil dodo", "\ud83e\udd16 robot", "\ud83d\udc7b fantome",
+"\ud83d\udc7d extraterrestre alien martien", "\ud83c\udf83 citrouille halloween",
+"\ud83e\uddd9 sorcier magicien mage", "\ud83e\uddda fee", "\ud83e\udddc sirene",
+"\ud83e\uddb8 super heros", "\ud83e\udd21 clown", "\ud83d\udeb6 bonhomme pieton personne gens",
+"\ud83c\udfc3 coureur qui court", "\ud83d\udc83 danseuse danse", "\ud83d\udc6e policier gendarme",
+"\ud83c\udf85 pere noel", "\ud83d\udc76 bebe nourrisson", "\ud83d\udc68 homme monsieur",
+"\ud83d\udc69 femme dame", "\ud83d\udc74 grand pere papi", "\ud83d\udc75 grand mere mamie",
+"\u2764 coeur amour", "\ud83d\udc94 coeur brise", "\ud83d\udcaa muscle biceps force",
+"\u270b main", "\ud83d\udc4d pouce en l air bravo", "\ud83d\udc41 oeil",
+"\ud83e\uddb6 pied", "\ud83e\uddb4 os", "\ud83e\udde0 cerveau",
+"\u2b55 cercle rond", "\u274c croix", "\u2795 plus signe plus", "\u2796 moins signe moins",
+"\u2714 coche valide", "\u2753 point d interrogation question", "\u2757 point d exclamation",
+"\ud83d\udd34 rond rouge", "\ud83d\udd35 rond bleu", "\ud83d\udfe2 rond vert",
+"\ud83d\udfe1 rond jaune", "\u2b1b carre noir", "\u2b1c carre blanc",
+"\ud83d\udd3a triangle", "\u2666 losange carreau", "\u2660 pique", "\u2663 trefle carte",
+"\ud83d\uddfa carte plan", "\ud83d\udd0d recherche", "\ud83d\udcdd note memo",
+// fantastique, sciences, maison, sports
+"\ud83d\udc09 dragon", "\ud83e\uddd9 sorciere", "\ud83e\uddde genie lutin",
+"\ud83e\uddf9 sorciere balai", "\ud83d\udd2e boule de cristal voyance",
+"\ud83e\ude84 baguette magique", "\ud83e\uddff oeil porte bonheur",
+"\ud83d\udee1 blason", "\ud83d\uddff statue moai", "\ud83c\udfad theatre masques",
+"\ud83c\udfaa chapiteau cirque", "\ud83d\uddbc tableau cadre peinture",
+"\ud83e\uddec adn genetique", "\ud83e\udda0 microbe virus germe",
+"\ud83d\udc8a medicament pilule gelule", "\ud83d\udc89 seringue vaccin piqure",
+"\ud83e\ude79 pansement", "\ud83e\ude7a stethoscope", "\ud83c\udf21 thermometre",
+"\u2697 alambic chimie", "\ud83d\udef0 satellite", "\ud83e\uddca glacon glace cube",
+"\ud83e\uded6 theiere", "\ud83e\udd58 marmite casserole", "\ud83d\udd2a couteau",
+"\ud83c\udffa amphore vase", "\ud83e\ude9e miroir glace murale", "\ud83e\uddf4 flacon lotion",
+"\ud83e\udea5 brosse a dents", "\ud83e\uddfd eponge", "\ud83d\udece sonnette clochette",
+"\ud83d\udddd vieille cle", "\ud83e\uddf1 brique mur de briques", "\ud83e\uddf5 fil bobine",
+"\ud83e\udea1 aiguille couture", "\ud83e\uddf6 pelote laine tricot", "\ud83d\udc8d bague alliance",
+"\ud83d\udc84 rouge a levres", "\ud83e\ude92 rasoir", "\ud83c\udfa3 canne a peche peche",
+"\ud83e\udd7c blouse", "\ud83e\udd7f chaussure de ville", "\ud83d\udc62 botte",
+"\ud83c\udf93 diplome chapeau d etudiant", "\ud83d\udcbc mallette porte documents",
+"\ud83d\udeb4 cycliste", "\u26f7 ski skieur", "\ud83c\udfc2 snowboard surf des neiges",
+"\ud83c\udfc4 surf surfeur", "\ud83e\udd3f natation palmes", "\ud83e\uddd7 escalade grimpeur",
+"\ud83c\udfb3 bowling quilles", "\ud83c\udfb0 machine a sous", "\ud83e\ude9d charniere",
+"\ud83e\ude9a scie", "\ud83e\ude9b tournevis", "\ud83e\udea3 seau",
+"\ud83e\udeb4 plante en pot", "\ud83c\udf7b trinquer sante", "\ud83e\uddca cube de glace"
+];
+
+// mot -> emoji, construit une fois au démarrage. Les petits mots de liaison
+// (« pomme DE terre », « arc EN ciel ») soudent leurs voisins : sans ça,
+// « terre » finirait par désigner une patate.
+const LIAISONS = ["de", "d", "a", "au", "aux", "en", "la", "le", "du", "des", "et", "avec"];
+// Un adjectif ou un mot trop courant ne doit pas devenir le nom d'un dessin :
+// sans ça « rouge » finirait par désigner un poisson et « grand » un papi.
+const MOTS_FAIBLES = ["grand", "grande", "petit", "petite", "gros", "grosse", "beau", "belle",
+  "vieux", "vieille", "nouveau", "rouge", "vert", "verte", "bleu", "bleue", "jaune", "orange",
+  "rose", "violet", "noir", "noire", "blanc", "blanche", "gris", "grise", "marron", "brun",
+  "or", "argent", "tropical", "americain", "douce", "composee", "morte", "brillante", "ancien",
+  "murale", "de", "des", "le", "la", "les", "du", "a", "au", "aux", "en", "et", "avec", "d"];
+
+const EMOJIS = (function(){
+  const table = {};
+  const poser = (nom, emo) => {
+    const n = normaliser(nom);
+    if (n && !table[n]) table[n] = emo;
+  };
+  for (const ligne of LEXIQUE){
+    const bouts = ligne.split(" ").filter(Boolean);
+    const emo = bouts[0];
+    const mots = bouts.slice(1);
+    const groupes = [];
+    for (let i = 0; i < mots.length; i++){
+      if (LIAISONS.indexOf(mots[i]) >= 0 && groupes.length && i + 1 < mots.length){
+        groupes[groupes.length - 1] += " " + mots[i] + " " + mots[i + 1];
+        i++;
+      } else groupes.push(mots[i]);
+    }
+    for (const g of groupes) if (MOTS_FAIBLES.indexOf(g) < 0) poser(g, emo);
+    // « grand pere », « pere noel » : les paires de mots comptent aussi
+    for (let i = 0; i + 1 < mots.length; i++)
+      if (MOTS_FAIBLES.indexOf(mots[i + 1]) < 0) poser(mots[i] + " " + mots[i + 1], emo);
+    if (groupes.length > 1) poser(mots.join(" "), emo);   // le nom complet de la ligne
+  }
+  return table;
+})();
+
+/* Cherche l'emoji d'un sujet : le mot exact, puis ses formes au singulier,
+   puis en laissant tomber les mots en trop (« un elephant rose » -> elephant). */
+function emojiSimple(m){
+  if (!m) return null;
+  if (EMOJIS[m]) return EMOJIS[m];
+  const formes = [];
+  if (m.endsWith("aux")) formes.push(m.slice(0, -3) + "al", m.slice(0, -3) + "eau");
+  if (m.endsWith("x") || m.endsWith("s")) formes.push(m.slice(0, -1));
+  for (const f of formes) if (EMOJIS[f]) return EMOJIS[f];
+  return null;
+}
+
+function emojiPour(mot){
+  const m = normaliser(mot);
+  const direct = emojiSimple(m);
+  if (direct) return direct;
+  const mots = m.split(" ").filter(Boolean);
+  if (mots.length < 2) return null;
+  // du groupe de mots le plus long au plus court
+  for (let taille = mots.length - 1; taille >= 1; taille--)
+    for (let d = 0; d + taille <= mots.length; d++){
+      const e = emojiSimple(mots.slice(d, d + taille).join(" "));
+      if (e) return e;
+    }
+  return null;
+}
+
+/* ---------- 7b. Modèles paramétriques faits main ----------------------
+   Pour les sujets courants, des équations écrites à la main : peu
+   nombreuses, très lisibles — parfaites pour Desmos ou pour un cours.
+------------------------------------------------------------------------ */
+
+function mSeg(x1,y1,x2,y2,col){ const c = droiteEntre([x1,y1],[x2,y2]); if (c) c.col = col; return c; }
+function mVert(x,y0,y1,col){ return courbe("constante",{c:x},"y",[Math.min(y0,y1),Math.max(y0,y1)],col); }
+function mHoriz(y,x0,x1,col){ return courbe("constante",{c:y},"x",[Math.min(x0,x1),Math.max(x0,x1)],col); }
+function mArc(h,k,r,s,x0,x1,col){ return courbe("arc",{h:h,k:k,r:r,s:s},"x",[x0,x1],col); }
+function mCercle(h,k,r,col){ return courbe("cercle",{h:h,k:k,r:r},"x",[h-r,h+r],col); }
+function mParab(a,h,k,x0,x1,col){ return courbe("parabole",{a:a,h:h,k:k},"x",[x0,x1],col); }
+function mAbs(a,h,k,x0,x1,col){ return courbe("absolue",{a:a,h:h,k:k},"x",[x0,x1],col); }
+function mEll(h,k,rx,ry,s,col){ return courbe("ellipse",{h:h,k:k,rx:rx,ry:ry,s:s},"x",[h-rx,h+rx],col); }
+function mSinY(A,w,ph,k,y0,y1,col){ return courbe("sinus",{A:A,w:w,ph:ph,k:k},"y",[y0,y1],col); }
+function mSinX(A,w,ph,k,x0,x1,col){ return courbe("sinus",{A:A,w:w,ph:ph,k:k},"x",[x0,x1],col); }
+function mExpY(a,b,h,k,y0,y1,col){ return courbe("expo",{a:a,b:b,h:h,k:k},"y",[y0,y1],col); }
+function rect(x0,y0,x1,y1,col){
+  return [mHoriz(y0,x0,x1,col), mHoriz(y1,x0,x1,col), mVert(x0,y0,y1,col), mVert(x1,y0,y1,col)];
+}
+
+const C_MUR="#f2c744", C_TOIT="#e2564d", C_BOIS="#c08a55", C_VERT="#3ec46d",
+      C_BLEU="#2d70f5", C_JAUNE="#f2c744", C_GRIS="#9aa6bf", C_ROSE="#f27a9b",
+      C_ORANGE="#f08a35", C_VIOLET="#c07cf5", C_BLANC="#e8edf7";
+
+const MODELES = {
+  maison: { mots:["maison","maisons","chalet","baraque"], ciel:false,
+    options:["toit","porte","fenetre","cheminee","fumee"], f: function(o){
+    o = o || {};
+    const L = [];
+    const ht = 5 + 3.2*(typeof o.toit === "number" ? o.toit : 1);   // hauteur de la pointe
+    const pente = (ht - 5)/4.3;
+    L.push.apply(L, tag([mHoriz(0,-3.5,3.5,C_MUR), mVert(-3.5,0,5,C_MUR), mVert(3.5,0,5,C_MUR)], "mur"));
+    L.push.apply(L, tag([mSeg(-4.3,5,0,ht,C_TOIT), mSeg(0,ht,4.3,5,C_TOIT),
+      mHoriz(5,-4.3,-3.5,C_TOIT), mHoriz(5,3.5,4.3,C_TOIT), mHoriz(5,-3.5,3.5,C_TOIT)], "toit"));
+    if (o.porte !== false){
+      const pp = borne(typeof o.porte === "number" ? o.porte : 1, 0.3, 1.6);
+      const lp = 0.8*pp, hp = 2.7*pp;
+      L.push.apply(L, tag([mVert(-0.5-lp,0,hp,C_BOIS), mVert(-0.5+lp,0,hp,C_BOIS),
+        mHoriz(hp,-0.5-lp,-0.5+lp,C_BOIS), mCercle(-0.5+lp-0.3,hp/2,0.14,C_BOIS)], "porte"));
+    }
+    const nf = o.fenetre === false ? 0 : borne(typeof o.fenetre === "number" ? o.fenetre : 1, 0, 3);
+    const places = [[1.2,2.8,2.8,4.2], [-2.8,-1.2,2.8,4.2], [-0.8,0.8,5.5,6.5]];
+    for (let i = 0; i < nf; i++){
+      const f = places[i];
+      const m = rect(f[0],f[2],f[1],f[3],C_BLEU);
+      m.push(mVert((f[0]+f[1])/2,f[2],f[3],C_BLEU), mHoriz((f[2]+f[3])/2,f[0],f[1],C_BLEU));
+      L.push.apply(L, tag(m, "fenetre"));
+    }
+    if (o.cheminee !== false){
+      const y1 = ht - pente*2.2, y2 = ht - pente*2.9, haut = ht + 0.2;
+      L.push.apply(L, tag([mVert(2.2,y1,haut,C_GRIS), mVert(2.9,y2,haut,C_GRIS),
+        mHoriz(haut,2.2,2.9,C_GRIS)], "cheminee"));
+      if (o.fumee !== false)
+        L.push.apply(L, tag([mSinY(0.4,2.6,haut,2.55,haut,haut+2.8,C_GRIS)], "fumee"));
+    }
+    for (let i = 1; i <= 3; i++){          // tuiles
+      const y = 5 + i*(ht - 5)/4.2;
+      const demi = (ht - y)/pente;
+      L.push.apply(L, niv(tag([mHoriz(y, -demi, demi, C_TOIT)], "decor"), 3));
+    }
+    for (let i = 1; i <= 4; i++)           // briques
+      L.push.apply(L, niv(tag([mHoriz(i, -3.5, 3.5, C_MUR)], "decor"), 3));
+    return L;
+  }},
+  sapin: { mots:["sapin","sapins","epicea","arbre de noel"], ciel:false, f: function(){
+    const L = [];
+    L.push.apply(L, tag([mVert(-0.45,0,0.7,C_BOIS), mVert(0.45,0,0.7,C_BOIS), mHoriz(0,-0.45,0.45,C_BOIS)], "tronc"));
+    L.push(mAbs(-1.8,0,4.2,-2.2,2.2,C_VERT), mHoriz(0.24,-2.2,2.2,C_VERT));
+    L.push(mAbs(-1.8,0,6.6,-1.7,1.7,C_VERT), mHoriz(3.54,-1.7,1.7,C_VERT));
+    L.push(mAbs(-1.8,0,9,-1.2,1.2,C_VERT), mHoriz(6.84,-1.2,1.2,C_VERT));
+    L.push.apply(L, niv(tag([mSinX(0.35,3.4,0,3.1,-1.7,1.7,C_JAUNE),
+      mSinX(0.3,4,0,5.6,-1.1,1.1,C_JAUNE)], "decor"), 3));
+    L.push.apply(L, niv(tag([mCercle(-1.2,1.6,0.3,C_TOIT), mCercle(0.9,2.2,0.3,C_BLEU),
+      mCercle(-0.6,4.4,0.28,C_ROSE), mCercle(0.8,4.8,0.28,C_JAUNE),
+      mCercle(0,9.6,0.45,C_JAUNE)], "decor"), 3));
+    return L;
+  }},
+  arbre: { mots:["arbre","arbres","chene"], ciel:false, f: function(){
+    const L = [];
+    L.push.apply(L, tag([mExpY(-0.9,-0.8,0,-0.42,0,3.4,C_BOIS), mExpY(0.9,-0.8,0,0.42,0,3.4,C_BOIS)], "tronc"));
+    L.push.apply(L, tag([mCercle(0,6.2,3.1,C_VERT),
+      mArc(-2.7,5.1,1.5,1,-4.2,-1.2,C_VERT), mArc(2.7,5.1,1.5,1,1.2,4.2,C_VERT)], "feuille"));
+    L.push.apply(L, niv(tag([mCercle(-1.4,6.6,0.42,C_TOIT), mCercle(1.2,7.2,0.42,C_TOIT),
+      mCercle(0.4,5.2,0.42,C_TOIT)], "decor"), 3));
+    return L;
+  }},
+  soleil: { mots:["soleil","soleils"], ciel:true, f: function(){
+    const L = [mCercle(0,0,2.2,C_JAUNE)];
+    for (let i = 0; i < 12; i++){
+      const a = i*Math.PI/6;
+      L.push.apply(L, niv(tag([mSeg(2.8*Math.cos(a),2.8*Math.sin(a),4.2*Math.cos(a),4.2*Math.sin(a),C_ORANGE)], "rayon"), 1));
+    }
+    for (let i = 0; i < 12; i++){
+      const a = (i + 0.5)*Math.PI/6;
+      L.push.apply(L, niv(tag([mSeg(2.6*Math.cos(a),2.6*Math.sin(a),3.4*Math.cos(a),3.4*Math.sin(a),C_JAUNE)], "decor"), 3));
+    }
+    return L;
+  }},
+  lune: { mots:["lune","lunes"], ciel:true, f: function(){
+    return [mCercle(0,0,2.4,C_BLANC), mCercle(-0.8,0.6,0.5,C_GRIS),
+            mCercle(0.9,0.2,0.35,C_GRIS), mCercle(0.1,-1.1,0.45,C_GRIS)];
+  }},
+  nuage: { mots:["nuage","nuages"], ciel:true, f: function(){
+    return [mArc(-1.8,0,1.2,1,-3,-0.6,C_BLANC), mArc(0,0.35,1.75,1,-1.75,1.75,C_BLANC),
+            mArc(2,0,1.3,1,0.7,3.3,C_BLANC), mHoriz(0,-3,3.3,C_BLANC)];
+  }},
+  montagne: { mots:["montagne","montagnes","mont","sommet"], ciel:false, f: function(){
+    const L = [];
+    L.push(mAbs(-2.2,0,8,-3.6,3.6,C_GRIS), mAbs(-2,3.6,5.6,0.6,6.2,C_GRIS));
+    L.push(mSeg(-1,5.8,0,8,C_BLANC), mSeg(0,8,1,5.8,C_BLANC), mSeg(-1,5.8,-0.4,6.4,C_BLANC));
+    L.push(mHoriz(0.08,-3.6,6.2,C_VERT));
+    return L;
+  }},
+  etoile: { mots:["etoile","etoiles","star"], ciel:true, f: function(){
+    const L = [], pts = [];
+    for (let i = 0; i < 10; i++){
+      const r = i % 2 === 0 ? 4.2 : 1.8;
+      const a = -Math.PI/2 + i*Math.PI/5;
+      pts.push([r*Math.cos(a), r*Math.sin(a)]);
+    }
+    for (let i = 0; i < 10; i++){
+      const a = pts[i], b = pts[(i+1)%10];
+      L.push(mSeg(a[0],a[1],b[0],b[1],C_JAUNE));
+    }
+    return L;
+  }},
+  coeur: { mots:["coeur","coeurs","amour"], ciel:false, f: function(){
+    return [mArc(-1.6,2.2,1.6,1,-3.2,0,C_ROSE), mArc(1.6,2.2,1.6,1,0,3.2,C_ROSE),
+            mParab(-0.469,-3.2,2.2,-3.2,0,C_ROSE), mParab(-0.469,3.2,2.2,0,3.2,C_ROSE)];
+  }},
+  chat: { mots:["chat","chats","chaton","minou"], ciel:false, f: function(){
+    const L = [];
+    L.push(mEll(0,5.2,3,2.8,1,C_ORANGE), mEll(0,5.2,3,2.8,-1,C_ORANGE));
+    L.push.apply(L, tag([mSeg(-2.4,7,-1.9,9.4,C_ORANGE), mSeg(-1.9,9.4,-0.5,7.9,C_ORANGE),
+      mSeg(2.4,7,1.9,9.4,C_ORANGE), mSeg(1.9,9.4,0.5,7.9,C_ORANGE)], "oreille"));
+    L.push.apply(L, tag([mCercle(-1.2,5.8,0.42,C_VERT), mCercle(1.2,5.8,0.42,C_VERT)], "oeil"));
+    L.push(mSeg(-0.4,4.7,0,4.3,C_ROSE), mSeg(0,4.3,0.4,4.7,C_ROSE), mSeg(-0.4,4.7,0.4,4.7,C_ROSE));
+    L.push(mArc(-0.45,4.35,0.45,-1,-0.9,0,C_GRIS), mArc(0.45,4.35,0.45,-1,0,0.9,C_GRIS));
+    for (const s of [-1,1]) for (let i = 0; i < 3; i++)
+      L.push.apply(L, niv(tag([mSeg(s*1.1, 4.7 - i*0.05 + 0.4, s*3.4, 5.2 - i*0.7 + 0.4, C_GRIS)], "moustache"), 3));
+    for (let i = 0; i < 3; i++)
+      L.push.apply(L, niv(tag([mSeg(-0.8 + i*0.8, 7.2, -1.1 + i*0.8, 8.1, C_BOIS)], "rayure"), 3));
+    return L;
+  }},
+  poisson: { mots:["poisson","poissons"], ciel:false, f: function(){
+    const L = [];
+    L.push(mParab(-0.42,0,4.4,-2.3,2.3,C_BLEU), mParab(0.42,0,1.2,-2.3,2.3,C_BLEU));
+    L.push.apply(L, tag([mSeg(2.29,2.8,4,4.6,C_BLEU), mSeg(4,4.6,4,1,C_BLEU), mSeg(4,1,2.29,2.8,C_BLEU)], "queue"));
+    L.push(mCercle(-1.2,3.3,0.28,C_BLANC));
+    L.push(mParab(-1.6,0,5.6,-0.9,0.9,C_BLEU));
+    L.push(mArc(-2.1,3.1,0.55,-1,-2.65,-1.9,C_BLEU));
+    return L;
+  }},
+  voiture: { mots:["voiture","voitures","auto","bagnole"], ciel:false, f: function(){
+    const L = [];
+    L.push(mHoriz(1,-4,4,C_BLEU), mHoriz(2.6,-4,4,C_BLEU), mVert(-4,1,2.6,C_BLEU), mVert(4,1,2.6,C_BLEU));
+    L.push(mSeg(-2.2,2.6,-1.3,4.2,C_BLEU), mSeg(2.2,2.6,1.3,4.2,C_BLEU), mHoriz(4.2,-1.3,1.3,C_BLEU));
+    L.push(mVert(0,2.6,4.2,C_GRIS));
+    L.push.apply(L, niv(tag([mCercle(-2.4,1,1,C_GRIS), mCercle(2.4,1,1,C_GRIS)], "roue"), 1));
+    L.push.apply(L, niv(tag([mCercle(-2.4,1,0.35,C_GRIS), mCercle(2.4,1,0.35,C_GRIS)], "roue"), 3));
+    L.push.apply(L, niv(tag([mCercle(-3.7,2,0.3,C_JAUNE), mCercle(3.7,2,0.3,C_TOIT),
+      mHoriz(1.7,-1.4,-0.8,C_GRIS), mHoriz(1.7,0.8,1.4,C_GRIS)], "decor"), 3));
+    return L;
+  }},
+  fusee: { mots:["fusee","fusees","navette"], ciel:false, f: function(){
+    const L = [];
+    L.push(mVert(-1.2,1.5,6,C_BLANC), mVert(1.2,1.5,6,C_BLANC), mHoriz(1.5,-1.2,1.2,C_BLANC));
+    L.push(mParab(-2.083,0,9,-1.2,1.2,C_TOIT));
+    L.push(mSeg(-1.2,3,-2.6,1,C_TOIT), mSeg(-2.6,1,-1.2,1.5,C_TOIT));
+    L.push(mSeg(1.2,3,2.6,1,C_TOIT), mSeg(2.6,1,1.2,1.5,C_TOIT));
+    L.push.apply(L, tag([mCercle(0,5,0.6,C_BLEU)], "hublot"));
+    L.push.apply(L, tag([mAbs(3,0,-1.5,-1,1,C_ORANGE)], "flamme"));
+    return L;
+  }},
+  fleur: { mots:["fleur","fleurs","tulipe","rose"], ciel:false, f: function(){
+    const L = [];
+    for (let i = 0; i < 6; i++){
+      const a = i*Math.PI/3;
+      L.push(mCercle(1.5*Math.cos(a), 7.5 + 1.5*Math.sin(a), 1.1, C_ROSE));
+    }
+    L.push(mCercle(0,7.5,0.9,C_JAUNE));
+    L.push.apply(L, tag([mSinY(0.5,0.85,0,0,0,6.1,C_VERT)], "tige"));
+    L.push.apply(L, tag([mEll(-1.5,3.2,1.5,0.6,1,C_VERT), mEll(-1.5,3.2,1.5,0.6,-1,C_VERT),
+      mEll(1.5,4.4,1.5,0.6,1,C_VERT), mEll(1.5,4.4,1.5,0.6,-1,C_VERT)], "feuille"));
+    return L;
+  }},
+  bonhomme: { mots:["bonhomme","personnage","humain","homme","femme","gens"], ciel:false, f: function(){
+    const L = [];
+    L.push(mCercle(0,8.6,1.2,C_JAUNE));
+    L.push(mVert(0,4.2,7.4,C_BLEU));
+    L.push(mSeg(-2,5.6,0,6.9,C_BLEU), mSeg(0,6.9,2,5.6,C_BLEU));
+    L.push(mSeg(0,4.2,-1.6,0,C_BLEU), mSeg(0,4.2,1.6,0,C_BLEU));
+    L.push(mCercle(-0.4,8.8,0.14,C_BOIS), mCercle(0.4,8.8,0.14,C_BOIS));
+    L.push(mArc(0,8.3,0.5,-1,-0.5,0.5,C_BOIS));
+    return L;
+  }},
+  sol: { mots:["sol","herbe","terrain","pelouse"], ciel:false, decor:true, f: function(){
+    return [mHoriz(0,-9,9,C_VERT), mSinX(0.32,7,0,0.34,-9,9,C_VERT)];
+  }},
+
+  /* --- modèles ajoutés en 0.2 --- */
+  chien: { mots:["chien","chiot","toutou","cabot"], ciel:false, f: function(){
+    const L = [];
+    L.push(mEll(0,5.2,3,2.6,1,C_BOIS), mEll(0,5.2,3,2.6,-1,C_BOIS));
+    L.push.apply(L, niv(tag([mEll(-3.1,4.6,0.9,2.1,1,C_BOIS), mEll(-3.1,4.6,0.9,2.1,-1,C_BOIS),
+      mEll(3.1,4.6,0.9,2.1,1,C_BOIS), mEll(3.1,4.6,0.9,2.1,-1,C_BOIS)], "oreille"), 2));
+    L.push.apply(L, niv(tag([mCercle(-1.1,5.8,0.34,C_BOIS), mCercle(1.1,5.8,0.34,C_BOIS)], "oeil"), 2));
+    L.push(mEll(0,4,1.5,1,1,C_BLANC), mEll(0,4,1.5,1,-1,C_BLANC));
+    L.push(mCercle(0,4.4,0.4,C_GRIS));
+    L.push.apply(L, niv([mArc(-0.5,3.7,0.5,-1,-1,0,C_GRIS), mArc(0.5,3.7,0.5,-1,0,1,C_GRIS)], 2));
+    L.push.apply(L, niv(tag([mArc(0,3.2,0.55,-1,-0.55,0.55,C_ROSE)], "decor"), 3));
+    return L;
+  }},
+  oiseau: { mots:["oiseau","moineau","piaf","mouette","perroquet"], ciel:false, f: function(){
+    const L = [];
+    L.push(mEll(0,4,2.2,1.6,1,C_BLEU), mEll(0,4,2.2,1.6,-1,C_BLEU));
+    L.push(mCercle(-1.9,5.6,1.1,C_BLEU));
+    L.push.apply(L, niv(tag([mSeg(-2.9,5.6,-4.3,5.2,C_JAUNE), mSeg(-4.3,5.2,-2.9,4.9,C_JAUNE)], "bec"), 2));
+    L.push.apply(L, niv(tag([mCercle(-2.2,5.9,0.18,C_GRIS)], "oeil"), 2));
+    L.push.apply(L, niv(tag([mEll(0.2,4.3,1.5,0.8,1,C_VIOLET), mEll(0.2,4.3,1.5,0.8,-1,C_VIOLET)], "aile"), 2));
+    L.push.apply(L, niv(tag([mSeg(2.1,4.3,3.9,5.1,C_VIOLET), mSeg(3.9,5.1,3.7,3.5,C_VIOLET),
+      mSeg(3.7,3.5,2.1,3.8,C_VIOLET)], "queue"), 2));
+    L.push.apply(L, niv([mVert(-0.5,1.3,2.5,C_JAUNE), mVert(0.6,1.3,2.5,C_JAUNE),
+      mHoriz(1.3,-0.9,-0.2,C_JAUNE), mHoriz(1.3,0.3,1,C_JAUNE)], 3));
+    return L;
+  }},
+  papillon: { mots:["papillon"], ciel:false, f: function(){
+    const L = [];
+    L.push(mEll(0,5,0.4,2.3,1,C_GRIS), mEll(0,5,0.4,2.3,-1,C_GRIS));
+    for (const c of [-1, 1]){
+      // aile haute : large et pointue vers l'extérieur ; aile basse : plus courte
+      L.push.apply(L, niv(tag([mEll(c*2.7,6.5,2.6,1.5,1,C_ORANGE), mEll(c*2.7,6.5,2.6,1.5,-1,C_ORANGE),
+        mEll(c*2,3.5,1.9,1.1,1,C_JAUNE), mEll(c*2,3.5,1.9,1.1,-1,C_JAUNE)], "aile"), 1));
+      L.push.apply(L, niv([mSinY(c*0.5,1.6,7.3,c*0.9,7.3,8.8,C_GRIS)], 2));
+      L.push.apply(L, niv(tag([mEll(c*2.9,6.5,1.1,0.6,1,C_TOIT), mEll(c*2.9,6.5,1.1,0.6,-1,C_TOIT),
+        mEll(c*2.2,3.5,0.7,0.4,1,C_TOIT), mEll(c*2.2,3.5,0.7,0.4,-1,C_TOIT)], "decor"), 3));
+    }
+    return L;
+  }},
+  tortue: { mots:["tortue"], ciel:false, f: function(){
+    const L = [];
+    L.push(mArc(0,2.4,3.2,1,-3.2,3.2,C_VERT), mHoriz(2.4,-3.2,3.2,C_VERT));
+    L.push(mCercle(4,3,1,C_VERT));
+    L.push.apply(L, niv(tag([mCercle(4.3,3.3,0.16,C_GRIS)], "oeil"), 2));
+    L.push.apply(L, niv([mEll(-2.2,2.4,0.9,0.7,-1,C_VERT), mEll(1.9,2.4,0.9,0.7,-1,C_VERT)], 2));
+    L.push.apply(L, niv(tag([mSeg(-3.2,2.4,-4.4,2.9,C_VERT)], "queue"), 2));
+    L.push.apply(L, niv(tag([mArc(0,2.4,2.1,1,-2.1,2.1,C_BOIS), mArc(0,2.4,1.1,1,-1.1,1.1,C_BOIS),
+      mVert(-1.6,2.4,4.2,C_BOIS), mVert(1.6,2.4,4.2,C_BOIS)], "decor"), 3));
+    return L;
+  }},
+  lapin: { mots:["lapin","lapereau","lievre"], ciel:false, f: function(){
+    const L = [];
+    L.push(mCercle(0,4.6,2.2,C_BLANC));
+    L.push.apply(L, niv(tag([mEll(-0.95,8,0.6,2.5,1,C_BLANC), mEll(-0.95,8,0.6,2.5,-1,C_BLANC),
+      mEll(0.95,8,0.6,2.5,1,C_BLANC), mEll(0.95,8,0.6,2.5,-1,C_BLANC)], "oreille"), 1));
+    L.push.apply(L, niv(tag([mCercle(-0.8,5,0.3,C_GRIS), mCercle(0.8,5,0.3,C_GRIS)], "oeil"), 2));
+    L.push.apply(L, niv([mCercle(0,3.9,0.28,C_ROSE), mArc(-0.4,3.6,0.4,-1,-0.8,0,C_GRIS),
+      mArc(0.4,3.6,0.4,-1,0,0.8,C_GRIS)], 2));
+    L.push.apply(L, niv(tag([mEll(-0.95,8.2,0.28,1.7,1,C_ROSE), mEll(-0.95,8.2,0.28,1.7,-1,C_ROSE),
+      mEll(0.95,8.2,0.28,1.7,1,C_ROSE), mEll(0.95,8.2,0.28,1.7,-1,C_ROSE)], "decor"), 3));
+    for (const c of [-1, 1]) for (let i = 0; i < 2; i++)
+      L.push.apply(L, niv(tag([mSeg(c*0.9, 3.7 - i*0.1, c*3, 4.1 - i*0.6, C_GRIS)], "moustache"), 3));
+    return L;
+  }},
+  champignon: { mots:["champignon","cepe"], ciel:false, f: function(){
+    const L = [];
+    L.push(mArc(0,4.2,3.2,1,-3.2,3.2,C_TOIT), mHoriz(4.2,-3.2,3.2,C_TOIT));
+    L.push(mVert(-0.95,0,4.2,C_BLANC), mVert(0.95,0,4.2,C_BLANC), mHoriz(0,-0.95,0.95,C_BLANC));
+    L.push.apply(L, niv(tag([mCercle(-1.6,5.2,0.5,C_BLANC), mCercle(1.3,5.5,0.45,C_BLANC),
+      mCercle(0,6.6,0.4,C_BLANC)], "decor"), 3));
+    return L;
+  }},
+  cactus: { mots:["cactus"], ciel:false, f: function(){
+    const L = [];
+    L.push(mVert(-1,1.4,6,C_VERT), mVert(1,1.4,6,C_VERT), mArc(0,6,1,1,-1,1,C_VERT));
+    L.push.apply(L, niv([mVert(-2.8,3,4.6,C_VERT), mHoriz(3,-2.8,-1,C_VERT), mArc(-1.9,4.6,0.9,1,-2.8,-1,C_VERT),
+      mVert(2.8,3.8,5.4,C_VERT), mHoriz(3.8,1,2.8,C_VERT), mArc(1.9,5.4,0.9,1,1,2.8,C_VERT)], 2));
+    L.push.apply(L, niv([mSeg(-1.8,1.4,1.8,1.4,C_BOIS), mSeg(-1.6,1.4,-1.3,0,C_BOIS),
+      mSeg(1.6,1.4,1.3,0,C_BOIS), mHoriz(0,-1.3,1.3,C_BOIS)], 2));
+    for (let i = 0; i < 4; i++)
+      L.push.apply(L, niv(tag([mSeg(-1, 2.4 + i*0.9, -1.5, 2.6 + i*0.9, C_VERT),
+        mSeg(1, 2.4 + i*0.9, 1.5, 2.6 + i*0.9, C_VERT)], "decor"), 3));
+    return L;
+  }},
+  palmier: { mots:["palmier","cocotier"], ciel:false, f: function(){
+    const L = [];
+    const hx = 0.35, hy = 5.9;                      // sommet du tronc
+    L.push(courbe("parabole",{a:0.03,h:0,k:-0.85},"y",[0,hy],C_BOIS),
+           courbe("parabole",{a:0.03,h:0,k:0.25},"y",[0,hy],C_BOIS));
+    for (const [dx, a] of [[-4.2,-0.14], [-2.8,-0.3], [4.2,-0.14], [2.8,-0.3]])
+      L.push(mParab(a, hx, hy, Math.min(hx, hx+dx), Math.max(hx, hx+dx), C_VERT));
+    L.push(mParab(-1.1, hx, hy + 0.7, hx - 1.1, hx + 1.1, C_VERT));
+    L.push.apply(L, niv(tag([mCercle(hx-0.75,hy-0.7,0.4,C_BOIS), mCercle(hx+0.6,hy-0.9,0.4,C_BOIS)], "decor"), 3));
+    for (let i = 1; i <= 4; i++){
+      const y = i*1.1;
+      L.push.apply(L, niv(tag([mHoriz(y, 0.03*y*y - 0.85, 0.03*y*y + 0.25, C_BOIS)], "decor"), 3));
+    }
+    return L;
+  }},
+  parapluie: { mots:["parapluie","ombrelle"], ciel:false, f: function(){
+    const L = [];
+    L.push(mArc(0,5.5,4,1,-4,4,C_TOIT), mVert(0,1.2,5.5,C_BOIS));
+    L.push.apply(L, niv([mArc(-3,5.5,1,-1,-4,-2,C_TOIT), mArc(-1,5.5,1,-1,-2,0,C_TOIT),
+      mArc(1,5.5,1,-1,0,2,C_TOIT), mArc(3,5.5,1,-1,2,4,C_TOIT)], 2));
+    L.push.apply(L, niv([mArc(-0.6,1.2,0.6,-1,-1.2,0,C_BOIS)], 2));
+    L.push.apply(L, niv(tag([mSeg(0,5.5,-2,5.5,C_TOIT), mSeg(0,5.5,2,5.5,C_TOIT),
+      mCercle(0,5.8,0.2,C_TOIT)], "decor"), 3));
+    return L;
+  }},
+  cadeau: { mots:["cadeau","paquet","present"], ciel:false, f: function(){
+    const L = [];
+    L.push.apply(L, rect(-3,0,3,4,C_TOIT));
+    L.push.apply(L, niv([mVert(-0.4,0,4,C_JAUNE), mVert(0.4,0,4,C_JAUNE),
+      mHoriz(1.9,-3,3,C_JAUNE), mHoriz(2.5,-3,3,C_JAUNE)], 2));
+    L.push.apply(L, niv([mArc(-1,4.8,1,1,-2,0,C_JAUNE), mArc(1,4.8,1,1,0,2,C_JAUNE),
+      mSeg(-2,4.8,0,4,C_JAUNE), mSeg(2,4.8,0,4,C_JAUNE)], 2));
+    return L;
+  }},
+  gateau: { mots:["gateau","anniversaire","tarte"], ciel:false, f: function(){
+    const L = [];
+    L.push.apply(L, rect(-3.5,0,3.5,2.4,C_BOIS));
+    L.push.apply(L, rect(-2.6,2.4,2.6,4.2,C_ROSE));
+    L.push.apply(L, niv([mArc(-1.7,4.2,0.9,-1,-2.6,-0.8,C_BLANC), mArc(0,4.2,0.9,-1,-0.9,0.9,C_BLANC),
+      mArc(1.7,4.2,0.9,-1,0.8,2.6,C_BLANC)], 2));
+    for (const x of [-1.4, 0, 1.4]){
+      L.push.apply(L, niv(tag([mVert(x-0.18,4.2,5.6,C_BLANC), mVert(x+0.18,4.2,5.6,C_BLANC)], "bougie"), 2));
+      L.push.apply(L, niv(tag([mSeg(x-0.3,5.6,x,6.3,C_ORANGE), mSeg(x,6.3,x+0.3,5.6,C_ORANGE)], "flamme"), 3));
+    }
+    return L;
+  }},
+  tasse: { mots:["tasse","mug","cafe","the"], ciel:false, f: function(){
+    const L = [];
+    L.push(mSeg(-1.9,3.4,-1.5,0.6,C_BLANC), mSeg(1.9,3.4,1.5,0.6,C_BLANC),
+           mHoriz(3.4,-1.9,1.9,C_BLANC), mHoriz(0.6,-1.5,1.5,C_BLANC));
+    L.push.apply(L, niv([mArc(1.9,2,1.4,1,1.9,3.3,C_BLANC), mArc(1.9,2,0.9,1,1.9,2.8,C_BLANC),
+      mSeg(1.9,3.4,1.9,2.9,C_BLANC)], 2));
+    L.push.apply(L, niv([mEll(0,0.4,3,0.5,1,C_GRIS), mEll(0,0.4,3,0.5,-1,C_GRIS)], 2));
+    L.push.apply(L, niv(tag([mSinY(0.35,2.2,3.6,-0.7,3.6,6,C_GRIS),
+      mSinY(0.35,2.2,3.6,0.7,3.6,6,C_GRIS)], "decor"), 3));
+    return L;
+  }},
+  bougie: { mots:["bougie","chandelle"], ciel:false, f: function(){
+    const L = [];
+    L.push.apply(L, rect(-0.9,0,0.9,5,C_JAUNE));
+    L.push(mVert(0,5,5.4,C_GRIS));
+    L.push.apply(L, niv(tag([mSeg(-0.8,5.9,0,7.6,C_ORANGE), mSeg(0,7.6,0.8,5.9,C_ORANGE),
+      mArc(0,5.9,0.8,-1,-0.8,0.8,C_ORANGE)], "flamme"), 1));
+    L.push.apply(L, niv(tag([mEll(0,6.3,1.5,2,1,C_JAUNE), mEll(0,6.3,1.5,2,-1,C_JAUNE)], "decor"), 3));
+    return L;
+  }},
+  ampoule: { mots:["ampoule","lampe","idee"], ciel:false, f: function(){
+    const L = [];
+    L.push(mArc(0,6,2.2,1,-2.2,2.2,C_JAUNE), mArc(0,6,2.2,-1,-1.5,1.5,C_JAUNE));
+    L.push(mSeg(-1.5,4.4,-1.1,3.4,C_GRIS), mSeg(1.5,4.4,1.1,3.4,C_GRIS));
+    L.push.apply(L, rect(-1.1,1.4,1.1,3.4,C_GRIS));
+    L.push.apply(L, niv([mSinX(0.45,5.5,0,6.2,-1.1,1.1,C_ORANGE)], 2));
+    L.push.apply(L, niv(tag([mHoriz(2,-1.1,1.1,C_GRIS), mHoriz(2.6,-1.1,1.1,C_GRIS),
+      mHoriz(3.2,-1.1,1.1,C_GRIS)], "decor"), 3));
+    return L;
+  }},
+  cle: { mots:["cle","clef"], ciel:false, f: function(){
+    const L = [];
+    L.push(mCercle(-2.6,2,1.4,C_JAUNE), mCercle(-2.6,2,0.7,C_JAUNE));
+    L.push(mHoriz(1.6,-1.2,3.8,C_JAUNE), mHoriz(2.4,-1.2,3.8,C_JAUNE), mVert(3.8,1.6,2.4,C_JAUNE));
+    L.push.apply(L, niv([mVert(2.6,0.9,1.6,C_JAUNE), mHoriz(0.9,2.6,3.1,C_JAUNE), mVert(3.1,0.9,1.6,C_JAUNE),
+      mVert(3.8,0.9,1.6,C_JAUNE), mHoriz(0.9,3.4,3.8,C_JAUNE), mVert(3.4,0.9,1.6,C_JAUNE)], 2));
+    return L;
+  }},
+  ballon: { mots:["ballon","football","foot","balle"], ciel:false, f: function(){
+    const L = [mCercle(0,3.2,3.2,C_BLANC)];
+    const pts = [];
+    for (let i = 0; i < 5; i++){
+      const a = Math.PI/2 + i*2*Math.PI/5;
+      pts.push([1.3*Math.cos(a), 3.2 + 1.3*Math.sin(a)]);
+    }
+    for (let i = 0; i < 5; i++)
+      L.push.apply(L, niv([mSeg(pts[i][0],pts[i][1],pts[(i+1)%5][0],pts[(i+1)%5][1],C_GRIS)], 1));
+    for (let i = 0; i < 5; i++){
+      const a = Math.PI/2 + i*2*Math.PI/5;
+      L.push.apply(L, niv(tag([mSeg(pts[i][0],pts[i][1],3.1*Math.cos(a),3.2 + 3.1*Math.sin(a),C_GRIS)], "decor"), 3));
+    }
+    return L;
+  }},
+  avion: { mots:["avion","jet","appareil"], ciel:true, f: function(){
+    const L = [];
+    L.push(mEll(0,4,4.5,1,1,C_BLANC), mEll(0,4,4.5,1,-1,C_BLANC));
+    L.push.apply(L, niv(tag([mSeg(0.6,3.4,-1.4,0.9,C_BLEU), mSeg(-1.4,0.9,1.9,0.9,C_BLEU),
+      mSeg(1.9,0.9,1.6,3.4,C_BLEU)], "aile"), 1));
+    L.push.apply(L, niv(tag([mSeg(-3.5,4.7,-4.5,6.4,C_BLEU), mSeg(-4.5,6.4,-2.9,5,C_BLEU)], "queue"), 2));
+    for (let i = 0; i < 4; i++)
+      L.push.apply(L, niv(tag([mCercle(-1.8 + i*1.2, 4.3, 0.22, C_BLEU)], "hublot"), 3));
+    return L;
+  }},
+  bateau: { mots:["bateau","voilier","barque","navire"], ciel:false, f: function(){
+    const L = [];
+    L.push.apply(L, niv(tag([mParab(0.18,0,0,-3.6,3.6,C_BOIS), mHoriz(2.33,-3.6,3.6,C_BOIS)], "coque"), 1));
+    L.push(mVert(0,2.33,8,C_BOIS));
+    L.push.apply(L, niv([mSeg(0.4,7.6,3.2,3.2,C_BLANC), mSeg(3.2,3.2,0.4,3.2,C_BLANC),
+      mSeg(-0.4,6.8,-2.6,3.2,C_BLANC), mSeg(-2.6,3.2,-0.4,3.2,C_BLANC)], 1));
+    L.push.apply(L, niv(tag([mSinX(0.3,2.6,0,0.6,-6,6,C_BLEU)], "decor"), 2));
+    L.push.apply(L, niv(tag([mSeg(0,8,1.4,7.6,C_TOIT), mSeg(1.4,7.6,0,7.2,C_TOIT)], "decor"), 3));
+    return L;
+  }},
+  train: { mots:["train","locomotive","tgv","wagon"], ciel:false, f: function(){
+    const L = [];
+    L.push.apply(L, rect(-4.2,1.2,1.4,4,C_TOIT));
+    L.push.apply(L, rect(-4.2,4,-1.4,6.2,C_TOIT));
+    L.push.apply(L, niv([mVert(0.3,4,1.1,C_GRIS), mVert(1.1,4,5.4,C_GRIS), mVert(0.3,4,5.4,C_GRIS),
+      mHoriz(5.4,0.3,1.1,C_GRIS)], 2));
+    L.push.apply(L, niv(tag([mCercle(-3,1.2,1.2,C_GRIS), mCercle(0.2,1.2,1.2,C_GRIS)], "roue"), 1));
+    L.push.apply(L, niv(tag([mCercle(-3,1.2,0.4,C_GRIS), mCercle(0.2,1.2,0.4,C_GRIS)], "roue"), 3));
+    L.push.apply(L, niv(tag([mHoriz(0,-6,6,C_GRIS)], "decor"), 2));
+    L.push.apply(L, rect(-3.6,4.5,-2,5.7,C_BLEU));
+    L.push.apply(L, niv(tag([mCercle(0.7,6.2,0.5,C_GRIS), mCercle(1.3,7,0.6,C_GRIS),
+      mCercle(2.1,7.9,0.7,C_GRIS)], "fumee"), 3));
+    return L;
+  }},
+  robot: { mots:["robot","androide","automate"], ciel:false, f: function(){
+    const L = [];
+    L.push.apply(L, niv(rect(-1.8,6.4,1.8,9,C_GRIS), 1));
+    L.push.apply(L, niv([mVert(0,9,10,C_GRIS), mCercle(0,10.3,0.35,C_TOIT)], 2));
+    L.push.apply(L, niv(tag([mCercle(-0.8,8.2,0.4,C_BLEU), mCercle(0.8,8.2,0.4,C_BLEU)], "oeil"), 2));
+    L.push.apply(L, niv([mHoriz(7.2,-1,1,C_BLEU)], 2));
+    L.push.apply(L, rect(-2.6,2.2,2.6,6.4,C_BLEU));
+    L.push.apply(L, niv([mVert(-1,7.2,7.4,C_BLEU), mVert(0,7.2,7.4,C_BLEU), mVert(1,7.2,7.4,C_BLEU)], 3));
+    L.push.apply(L, niv(rect(-3.9,3.4,-2.6,6,C_GRIS), 2));
+    L.push.apply(L, niv(rect(2.6,3.4,3.9,6,C_GRIS), 2));
+    L.push.apply(L, niv(rect(-1.8,0,-0.6,2.2,C_GRIS), 2));
+    L.push.apply(L, niv(rect(0.6,0,1.8,2.2,C_GRIS), 2));
+    L.push.apply(L, niv(tag([mCercle(-1.2,4.6,0.35,C_JAUNE), mCercle(0,4.6,0.35,C_TOIT),
+      mCercle(1.2,4.6,0.35,C_VERT)], "decor"), 3));
+    return L;
+  }}
+};
+
+/* Chaque courbe d'un modèle a un niveau : 1 la silhouette, 2 les éléments
+   normaux, 3 la finition. On empile les niveaux tant qu'on tient dans le
+   nombre de fonctions demandé — c'est ce qui fait servir le curseur en mode
+   Formules. */
+function niv(liste, n){ liste.forEach(c => { if (c) c.niv = n; }); return liste; }
+
+const NIVEAU_PIECE = { mur:1, toit:1, tronc:1, coque:1, porte:2, fenetre:2, cheminee:2,
+  roue:2, oreille:2, oeil:2, rayon:2, feuille:2, tige:2, queue:2, aile:2, bec:2,
+  fumee:3, hublot:3, flamme:3, moustache:3, poignee:3, decor:3, rayure:3, bougie:3 };
+
+function courbesModele(cle, opts, cible){
+  const m = MODELES[cle];
+  if (!m) return [];
+  const brut = m.f(opts || {}).filter(Boolean);
+  brut.forEach(c => { if (!c.niv) c.niv = NIVEAU_PIECE[c.part] || 1; });
+  const but = cible || 250;
+  const silhouette = brut.filter(c => c.niv === 1);
+  const base = brut.filter(c => c.niv <= 2);
+  const finition = brut.filter(c => c.niv === 3);
+  // très peu de fonctions demandées : la silhouette seule, si elle se tient
+  if (but < base.length*0.75 && silhouette.length >= 4) return silhouette;
+  if (finition.length && base.length + finition.length <= but*1.3) return base.concat(finition);
+  return base.length ? base : brut;
+}
+
+function totalModele(cle, opts){
+  const m = MODELES[cle];
+  return m ? m.f(opts || {}).filter(Boolean).length : 0;
+}
+
+function modelePour(mot){
+  const m = normaliser(mot);
+  for (const cle in MODELES) if (MODELES[cle].mots.indexOf(m) >= 0) return cle;
+  const sing = m.replace(/s$/,"");
+  for (const cle in MODELES) if (MODELES[cle].mots.indexOf(sing) >= 0) return cle;
+  return null;
+}
+
+/* ---------- 8. La scène : plusieurs objets, placés ensemble ------------ */
+
+function tag(liste, nom){ liste.forEach(c => { if (c) c.part = nom; }); return liste; }
+
+function echantillonsCourbe(c, n){
+  const out = [];
+  if (c.fam === "cercle"){
+    const N = Math.max(n, 28);
+    for (let i = 0; i <= N; i++){
+      const a = i*2*Math.PI/N;
+      out.push([c.p.h + c.p.r*Math.cos(a), c.p.k + c.p.r*Math.sin(a)]);
+    }
+    return out;
+  }
+  const t0 = Math.min(c.dom[0], c.dom[1]), t1 = Math.max(c.dom[0], c.dom[1]);
+  const serre = (c.fam === "arc" || c.fam === "ellipse");
+  const N = Math.max(2, n|0);
+  for (let i = 0; i <= N; i++){
+    const u = i/N;
+    const t = serre ? (t0+t1)/2 + (t1-t0)/2*Math.sin(Math.PI*(u-0.5)) : t0 + (t1-t0)*u;
+    const v = evaluer(c, t);
+    if (!isFinite(v)){ out.push(null); continue; }
+    out.push(c.axe === "x" ? [t, v] : [v, t]);
+  }
+  return out;
+}
+
+function bboxListe(liste){
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  // au-delà de quelques milliers de courbes, un échantillon suffit à cadrer
+  const pas = Math.max(1, Math.floor(liste.length/2000));
+  for (let i = 0; i < liste.length; i += pas){
+    const c = liste[i];
+    if (!c) continue;
+    for (const p of echantillonsCourbe(c, 24)){
+      if (!p) continue;
+      if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0];
+      if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1];
+    }
+  }
+  if (!isFinite(x0)) return null;
+  return { x0:x0, x1:x1, y0:y0, y1:y1, w: Math.max(x1-x0, 1e-6), h: Math.max(y1-y0, 1e-6) };
+}
+
+const MOTS_CIEL = ["soleil","lune","nuage","nuages","etoile","etoiles","oiseau","avion","arc en ciel","eclair","planete","fusee"];
+
+const scene = {
+  objets: [],
+  mode: "formules",
+  graine: 0,           // change à chaque « Regénérer » : une autre image
+  cible: 250,          // nombre de fonctions visé (10 à 10 000)
+  couleurs: 12,        // nombre de calques de couleur (1 à 100)
+  historique: [],
+  demande: ""
+};
+
+let _idObjet = 1;
+
+function creerObjet(mot, type, source){
+  return {
+    id: _idObjet++,
+    mot: mot,
+    type: type || "mot",
+    src: source || null,
+    mode: scene.mode,
+    cible: scene.cible,
+    couleurs: scene.couleurs,
+    opts: {},
+    retirees: [],
+    palette: false,
+    couleurForcee: null,
+    t: { s: 1, dx: 0, dy: 0, mir: false, rot: 0 },
+    man: { s: 1, dx: 0, dy: 0 },   // ce que l'utilisateur a corrigé à la main
+    ciel: false,
+    info: "",
+    base: []
+  };
+}
+
+function regenererBase(o){
+  const reg = { cible: o.cible, couleurs: o.couleurs, hauteur: 10 };
+  if (o.type === "image" || o.type === "dessin"){
+    const r = vectoriserSource(o.src, reg);
+    o.base = r.courbes; o.info = o.type; o.ciel = false; o.calques = r.calques;
+    o.detail = (r.contours || 0) + " contours, " + (r.calques || 0) + " calques" +
+      (r.sature ? ", saturé" : "") + (r.cran ? ", image affinée" : "");
+    return;
+  }
+  const cle = modelePour(o.mot);
+  o.modele = cle;
+  o.ciel = cle ? !!MODELES[cle].ciel : MOTS_CIEL.indexOf(normaliser(o.mot)) >= 0;
+  if (o.mode === "formules" && cle){
+    o.base = courbesModele(cle, o.opts, o.cible);
+    o.maxModele = totalModele(cle, o.opts);
+    o.info = "formules";
+    return;
+  }
+  if (o.mode === "tracage" && cle && !emojiPour(o.mot) && !emojiDisponible()){
+    o.base = courbesModele(cle, o.opts, o.cible);
+    o.maxModele = totalModele(cle, o.opts);
+    o.info = "formules";
+    return;
+  }
+  const r = vectoriserMot(o.mot, reg);
+  if (r.courbes.length){
+    o.base = r.courbes;
+    o.info = r.source;
+    o.calques = r.calques;
+    o.detail = (r.contours || 0) + " contours, " + (r.calques || 0) + " calques" +
+      (r.sature ? ", saturé" : "") + (r.cran ? ", image affinée" : "");
+  } else if (cle){
+    o.base = MODELES[cle].f(o.opts).filter(Boolean);
+    o.info = "formules";
+  } else {
+    o.base = []; o.info = "vide";
+  }
+}
+
+function courbesObjet(o){
+  const base = o.base.filter(c => c && !c.supprime && o.retirees.indexOf(c.part) < 0);
+  const identite = o.t.s === 1 && !o.t.dx && !o.t.dy && !o.t.mir && !o.t.rot;
+  if (identite && base.length > 30000){
+    // mode Max : recopier un million de courbes doublerait la mémoire pour rien
+    for (const c of base){
+      c.src = c;
+      if (o.couleurForcee) c.col = o.couleurForcee;
+    }
+    return base;
+  }
+  const sortie = [];
+  for (const origine of base){
+    const c = normaliserCourbe(transformerCourbe(origine, o.t));
+    if (!courbeValide(c)) continue;
+    c.src = origine;                 // pour pouvoir masquer ou supprimer depuis la liste
+    c.cache = !!origine.cache;
+    if (o.couleurForcee) c.col = o.couleurForcee;
+    else if (o.palette || !c.col) c.col = PALETTE[sortie.length % PALETTE.length];
+    sortie.push(c);
+  }
+  return sortie;
+}
+
+function courbesScene(){
+  // push.apply fait exploser la pile passé une centaine de milliers d'éléments
+  if (scene.objets.length === 1) return courbesObjet(scene.objets[0]);
+  const out = [];
+  for (const o of scene.objets){
+    const liste = courbesObjet(o);
+    for (let i = 0; i < liste.length; i++) out.push(liste[i]);
+  }
+  return out;
+}
+
+// Place les objets : les uns à côté des autres sur le sol, le décor en haut
+// Le placement automatique, puis par-dessus les corrections demandées
+function appliquerPlacement(o, s0, dx0, dy0){
+  if (!o.man) o.man = { s: 1, dx: 0, dy: 0 };
+  o.t.s = arrondi(s0*o.man.s, 3);
+  o.t.dx = arrondi(dx0 + o.man.dx, 2);
+  o.t.dy = arrondi(dy0*o.man.s + o.man.dy, 2);
+}
+
+/* Où poser un objet accroché à un autre : sur la tête, dedans, dessous… */
+function ancrer(o, cible){
+  const b = bboxListe(o.base.filter(c => c && !c.supprime));
+  const bc = bboxListe(cible.base.filter(c => c && !c.supprime));
+  if (!b || !bc) return false;
+  const T = cible.t;
+  const cx0 = bc.x0*T.s + T.dx, cx1 = bc.x1*T.s + T.dx;
+  const cy0 = bc.y0*T.s + T.dy, cy1 = bc.y1*T.s + T.dy;
+  const larg = cx1 - cx0, haut = cy1 - cy0, cxm = (cx0 + cx1)/2;
+  const prop = { sur: 0.32, sous: 0.3, dans: 0.45, devant: 0.55, derriere: 0.8, tient: 0.28 };
+  const p = prop[o.relation.type] || 0.35;
+  const s = arrondi(Math.max(p*larg/b.w, 0.02), 3);
+  o.t.s = s;
+  const pose = (x, y) => { o.t.dx = arrondi(x - b.x0*s, 2); o.t.dy = arrondi(y - b.y0*s, 2); };
+  const demi = b.w*s/2;
+  switch (o.relation.type){
+    case "sur":      pose(cxm - demi, cy1 - b.h*s*0.12); break;
+    case "sous":     pose(cxm - demi, cy0 - b.h*s*0.88); break;
+    case "dans":     pose(cxm - demi, cy0 + haut/2 - b.h*s/2); break;
+    case "devant":   pose(cxm - demi + larg*0.1, cy0); break;
+    case "derriere": pose(cxm - demi - larg*0.18, cy0 + haut*0.25); break;
+    case "tient":    pose(cx1 - demi*0.4, cy0 + haut*0.35); break;
+    default:         pose(cxm - demi, cy1); break;
+  }
+  return true;
+}
+
+function placerScene(){
+  const attaches = scene.objets.filter(o => o.relation && scene.objets[o.relation.cible]);
+  const libres = scene.objets.filter(o => attaches.indexOf(o) < 0);
+  const sol = libres.filter(o => !o.ciel);
+  const ciel = libres.filter(o => o.ciel);
+  // un seul objet en mode formules : on garde ses coordonnées d'origine,
+  // les équations restent avec des nombres ronds.
+  if (scene.objets.length === 1 && scene.objets[0].info === "formules"){
+    appliquerPlacement(scene.objets[0], 1, 0, 0);
+    return;
+  }
+  if (!sol.length && !ciel.length) return;
+  let curseur = 0;
+  sol.forEach((o, i) => {
+    const b = bboxListe(o.base.filter(c => c && o.retirees.indexOf(c.part) < 0));
+    if (!b){ appliquerPlacement(o, 1, 0, 0); return; }
+    const hCible = i === 0 ? 9 : 6.5;
+    // l'échelle se calcule sur la taille d'origine : enlever une cheminée
+    // ne doit pas faire grossir toute la maison.
+    if (!o.ref || o.refInfo !== o.info){ o.ref = b; o.refInfo = o.info; }
+    const s = arrondi(Math.min(hCible/o.ref.h, 12/o.ref.w), 2);
+    o.pos = { s: s, dx: arrondi(curseur - b.x0*s, 1), dy: arrondi(-b.y0*s, 1) };
+    curseur += b.w*s + 1.3;
+  });
+  const largeur = Math.max(curseur - 1.3, 6);
+  sol.forEach(o => { if (o.pos) appliquerPlacement(o, o.pos.s, arrondi(o.pos.dx - largeur/2, 1), o.pos.dy); });
+  // les objets accrochés se placent après leur cible (et en chaîne si besoin)
+  for (let passe = 0; passe < 4; passe++){
+    let reste = false;
+    for (const o of attaches){
+      if (o._ancre) continue;
+      const cible = scene.objets[o.relation.cible];
+      if (cible.relation && !cible._ancre && attaches.indexOf(cible) >= 0){ reste = true; continue; }
+      o._ancre = ancrer(o, cible);
+      if (!o._ancre) o._ancre = true;
+    }
+    if (!reste) break;
+  }
+  attaches.forEach(o => { o._ancre = false; });
+
+  ciel.forEach((o, i) => {
+    const b = bboxListe(o.base.filter(c => c && o.retirees.indexOf(c.part) < 0));
+    if (!b){ appliquerPlacement(o, 1, 0, 10); return; }
+    if (!o.ref || o.refInfo !== o.info){ o.ref = b; o.refInfo = o.info; }
+    const s = arrondi(Math.min(4.4/o.ref.h, 5.5/o.ref.w), 2);
+    const n = ciel.length;
+    const cx = (i + 1)/(n + 1)*largeur - largeur/2 + largeur*0.12;
+    appliquerPlacement(o, s, arrondi(cx - (b.x0 + b.w/2)*s, 1), arrondi(10.2 - b.y0*s, 1));
+  });
+}
+
+function memoriser(){
+  const copie = scene.objets.map(o => {
+    const c = Object.assign({}, o);
+    c.base = null;
+    c.t = Object.assign({}, o.t);
+    c.man = Object.assign({}, o.man || { s:1, dx:0, dy:0 });
+    c.opts = Object.assign({}, o.opts);
+    c.retirees = o.retirees.slice();
+    return c;
+  });
+  scene.historique.push({ objets: copie, mode: scene.mode, cible: scene.cible, couleurs: scene.couleurs, demande: scene.demande });
+  if (scene.historique.length > 30) scene.historique.shift();
+}
+
+function annulerDerniere(){
+  if (scene.historique.length < 1) return false;
+  const e = scene.historique.pop();
+  scene.objets = e.objets;
+  scene.mode = e.mode; scene.cible = e.cible; scene.couleurs = e.couleurs; scene.demande = e.demande;
+  scene.objets.forEach(regenererBase);
+  return true;
+}
+
+/* ---------- Analyse de la demande ------------------------------------- */
+
+const MOTS_INUTILES = ["dessine","dessiner","dessin","trace","tracer","fais","faire","moi","genere","generer",
+  "cree","creer","montre","montrer","je","veux","voudrais","peux","tu","stp","s","il","te","plait","please",
+  "un","une","des","le","la","les","du","de","d","l","au","aux","mon","ma","mes","ce","cette"];
+
+function nettoyerSujet(p){
+  const mots = p.trim().split(/\s+/).filter(Boolean);
+  while (mots.length && MOTS_INUTILES.indexOf(mots[0]) >= 0) mots.shift();
+  return mots.join(" ").trim();
+}
+
+/* « une pomme sur un chat » : deux sujets ET une relation. C'est elle qui
+   permet de fusionner les deux dessins au lieu de les poser côte à côte. */
+const RELATIONS = [
+  ["au dessus de", "sur"], ["par dessus", "sur"], ["qui porte", "sur"], ["sur", "sur"],
+  ["en dessous de", "sous"], ["sous", "sous"],
+  ["a l interieur de", "dans"], ["dedans", "dans"], ["dans", "dans"],
+  ["a cote de", "cote"], ["a cote", "cote"],
+  ["devant", "devant"], ["derriere", "derriere"], ["qui tient", "tient"],
+  ["ainsi que", "et"], ["avec", "et"], ["puis", "et"], ["et", "et"], ["plus", "et"]
+];
+
+function analyserDemande(txt){
+  let reste = " " + normaliser(txt).replace(/[,+]/g, " et ") + " ";
+  const sujets = [];
+  let garde = 0;
+  while (reste.trim() && garde++ < 8){
+    let trouve = null;
+    for (const [marque, type] of RELATIONS){
+      const i = reste.indexOf(" " + marque + " ");
+      if (i >= 0 && (!trouve || i < trouve.i)) trouve = { i: i, type: type, saut: marque.length + 2 };
+    }
+    if (!trouve){
+      const m = nettoyerSujet(reste);
+      if (m) sujets.push({ mot: m, rel: null });
+      break;
+    }
+    const gauche = nettoyerSujet(reste.slice(0, trouve.i));
+    if (gauche) sujets.push({ mot: gauche, rel: trouve.type });
+    reste = " " + reste.slice(trouve.i + trouve.saut) + " ";
+  }
+  return sujets;
+}
+
+// « un chat bleu » : le mot de couleur sort du sujet et devient la couleur du tracé
+function extraireCouleur(sujet){
+  const mots = normaliser(sujet).split(" ").filter(Boolean);
+  if (mots.length < 2) return { mot: mots.join(" "), col: null };
+  let col = null;
+  const restants = [];
+  for (const m of mots){
+    const sing = m.replace(/s$/, "");
+    const c = COULEURS_MOTS[m] || COULEURS_MOTS[sing];
+    if (c && !col && restants.length + 1 < mots.length + 1){ col = c; continue; }
+    restants.push(m);
+  }
+  return { mot: (restants.length ? restants : mots).join(" "), col: col };
+}
+
+function construireScene(demande){
+  const sujets = analyserDemande(demande);
+  if (!sujets.length) return { ok: false, message: "Écris ce que tu veux dessiner, par exemple « une maison »." };
+  scene.demande = demande;
+  const liste = sujets.slice(0, 6);
+  scene.objets = liste.map(sujet => {
+    const d = extraireCouleur(sujet.mot);
+    const o = creerObjet(d.mot || sujet.mot, "mot");
+    if (d.col){ o.couleurForcee = d.col; o.couleurDemandee = true; }
+    o.graine = scene.graine;
+    return o;
+  });
+  // « pomme SUR chat » : la pomme s'accroche au chat, elle ne se pose pas au sol
+  liste.forEach((sujet, i) => {
+    const suivant = scene.objets[i+1];
+    if (!suivant || !sujet.rel || sujet.rel === "et" || sujet.rel === "cote") return;
+    scene.objets[i].relation = { type: sujet.rel, cible: i + 1 };
+  });
+  return { ok: true, sujets: sujets };
+}
+
+function ajouterObjetMot(mot){
+  const o = creerObjet(mot, "mot");
+  o.mode = scene.mode; o.cible = cibleParObjet(scene.objets.length + 1); o.couleurs = scene.couleurs;
+  regenererBase(o);
+  if (!o.base.length) return null;
+  scene.objets.push(o);
+  placerScene();
+  return o;
+}
+
+function objetDepuisSource(nom, type, canvas){
+  const o = creerObjet(nom, type, canvas);
+  o.mode = "tracage"; o.cible = scene.cible; o.couleurs = scene.couleurs;   // une image = un seul objet
+  regenererBase(o);
+  return o;
+}
+
+/* ---------- 9. Les reproches : corriger le dessin en français ---------- */
+
+const PIECES = {
+  toit:["toit","toiture"], cheminee:["cheminee"], fumee:["fumee"], porte:["porte"],
+  fenetre:["fenetre","fenetres","vitre","vitres"], mur:["mur","murs"], roue:["roue","roues"],
+  hublot:["hublot"], flamme:["flamme","flammes","feu"], moustache:["moustache","moustaches"],
+  oreille:["oreille","oreilles"], oeil:["oeil","yeux"], tronc:["tronc"], rayon:["rayon","rayons"],
+  feuille:["feuille","feuilles","feuillage"], tige:["tige"], queue:["queue"]
+};
+
+const COULEURS_MOTS = {
+  rouge:"#e2564d", bleu:"#2d70f5", bleue:"#2d70f5", vert:"#3ec46d", verte:"#3ec46d",
+  jaune:"#f2c744", orange:"#f08a35", violet:"#c07cf5", violette:"#c07cf5", rose:"#f27a9b",
+  blanc:"#e8edf7", blanche:"#e8edf7", noir:"#8a94ab", gris:"#9aa6bf", grise:"#9aa6bf",
+  marron:"#c08a55", brun:"#c08a55", cyan:"#48c7d0", turquoise:"#48c7d0"
+};
+
+function trouverPiece(n){
+  for (const cle in PIECES) for (const m of PIECES[cle])
+    if (new RegExp("\\b" + m + "\\b").test(n)) return cle;
+  return null;
+}
+
+function trouverObjet(n){
+  for (const o of scene.objets){
+    const m = normaliser(o.mot);
+    if (m && new RegExp("\\b" + m.replace(/[.*+?^${}()|[\]\\]/g,"") + "\\b").test(n)) return o;
+  }
+  return null;
+}
+
+function objetPrincipal(){ return scene.objets.length ? scene.objets[0] : null; }
+
+function appliquerReproche(txt){
+  const n = normaliser(txt);
+  if (!n) return { ok:false, message:"Dis-moi ce qui ne va pas." };
+
+  if (/\b(annule|annuler|retour|reviens|undo|avant)\b/.test(n)){
+    if (annulerDerniere()) return { ok:true, message:"C'est annulé, on revient au dessin d'avant." };
+    return { ok:false, message:"Il n'y a rien à annuler." };
+  }
+
+  memoriser();
+  const cible = trouverObjet(n) || objetPrincipal();
+  if (!cible) return { ok:false, message:"Il n'y a encore rien à corriger : demande d'abord un dessin." };
+  const piece = trouverPiece(n);
+  const tous = /\b(tout|tous|toute|entier|dessin|scene)\b/.test(n);
+  const vises = tous ? scene.objets : [cible];
+  const modele = cible.modele && MODELES[cible.modele];
+  const options = (modele && modele.options) || [];
+  const nomCible = cible.mot;
+
+  const grand = /\b(plus (grand|gros|grande|large|haut|haute|long|longue)|agrandis|agrandir|grossis|trop petit|trop petite|minuscule|plus grand)\b/.test(n);
+  const petit = /\b(plus (petit|petite|fin|mince|bas|basse|court|courte)|reduis|reduire|diminue|retrecis|trop grand|trop grande|trop gros|enorme)\b/.test(n);
+  const facteurTexte = n.match(/\b(?:fois|x|\*)\s*([0-9]+(?:[.,][0-9]+)?)/);
+  let facteur = grand ? 1.35 : (petit ? 1/1.35 : 1);
+  if (facteurTexte){
+    const v = parseFloat(facteurTexte[1].replace(",", "."));
+    if (isFinite(v) && v > 0.05 && v < 20) facteur = petit ? 1/v : v;
+  }
+  if (/\b(deux fois plus (grand|gros))\b/.test(n)) facteur = 2;
+  if (/\b(deux fois plus (petit|petite))\b/.test(n)) facteur = 0.5;
+
+  /* --- enlever --- */
+  if (/\b(enleve|enlever|supprime|supprimer|retire|retirer|vire|sans|cache)\b/.test(n)){
+    if (piece){
+      if (options.indexOf(piece) >= 0){ cible.opts[piece] = false; regenererBase(cible); placerScene();
+        return { ok:true, message:"D'accord, j'enlève " + piece + " sur " + nomCible + "." }; }
+      let trouve = false;
+      for (const o of vises){
+        if (o.base.some(c => c && c.part === piece)){ o.retirees.push(piece); trouve = true; }
+      }
+      if (trouve){ placerScene(); return { ok:true, message:"C'est enlevé : " + piece + "." }; }
+      return { ok:false, message:"Je ne trouve pas « " + piece + " » dans ce dessin." };
+    }
+    const objVise = trouverObjet(n);
+    if (objVise && scene.objets.length > 1){
+      scene.objets = scene.objets.filter(o => o !== objVise);
+      placerScene();
+      return { ok:true, message:"J'ai retiré " + objVise.mot + " de la scène." };
+    }
+    return { ok:false, message:"Précise ce que j'enlève : « enlève la cheminée », « enlève le sapin »." };
+  }
+
+  /* --- ajouter --- */
+  if (/\b(ajoute|ajouter|rajoute|mets|met|mettre|avec un|avec une)\b/.test(n)){
+    if (piece && options.indexOf(piece) >= 0){
+      const v = cible.opts[piece];
+      cible.opts[piece] = (typeof v === "number") ? v + 1 : true;
+      regenererBase(cible); placerScene();
+      return { ok:true, message:"J'ajoute " + piece + " sur " + nomCible + "." };
+    }
+    if (piece && cible.retirees.indexOf(piece) >= 0){
+      cible.retirees = cible.retirees.filter(p => p !== piece);
+      placerScene();
+      return { ok:true, message:"Je remets " + piece + "." };
+    }
+    const apres = n.replace(/^.*\b(ajoute|ajouter|rajoute|mets|met|mettre)\b/, "");
+    const sujet = nettoyerSujet(apres);
+    if (sujet){
+      const o = ajouterObjetMot(sujet);
+      if (o) return { ok:true, message:"J'ajoute " + sujet + " à la scène." };
+      return { ok:false, message:"Je n'arrive pas à tracer « " + sujet + " »." };
+    }
+    return { ok:false, message:"Dis-moi quoi ajouter : « ajoute un soleil »." };
+  }
+
+  /* --- pièce paramétrable (toit plus pointu, porte plus grande...) --- */
+  if (piece && (grand || petit || /\bpointu|plat|pentu|haut\b/.test(n))){
+    if (options.indexOf(piece) >= 0){
+      const actuel = typeof cible.opts[piece] === "number" ? cible.opts[piece] : 1;
+      let f = facteur;
+      if (/\bpointu|pentu\b/.test(n)) f = 1.3;
+      if (/\bplat\b/.test(n)) f = 0.75;
+      cible.opts[piece] = borne(actuel*f, 0.2, 4);
+      regenererBase(cible); placerScene();
+      return { ok:true, message:"Voilà : " + piece + " " + (f >= 1 ? "plus grand" : "plus petit") + " sur " + nomCible + "." };
+    }
+    // sinon : on agrandit juste cette pièce, autour de son centre
+    let touche = 0;
+    for (const o of vises){
+      const morceaux = o.base.filter(c => c && c.part === piece);
+      if (!morceaux.length) continue;
+      const b = bboxListe(morceaux);
+      if (!b) continue;
+      const cx = (b.x0+b.x1)/2, cy = (b.y0+b.y1)/2;
+      const remplace = morceaux.map(c => {
+        let r = deplacer(c, -cx, -cy);
+        r = agrandir(r, facteur);
+        r = deplacer(r, cx, cy);
+        r.part = c.part; r.col = c.col;
+        return r;
+      });
+      let k = 0;
+      o.base = o.base.map(c => (c && c.part === piece) ? remplace[k++] : c);
+      touche++;
+    }
+    if (touche){ placerScene(); return { ok:true, message:(facteur >= 1 ? "J'agrandis " : "Je réduis ") + piece + "." }; }
+    return { ok:false, message:"Je ne trouve pas « " + piece + " » dans ce dessin." };
+  }
+
+  /* --- taille globale --- */
+  if (grand || petit || (facteurTexte && facteur !== 1)){
+    vises.forEach(o => { o.man.s = borne(o.man.s*facteur, 0.15, 8); });
+    placerScene();
+    return { ok:true, message:(facteur >= 1 ? "J'agrandis " : "Je réduis ") + (tous ? "tout le dessin" : nomCible) + "." };
+  }
+
+  /* --- déplacement --- */
+  const pas = 2.2;
+  let bouge = null;
+  if (/\b(a gauche|vers la gauche|plus a gauche|gauche)\b/.test(n)) bouge = [-pas, 0];
+  else if (/\b(a droite|vers la droite|plus a droite|droite)\b/.test(n)) bouge = [pas, 0];
+  else if (/\b(plus haut|monte|vers le haut|en haut|remonte)\b/.test(n)) bouge = [0, pas];
+  else if (/\b(plus bas|descend|vers le bas|en bas|baisse)\b/.test(n)) bouge = [0, -pas];
+  else if (/\b(au milieu|au centre|centre|recentre)\b/.test(n)) bouge = "centre";
+  if (bouge === "centre"){
+    scene.objets.forEach(o => { o.man = { s: o.man.s, dx: 0, dy: 0 }; });
+    placerScene();
+    return { ok:true, message:"Tout est recentré." };
+  }
+  if (bouge){
+    vises.forEach(o => { o.man.dx += bouge[0]; o.man.dy += bouge[1]; });
+    placerScene();
+    return { ok:true, message:"Déplacé " + (bouge[0] < 0 ? "à gauche" : bouge[0] > 0 ? "à droite" : bouge[1] > 0 ? "vers le haut" : "vers le bas") + "." };
+  }
+
+  /* --- retournement / rotation --- */
+  if (/\b(retourne|miroir|inverse|autre sens|symetrique)\b/.test(n)){
+    vises.forEach(o => { o.t.mir = !o.t.mir; });
+    placerScene();
+    return { ok:true, message:"Retourné comme dans un miroir." };
+  }
+  if (/\b(tourne|pivote|rotation|couche|penche)\b/.test(n)){
+    const sens = /\b(gauche|antihoraire)\b/.test(n) ? 3 : 1;
+    vises.forEach(o => { o.t.rot = (o.t.rot + sens) % 4; });
+    placerScene();
+    return { ok:true, message:"J'ai fait tourner d'un quart de tour." };
+  }
+
+  /* --- niveau de détail / mode --- */
+  if (/\b(plus de detail|plus de details|plus precis|plus fin|plus ressemblant|plus realiste|mieux|vrai dessin|plus beau)\b/.test(n)){
+    let change = false;
+    const avant = scene.cible;
+    if (scene.mode === "formules"){   // les modèles tout faits ne peuvent pas être plus détaillés
+      scene.mode = "tracage"; change = true;
+    } else if (scene.cible < CIBLE_MAX){
+      scene.cible = borne(Math.round(scene.cible*2), CIBLE_MIN, CIBLE_MAX); change = true;
+    }
+    scene.objets.forEach(o => { o.mode = scene.mode; o.cible = cibleParObjet(); regenererBase(o); });
+    placerScene();
+    majCurseurs();
+    return { ok:change, message: change
+      ? "Plus de détails : environ " + scene.cible + " fonctions" + (scene.mode === "tracage" && avant === scene.cible ? ", en mode traçage" : "") + "."
+      : "C'est déjà le maximum : " + CIBLE_MAX + " fonctions." };
+  }
+  if (/\b(moins de detail|moins de fonctions|trop de fonctions|simplifie|plus simple|trop complique|allege)\b/.test(n)){
+    let change = false;
+    if (/\b(fonctions|simple|simplifie)\b/.test(n) && scene.mode === "tracage" && scene.cible <= CIBLE_MIN*2){
+      scene.mode = "formules"; change = true;
+    } else if (scene.cible > CIBLE_MIN){
+      scene.cible = borne(Math.round(scene.cible/2), CIBLE_MIN, CIBLE_MAX); change = true;
+    }
+    scene.objets.forEach(o => { o.mode = scene.mode; o.cible = cibleParObjet(); regenererBase(o); });
+    placerScene();
+    majCurseurs();
+    return { ok:change, message: change
+      ? (scene.mode === "formules" ? "Version plus simple : mode formules."
+                                   : "Version plus simple : environ " + scene.cible + " fonctions.")
+      : "C'est déjà le plus simple." };
+  }
+  if (/\b(formules?|equations simples|pour desmos|propre)\b/.test(n)){
+    scene.mode = "formules";
+    scene.objets.forEach(o => { o.mode = "formules"; regenererBase(o); });
+    placerScene();
+    return { ok:true, message:"Mode formules : peu d'équations, bien lisibles." };
+  }
+  if (/\b(tracage|trace le vrai|photo|image reelle)\b/.test(n)){
+    scene.mode = "tracage";
+    scene.objets.forEach(o => { o.mode = "tracage"; regenererBase(o); });
+    placerScene();
+    return { ok:true, message:"Mode traçage : beaucoup plus de fonctions, beaucoup plus ressemblant." };
+  }
+
+  /* --- couleurs --- */
+  if (/\bnoir et blanc\b/.test(n)){
+    scene.couleurs = 1;
+    majCurseurs();
+    scene.objets.forEach(o => { o.couleurs = 1; o.palette = false; o.couleurForcee = "#e8edf7"; regenererBase(o); });
+    placerScene();
+    return { ok:true, message:"Tout en blanc sur fond sombre." };
+  }
+  if (/\b(arc en ciel|toutes les couleurs|colore|coloree|multicolore)\b/.test(n)){
+    vises.forEach(o => { o.palette = true; o.couleurForcee = null; });
+    return { ok:true, message:"Chaque fonction a maintenant sa couleur." };
+  }
+  if (/\bplus de couleurs\b/.test(n)){
+    scene.couleurs = borne(Math.round(scene.couleurs*2) + 1, 1, COULEURS_MAX);
+    scene.objets.forEach(o => { o.couleurs = scene.couleurs; o.couleurForcee = null; o.palette = false; regenererBase(o); });
+    placerScene();
+    majCurseurs();
+    return { ok:true, message:"Plus de couleurs : " + scene.couleurs + " calques." };
+  }
+  if (/\bmoins de couleurs\b/.test(n)){
+    scene.couleurs = borne(Math.round(scene.couleurs/2), 1, COULEURS_MAX);
+    scene.objets.forEach(o => { o.couleurs = scene.couleurs; o.couleurForcee = null; o.palette = false; regenererBase(o); });
+    placerScene();
+    majCurseurs();
+    return { ok:true, message:"Moins de couleurs : " + scene.couleurs + " calques." };
+  }
+  for (const mot in COULEURS_MOTS){
+    if (new RegExp("\\b" + mot + "\\b").test(n)){
+      vises.forEach(o => { o.couleurForcee = COULEURS_MOTS[mot]; o.palette = false; });
+      return { ok:true, message:"Tracé en " + mot + "." };
+    }
+  }
+
+  return { ok:false, message:"Je n'ai pas compris. Essaie : « plus grand », « à gauche », « plus de détails », « enlève la cheminée », « ajoute un soleil », « en rouge », « annule »." };
+}
+
+/* ---------- 10. Le repère et le panneau des équations ----------------- */
+
+const cvGraphe = document.getElementById("graphe");
+let ctxG = cvGraphe.getContext("2d");
+let tailleRendu = null;      // quand on dessine ailleurs que dans la page (export PNG)
+let limiteAnim = null;       // animation : on ne trace que les n premières fonctions
+const elEtat = document.getElementById("etat");
+const elListe = document.getElementById("liste");
+const elPagination = document.getElementById("pagination");
+const elCompteur = document.getElementById("compteur");
+const elJournal = document.getElementById("journal");
+
+let COURBES = [];
+let COURBE_SURVOL = null;
+let page = 0;
+const PAR_PAGE = 200;
+let vue = { cx: 0, cy: 5, ppu: 32 };
+
+function redimensionner(){
+  const r = cvGraphe.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cvGraphe.width = Math.max(1, Math.round(r.width*dpr));
+  cvGraphe.height = Math.max(1, Math.round(r.height*dpr));
+  ctxG.setTransform(dpr, 0, 0, dpr, 0, 0);
+  dessiner();
+}
+
+function largeurVue(){ return tailleRendu ? tailleRendu[0] : cvGraphe.width / (Math.min(window.devicePixelRatio || 1, 2)); }
+function hauteurVue(){ return tailleRendu ? tailleRendu[1] : cvGraphe.height / (Math.min(window.devicePixelRatio || 1, 2)); }
+function versEcranX(x){ return largeurVue()/2 + (x - vue.cx)*vue.ppu; }
+function versEcranY(y){ return hauteurVue()/2 - (y - vue.cy)*vue.ppu; }
+function versRepereX(px){ return vue.cx + (px - largeurVue()/2)/vue.ppu; }
+function versRepereY(py){ return vue.cy - (py - hauteurVue()/2)/vue.ppu; }
+
+function pasGrille(){
+  const brut = 80/vue.ppu;
+  const p = Math.pow(10, Math.floor(Math.log10(brut)));
+  for (const m of [1, 2, 5, 10]) if (p*m >= brut) return p*m;
+  return p*10;
+}
+
+function dessinerGrille(){
+  const W = largeurVue(), H = hauteurVue();
+  const pas = pasGrille();
+  const x0 = versRepereX(0), x1 = versRepereX(W), y0 = versRepereY(H), y1 = versRepereY(0);
+  ctxG.lineWidth = 1;
+  ctxG.strokeStyle = "#2a3244";
+  ctxG.beginPath();
+  for (let x = Math.ceil(x0/pas)*pas; x <= x1; x += pas){
+    const px = Math.round(versEcranX(x)) + 0.5;
+    ctxG.moveTo(px, 0); ctxG.lineTo(px, H);
+  }
+  for (let y = Math.ceil(y0/pas)*pas; y <= y1; y += pas){
+    const py = Math.round(versEcranY(y)) + 0.5;
+    ctxG.moveTo(0, py); ctxG.lineTo(W, py);
+  }
+  ctxG.stroke();
+  // axes
+  ctxG.strokeStyle = "#7d8aa5";
+  ctxG.lineWidth = 1.4;
+  ctxG.beginPath();
+  const py0 = Math.round(versEcranY(0)) + 0.5, px0 = Math.round(versEcranX(0)) + 0.5;
+  ctxG.moveTo(0, py0); ctxG.lineTo(W, py0);
+  ctxG.moveTo(px0, 0); ctxG.lineTo(px0, H);
+  ctxG.stroke();
+  // graduations
+  ctxG.fillStyle = "#9aa6bf";
+  ctxG.font = "11px system-ui,sans-serif";
+  ctxG.textAlign = "center"; ctxG.textBaseline = "top";
+  for (let x = Math.ceil(x0/pas)*pas; x <= x1; x += pas){
+    if (Math.abs(x) < pas/2) continue;
+    ctxG.fillText(nb(x, 2), versEcranX(x), borne(py0 + 4, 4, H - 16));
+  }
+  ctxG.textAlign = "right"; ctxG.textBaseline = "middle";
+  for (let y = Math.ceil(y0/pas)*pas; y <= y1; y += pas){
+    if (Math.abs(y) < pas/2) continue;
+    ctxG.fillText(nb(y, 2), borne(px0 - 6, 26, W - 4), versEcranY(y));
+  }
+}
+
+let MODE_LOURD = false;        // au-delà de 30 000 courbes : pas de cache, image figée
+let bitmapCache = null;
+let redessinDifferé = null;
+
+function echantillonsAffichage(c){
+  if (MODE_LOURD){
+    const n = c.fam === "cercle" ? 20 : borne(Math.round(Math.abs(c.dom[1]-c.dom[0])*vue.ppu/4), 4, 40);
+    return echantillonsCourbe(c, n);
+  }
+  if (c._ppu === vue.ppu && c._ech) return c._ech;
+  let n;
+  if (c.fam === "cercle") n = borne(Math.round(2*Math.PI*c.p.r*vue.ppu/5), 32, 400);
+  else n = borne(Math.round(Math.abs(c.dom[1]-c.dom[0])*vue.ppu/3), 12, 320);
+  c._ech = echantillonsCourbe(c, n);
+  c._ppu = vue.ppu;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const p of c._ech){
+    if (!p) continue;
+    if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0];
+    if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1];
+  }
+  c._bb = isFinite(x0) ? [x0, y0, x1, y1] : null;
+  return c._ech;
+}
+
+// Trace une courbe dans le chemin en cours
+function ajouterChemin(c, W, H){
+  const pts = echantillonsAffichage(c);
+  let leve = true;
+  for (const p of pts){
+    if (!p){ leve = true; continue; }
+    const px = versEcranX(p[0]), py = versEcranY(p[1]);
+    if (px < -4000 || px > W + 4000 || py < -4000 || py > H + 4000){ leve = true; continue; }
+    if (leve){ ctxG.moveTo(px, py); leve = false; } else ctxG.lineTo(px, py);
+  }
+}
+
+/* Dix mille courbes, c'est dix mille appels de tracé si on s'y prend mal.
+   On regroupe donc par couleur (une centaine au plus) et on saute tout ce
+   qui ne touche pas l'écran. */
+function dessinerCourbes(liste){
+  const W = largeurVue(), H = hauteurVue();
+  const xmin = versRepereX(0), xmax = versRepereX(W);
+  const ymin = versRepereY(H), ymax = versRepereY(0);
+  ctxG.lineWidth = 2.1;
+  ctxG.lineJoin = "round"; ctxG.lineCap = "round";
+  const groupes = new Map();
+  for (const c of (liste || COURBES)){
+    if (c.cache) continue;
+    if (!MODE_LOURD){
+      echantillonsAffichage(c);
+      const bb = c._bb;
+      if (!bb) continue;
+      if (bb[2] < xmin || bb[0] > xmax || bb[3] < ymin || bb[1] > ymax) continue;
+    }
+    const col = c.col || "#2d70f5";
+    let g = groupes.get(col);
+    if (!g){ g = []; groupes.set(col, g); }
+    g.push(c);
+  }
+  groupes.forEach((liste, col) => {
+    ctxG.strokeStyle = col;
+    ctxG.beginPath();
+    for (const c of liste) ajouterChemin(c, W, H);
+    ctxG.stroke();
+  });
+  if (COURBE_SURVOL && !COURBE_SURVOL.cache){
+    ctxG.strokeStyle = "#ffffff";
+    ctxG.lineWidth = 4;
+    ctxG.beginPath();
+    ajouterChemin(COURBE_SURVOL, W, H);
+    ctxG.stroke();
+    ctxG.lineWidth = 2.1;
+  }
+}
+
+function dessinerTout(){
+  ctxG.clearRect(0, 0, largeurVue(), hauteurVue());
+  ctxG.fillStyle = "#1b2130";
+  ctxG.fillRect(0, 0, largeurVue(), hauteurVue());
+  dessinerGrille();
+  dessinerCourbes(limiteAnim === null ? null : COURBES.slice(0, limiteAnim));
+}
+
+/* Avec des dizaines de milliers de courbes, on ne redessine pas à chaque
+   déplacement : on garde une image figée qu'on fait glisser, et on relance le
+   vrai tracé quand la main s'arrête. */
+function dessiner(){
+  if (!MODE_LOURD || tailleRendu){ dessinerTout(); return; }
+  const W = largeurVue(), H = hauteurVue();
+  if (bitmapCache && bitmapCache.ppu === vue.ppu && bitmapCache.cx === vue.cx && bitmapCache.cy === vue.cy){
+    ctxG.drawImage(bitmapCache.canvas, 0, 0, W, H);
+    return;
+  }
+  if (bitmapCache){
+    // aperçu : on décale et met à l'échelle l'image précédente
+    const k = vue.ppu/bitmapCache.ppu;
+    const dx = (bitmapCache.cx - vue.cx)*vue.ppu, dy = (vue.cy - bitmapCache.cy)*vue.ppu;
+    ctxG.fillStyle = "#1b2130";
+    ctxG.fillRect(0, 0, W, H);
+    ctxG.save();
+    ctxG.translate(W/2 + dx, H/2 + dy);
+    ctxG.scale(k, k);
+    ctxG.drawImage(bitmapCache.canvas, -W/2, -H/2, W, H);
+    ctxG.restore();
+    if (redessinDifferé) clearTimeout(redessinDifferé);
+    redessinDifferé = setTimeout(() => { redessinDifferé = null; figerImage(); }, 260);
+    return;
+  }
+  figerImage();
+}
+
+function figerImage(){
+  const W = largeurVue(), H = hauteurVue();
+  const cv = document.createElement("canvas");
+  cv.width = Math.max(1, Math.round(W)); cv.height = Math.max(1, Math.round(H));
+  const memoCtx = ctxG, memoTaille = tailleRendu;
+  ctxG = cv.getContext("2d"); tailleRendu = [W, H];
+  try { dessinerTout(); } finally { ctxG = memoCtx; tailleRendu = memoTaille; }
+  bitmapCache = { canvas: cv, cx: vue.cx, cy: vue.cy, ppu: vue.ppu };
+  ctxG.drawImage(cv, 0, 0, W, H);
+}
+
+/* --- L'image PNG : la vue courante redessinée en double résolution --- */
+function exporterPNG(){
+  const W = largeurVue(), H = hauteurVue(), k = 2;
+  const cv = document.createElement("canvas");
+  cv.width = Math.round(W*k); cv.height = Math.round(H*k);
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  const memoCtx = ctxG, memoTaille = tailleRendu, memoSurvol = COURBE_SURVOL;
+  ctxG = ctx; tailleRendu = [W, H]; COURBE_SURVOL = null;
+  try { dessiner(); } finally { ctxG = memoCtx; tailleRendu = memoTaille; COURBE_SURVOL = memoSurvol; }
+  const fini = (ok, url) => {
+    if (ok) journal("Image enregistrée : " + COURBES.length + " fonctions en PNG.", "app");
+    else if (url){ window.open(url, "_blank"); journal("Le téléchargement est bloqué ici : j'ai ouvert l'image dans un onglet, fais un clic droit pour l'enregistrer.", "app", true); }
+    else journal("Je n'arrive pas à fabriquer l'image sur cet appareil.", "app", true);
+  };
+  try {
+    cv.toBlob(blob => {
+      if (!blob){ fini(false, null); return; }
+      const url = URL.createObjectURL(blob);
+      try {
+        const a = document.createElement("a");
+        if (typeof a.download !== "string"){ fini(false, url); return; }
+        a.href = url;
+        a.download = "funcora-" + (scene.demande || "dessin").replace(/[^a-z0-9]+/gi, "-").slice(0, 30) + ".png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        fini(true);
+      } catch (e){ fini(false, url); }
+      setTimeout(() => URL.revokeObjectURL(url), 8000);
+    }, "image/png");
+  } catch (e){ fini(false, null); }
+}
+
+/* --- Le mode Max : 10 000, 100 000, un million ---------------------------
+   Ici on ne répartit plus un budget : on pousse la machine. Le calcul se fait
+   par lots pour que la page respire, le bouton Arrêter coupe, et le compte
+   annoncé à la fin est le vrai. */
+let maxEnCours = false, ANNULER = false;
+
+function majBoutonsMax(){
+  const stop = document.getElementById("btnStopMax");
+  if (stop) stop.hidden = !maxEnCours;
+  document.querySelectorAll(".palier").forEach(b => { b.disabled = maxEnCours; });
+}
+
+function lancerMax(cible){
+  if (maxEnCours) return;
+  const o = scene.objets[0];
+  if (!o){ journal("Demande d'abord un dessin, ensuite je le pousse au maximum.", "app", true); return; }
+  const memoire = navigator.deviceMemory || 8;
+  if (cible >= 1000000 && memoire < 4){
+    journal("Cette machine annonce " + memoire + " Go de mémoire : un million de fonctions la ferait tomber. Essaie 100 k.", "app", true);
+    return;
+  }
+  maxEnCours = true; ANNULER = false;
+  majBoutonsMax();
+  nouveauLoader("Mode Max : " + cible.toLocaleString("fr-FR") + " fonctions");
+  const t0 = performance.now();
+  const taille = tailleMax(cible);
+  let prep = null, iContour = 0, tolMin = 0;
+  let eImage = null, eContours = null, eAjuste = null;
+  const courbes = [];
+
+  const finir = (coupe) => {
+    maxEnCours = false;
+    majBoutonsMax();
+    if (eAjuste) etapeFin(eAjuste, !coupe, courbes.length.toLocaleString("fr-FR") + " équations" +
+      (coupe ? " (arrêté)" : ""));
+    const eMenage = etapeDebut("Je vérifie et je range");
+    const propres = nettoyerCourbes(courbes, prep ? prep.unite : 0.01, null, true);
+    etapeFin(eMenage, true, propres.length.toLocaleString("fr-FR") + " gardées");
+    o.base = propres;
+    o.t = { s: 1, dx: 0, dy: 0, mir: false, rot: 0 };
+    o.man = { s: 1, dx: 0, dy: 0 };
+    o.info = o.info === "formules" ? "tracage" : o.info;
+    scene.cible = Math.min(cible, CIBLE_MAX);
+    majTout(true);
+    const ms = Math.round(performance.now() - t0);
+    const n = COURBES.length;
+    etat("Max : " + n.toLocaleString("fr-FR") + " fonctions en " + (ms/1000).toFixed(1) + " s");
+    fermerLoader(12000);
+    journal((coupe ? "Arrêté à " : "Mode Max : ") + n.toLocaleString("fr-FR") + " fonctions sur les " +
+      cible.toLocaleString("fr-FR") + " demandées, en " + (ms/1000).toFixed(1) + " s" +
+      (n < cible*0.9 && !coupe ? " — le dessin n'avait pas plus de détail à donner, même en " +
+        taille + " px : c'est son maximum, pas celui de la machine." : ".") +
+      " Desmos ne digérera pas ça d'un coup : utilise le .txt ou les lots de 200.", "app");
+  };
+
+  const lot = () => {
+    if (ANNULER){ finir(true); return; }
+    if (!prep){
+      const cv = (o.type === "mot") ? canvasMot(o.mot, taille) : canvasAjuste(o.src, taille);
+      etapeFin(eImage, true, cv.width + " × " + cv.width + " pixels");
+      eContours = etapeDebut("Je suis tous les contours, toutes les couleurs");
+      const ctx = cv.getContext("2d", { willReadFrequently: true });
+      // en mode Max, on prend toutes les couleurs : chaque calque apporte ses contours
+      prep = preparerContours(ctx, cv.width, { cible: cible, couleurs: COULEURS_MAX, hauteur: 10, max: true });
+      tolMin = prep.reg.plancher*prep.unite;
+      etapeFin(eContours, prep.morceaux.length > 0,
+        prep.morceaux.length.toLocaleString("fr-FR") + " contours, " + prep.calques + " calques");
+      eAjuste = etapeDebut("J'ajuste au maximum");
+      etat("Max : " + prep.morceaux.length + " contours trouvés en " + taille + " px, j'ajuste…");
+      setTimeout(lot, 0);
+      return;
+    }
+    const fin = Math.min(prep.morceaux.length, iContour + 30);
+    for (; iContour < fin && courbes.length < cible; iContour++){
+      const m = prep.morceaux[iContour];
+      for (const c of polyligneVersCourbes(m.pts, tolMin, { rapide: true, coins: false })){
+        if (!c) continue;
+        c.col = m.col;
+        courbes.push(c);
+      }
+    }
+    if (iContour >= prep.morceaux.length || courbes.length >= cible){ finir(false); return; }
+    etat("Max : " + courbes.length.toLocaleString("fr-FR") + " fonctions… (" +
+      iContour + "/" + prep.morceaux.length + " contours)");
+    if (eAjuste) eAjuste.el.querySelector(".ms").textContent =
+      courbes.length.toLocaleString("fr-FR") + " · " + Math.round(iContour/prep.morceaux.length*100) + " %";
+    setTimeout(lot, 0);
+  };
+  eImage = etapeDebut("Je prépare une image de départ très fine");
+  etat("Max : je prépare une image de " + taille + " × " + taille + "…");
+  setTimeout(lot, 0);
+}
+
+/* --- L'animation : les fonctions apparaissent une à une --- */
+let animation = null;
+function arreterAnimation(){
+  if (animation) cancelAnimationFrame(animation);
+  animation = null;
+  limiteAnim = null;
+  const b = document.getElementById("btnRejouer");
+  if (b) b.textContent = "Rejouer";
+  dessiner();
+}
+
+function rejouerTrace(){
+  if (animation){ arreterAnimation(); return; }
+  if (!COURBES.length){ journal("Demande d'abord un dessin.", "app", true); return; }
+  const total = COURBES.length;
+  const pas = Math.max(1, Math.round(total/110));      // environ deux secondes
+  const b = document.getElementById("btnRejouer");
+  if (b) b.textContent = "Arrêter";
+  limiteAnim = 0;
+  const image = () => {
+    limiteAnim = Math.min(total, limiteAnim + pas);
+    dessiner();
+    if (limiteAnim >= total){ arreterAnimation(); return; }
+    animation = requestAnimationFrame(image);
+  };
+  animation = requestAnimationFrame(image);
+}
+
+function recadrer(){
+  const b = bboxListe(COURBES);
+  if (!b){ vue = { cx: 0, cy: 5, ppu: 32 }; dessiner(); return; }
+  const W = largeurVue(), H = hauteurVue();
+  const marge = 0.12;
+  vue.ppu = borne(Math.min(W/(b.w*(1+marge*2)), H/(b.h*(1+marge*2))), 1, 400);
+  vue.cx = (b.x0 + b.x1)/2;
+  vue.cy = (b.y0 + b.y1)/2;
+  COURBES.forEach(c => { c._ech = null; });
+  dessiner();
+}
+
+/* --- panneau des équations --- */
+
+function majPanneau(){
+  const n = COURBES.length;
+  const masquees = COURBES.filter(c => c.cache).length;
+  elCompteur.innerHTML = "<b>" + n + "</b> fonction" + (n > 1 ? "s" : "") +
+    (masquees ? ", " + masquees + " masquée" + (masquees > 1 ? "s" : "") : "");
+  const pages = Math.max(1, Math.ceil(n/PAR_PAGE));
+  if (page >= pages) page = pages - 1;
+  const debut = page*PAR_PAGE, fin = Math.min(n, debut + PAR_PAGE);
+  const frag = document.createDocumentFragment();
+  for (let i = debut; i < fin; i++){
+    const c = COURBES[i];
+    const d = document.createElement("div");
+    d.className = "eq" + (c.cache ? " masquee" : "");
+    const past = document.createElement("span");
+    past.className = "pastille";
+    past.style.background = c.col || "#2d70f5";
+    const f = document.createElement("span");
+    f.className = "form";
+    const txt = texteEquation(c, "uni");
+    const coupe = txt.indexOf(" {");
+    if (coupe > 0){
+      f.appendChild(document.createTextNode(txt.slice(0, coupe)));
+      const dom = document.createElement("span");
+      dom.className = "dom";
+      dom.textContent = txt.slice(coupe);
+      f.appendChild(dom);
+    } else f.textContent = txt;
+    const actions = document.createElement("span");
+    actions.className = "actes";
+    const oeil = document.createElement("button");
+    oeil.className = "ico";
+    oeil.title = c.cache ? "Remontrer cette courbe" : "Masquer cette courbe";
+    oeil.textContent = c.cache ? "◌" : "◉";
+    oeil.onclick = e => {
+      e.stopPropagation();
+      if (c.src) c.src.cache = !c.src.cache;
+      c.cache = !c.cache;
+      dessiner();
+      majPanneau();
+    };
+    const gomme = document.createElement("button");
+    gomme.className = "ico";
+    gomme.title = "Supprimer cette équation";
+    gomme.textContent = "\u2715";
+    gomme.onclick = e => {
+      e.stopPropagation();
+      memoriser();
+      if (c.src) c.src.supprime = true;
+      COURBE_SURVOL = null;
+      majTout(false);
+    };
+    actions.appendChild(oeil); actions.appendChild(gomme);
+    d.appendChild(past); d.appendChild(f); d.appendChild(actions);
+    d.onmouseenter = () => { COURBE_SURVOL = c; dessiner(); };
+    d.onmouseleave = () => { if (COURBE_SURVOL === c){ COURBE_SURVOL = null; dessiner(); } };
+    frag.appendChild(d);
+  }
+  elListe.innerHTML = "";
+  elListe.appendChild(frag);
+  elListe.scrollTop = 0;
+  majBoutonCopie();
+  elPagination.innerHTML = "";
+  if (pages > 1){
+    const prec = document.createElement("button");
+    prec.textContent = "◀";
+    prec.disabled = page === 0;
+    prec.onclick = () => { page--; majPanneau(); };
+    const suiv = document.createElement("button");
+    suiv.textContent = "▶";
+    suiv.disabled = page >= pages - 1;
+    suiv.onclick = () => { page++; majPanneau(); };
+    const txt = document.createElement("span");
+    txt.textContent = "équations " + (debut+1) + " à " + fin + " sur " + n;
+    elPagination.appendChild(prec); elPagination.appendChild(txt); elPagination.appendChild(suiv);
+  } else if (n){
+    const txt = document.createElement("span");
+    txt.textContent = "toutes les équations sont affichées";
+    elPagination.appendChild(txt);
+  }
+}
+
+const LOT_COPIE = 200;
+let lotCopie = 0;
+
+function formatChoisi(){
+  const el = document.getElementById("format");
+  return el && el.value === "texte" ? "texte" : "latex";
+}
+
+// N'exporte que des équations relues et vérifiées : ce qui part dans Desmos
+// redonne exactement la courbe affichée. La relecture ne porte que sur le lot
+// demandé — vérifier dix mille lignes à chaque clic ne servirait à rien.
+function courbesVisibles(){ return COURBES.filter(c => !c.cache); }
+
+function equationsExport(style, debut, fin){
+  const source = courbesVisibles();
+  const d = debut || 0, f = (fin === undefined || fin === null) ? source.length : fin;
+  const lignes = [];
+  let refus = 0;
+  for (let i = d; i < Math.min(f, source.length); i++){
+    const v = verifierCourbe(source[i], style);
+    if (v.ok) lignes.push(v.txt); else refus++;
+  }
+  return { lignes: lignes, refus: refus, total: source.length };
+}
+
+function texteExport(style){ return equationsExport(style || formatChoisi()).lignes.join("\n"); }
+
+function majBoutonCopie(){
+  const b = document.getElementById("btnCopier");
+  const tout = document.getElementById("btnCopierTout");
+  if (!b) return;
+  const n = courbesVisibles().length;
+  if (n <= LOT_COPIE){
+    lotCopie = 0;
+    b.textContent = "Copier pour Desmos";
+    if (tout) tout.hidden = true;
+    return;
+  }
+  if (tout) tout.hidden = false;
+  if (lotCopie*LOT_COPIE >= n) lotCopie = 0;
+  const debut = lotCopie*LOT_COPIE + 1, fin = Math.min(n, (lotCopie + 1)*LOT_COPIE);
+  b.textContent = (lotCopie === 0 ? "Copier " : "Lot suivant ") + debut + "\u2013" + fin;
+}
+
+function copierTexte(texte, fini){
+  if (navigator.clipboard && navigator.clipboard.writeText)
+    navigator.clipboard.writeText(texte).then(() => fini(true), () => fini(copierRepli(texte)));
+  else fini(copierRepli(texte));
+}
+
+/* À ces volumes le presse-papier ne suit plus : on écrit un fichier. */
+function telechargerEquations(){
+  const style = formatChoisi();
+  const visibles = courbesVisibles();
+  if (!visibles.length){ journal("Il n'y a encore aucune équation.", "app", true); return; }
+  const morceaux = [];
+  const lot = 5000;
+  for (let i = 0; i < visibles.length; i += lot){
+    const bout = [];
+    for (let j = i; j < Math.min(i + lot, visibles.length); j++) bout.push(texteEquation(visibles[j], style));
+    morceaux.push(bout.join("\n") + "\n");
+  }
+  // on relit un échantillon : tout relire prendrait des minutes à un million
+  let ko = 0;
+  const pas = Math.max(1, Math.floor(visibles.length/300));
+  let testees = 0;
+  for (let i = 0; i < visibles.length; i += pas){ testees++; if (!verifierCourbe(visibles[i], style).ok) ko++; }
+  try {
+    const blob = new Blob(morceaux, { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "funcora-" + visibles.length + "-fonctions.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 8000);
+    journal("Fichier écrit : " + visibles.length.toLocaleString("fr-FR") + " équations " +
+      (style === "latex" ? "en LaTeX" : "en texte simple") + " (" + (ko ? ko + " douteuses sur " + testees + " relues" : testees + " relues au hasard, toutes justes") + ").", "app", ko > 0);
+  } catch (e){
+    journal("Impossible d'écrire le fichier ici : " + e.message, "app", true);
+  }
+}
+
+function copierPourDesmos(tout){
+  const style = formatChoisi();
+  const total = courbesVisibles().length;
+  if (!total){ journal("Il n'y a encore aucune équation à copier.", "app", true); return; }
+  let debut = 0, fin = total, parLot = false;
+  if (!tout && total > LOT_COPIE){
+    debut = lotCopie*LOT_COPIE;
+    if (debut >= total){ debut = 0; lotCopie = 0; }
+    fin = Math.min(total, debut + LOT_COPIE);
+    parLot = true;
+  }
+  const r = equationsExport(style, debut, fin);
+  if (!r.lignes.length){ journal("Aucune équation n'a passé la relecture dans ce lot.", "app", true); return; }
+  copierTexte(r.lignes.join("\n"), ok => {
+    if (!ok){ journal("Copie impossible ici : sélectionne les équations dans la liste.", "app", true); return; }
+    const nom = style === "latex" ? "en LaTeX" : "en texte simple";
+    let msg = parLot
+      ? "Lot copié " + nom + " : équations " + (debut + 1) + " à " + fin + " sur " + total +
+        ". Colle-les dans Desmos, puis reclique pour le lot suivant."
+      : "J'ai copié " + r.lignes.length + " équations " + nom + " : colle-les dans Desmos, une par ligne.";
+    if (r.refus) msg += " (" + r.refus + " écartée" + (r.refus > 1 ? "s" : "") + " : je ne les ai pas relues correctement.)";
+    journal(msg, "app");
+    if (parLot) lotCopie = fin >= total ? 0 : lotCopie + 1;
+    majBoutonCopie();
+  });
+}
+
+function copierRepli(texte){
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = texte;
+    ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e){ return false; }
+}
+
+/* ---------- 11. Interface --------------------------------------------- */
+
+function journal(texte, qui, rate){
+  const d = document.createElement("div");
+  d.className = "msg " + (qui === "moi" ? "moi" : "app") + (rate ? " rate" : "");
+  d.textContent = texte;
+  elJournal.appendChild(d);
+  elJournal.scrollTop = elJournal.scrollHeight;
+  while (elJournal.children.length > 40) elJournal.removeChild(elJournal.firstChild);
+}
+
+function etat(txt){ elEtat.textContent = txt; }
+
+/* --- Le loader : ce que Funcora est en train de faire, étape par étape --- */
+let ETAPES = [];
+const elLoader = document.getElementById("loader");
+const elEtapes = document.getElementById("etapesListe");
+
+function nouveauLoader(titre){
+  ETAPES = [];
+  elLoader.hidden = false;
+  elEtapes.innerHTML = "";
+  const h = document.createElement("h3");
+  h.textContent = titre || "Ce que je fais";
+  elEtapes.appendChild(h);
+}
+
+function etapeDebut(texte){
+  const e = { texte: texte, t0: performance.now(), etat: "encours" };
+  e.el = document.createElement("div");
+  e.el.className = "etape encours";
+  e.el.innerHTML = "<span class=\"marque\">\u2022</span><span class=\"txt\"></span><span class=\"ms\"></span>";
+  e.el.querySelector(".txt").textContent = texte;
+  elEtapes.appendChild(e.el);
+  elLoader.hidden = false;
+  elLoader.scrollTop = elLoader.scrollHeight;
+  ETAPES.push(e);
+  return e;
+}
+
+function etapeFin(e, ok, detail){
+  if (!e) return;
+  e.etat = ok ? "ok" : "rate";
+  e.ms = Math.round(performance.now() - e.t0);
+  e.el.className = "etape " + e.etat;
+  e.el.querySelector(".marque").textContent = ok ? "\u2713" : "\u2717";
+  const txt = e.el.querySelector(".txt");
+  txt.textContent = e.texte;
+  if (detail){
+    const d = document.createElement("span");
+    d.className = "det";
+    d.textContent = " — " + detail;
+    txt.appendChild(d);
+  }
+  e.el.querySelector(".ms").textContent = e.ms >= 1000 ? (e.ms/1000).toFixed(1) + " s" : e.ms + " ms";
+  elLoader.scrollTop = elLoader.scrollHeight;
+}
+
+// une étape déjà terminée, pour les constats immédiats
+function etapeFaite(texte, detail, ok){
+  const e = etapeDebut(texte);
+  etapeFin(e, ok !== false, detail);
+  return e;
+}
+
+function fermerLoader(delai){
+  setTimeout(() => { if (!maxEnCours) elLoader.hidden = true; }, delai || 6000);
+}
+
+function majTout(recadre){
+  if (animation) arreterAnimation();
+  COURBES = courbesScene();
+  COURBE_SURVOL = null;
+  MODE_LOURD = COURBES.length > 30000;
+  bitmapCache = null;
+  page = 0;
+  if (recadre) recadrer(); else dessiner();
+  majPanneau();
+}
+
+function descriptionScene(){
+  const parts = scene.objets.map(o => {
+    const src = o.info === "formules" ? "formules" : (o.info === "emoji" ? "traçage" :
+      (o.info === "texte" ? "texte tracé" : o.info));
+    return o.mot + " (" + src + ")";
+  });
+  return parts.join(", ");
+}
+
+/* Les gros calculs sont découpés : la page reprend la main entre deux
+   morceaux, donc le bandeau d'état avance au lieu de rester figé. */
+function enChaine(taches, fin){
+  let i = 0;
+  const pas = () => {
+    if (i >= taches.length){ if (fin) fin(); return; }
+    const t = taches[i++];
+    try { t(); } catch (e){ console.error(e); }
+    setTimeout(pas, 0);
+  };
+  setTimeout(pas, 0);
+}
+
+// Le curseur Détail donne le nombre de fonctions du DESSIN : quand la scène
+// compte plusieurs objets, chacun en reçoit sa part.
+function cibleParObjet(nb){
+  return Math.max(CIBLE_MIN, Math.round(scene.cible/Math.max(1, nb || scene.objets.length || 1)));
+}
+
+function tachesCalcul(objets, intitule){
+  const taches = [];
+  objets.forEach((o, i) => {
+    let e = null;
+    taches.push(() => {
+      etat(intitule + " « " + o.mot + " » " + (i+1) + "/" + objets.length + "…");
+      e = etapeDebut("Je suis les contours de « " + o.mot + " » et j'ajuste");
+    });
+    taches.push(() => {
+      o.mode = scene.mode; o.cible = cibleParObjet(objets.length); o.couleurs = scene.couleurs;
+      regenererBase(o);
+      etapeFin(e, o.base.length > 0, o.base.length + " fonctions" + (o.detail ? " · " + o.detail : ""));
+    });
+  });
+  return taches;
+}
+
+/* Va chercher une image pour chaque sujet, avant tout calcul. Chaque tentative
+   apparaît dans le loader — y compris quand elle échoue. */
+function preparerSources(objets, fin){
+  if (scene.mode === "formules"){ fin(); return; }
+  if (!RESEAU_POSSIBLE){
+    etapeFaite("Je regarde si je peux chercher sur internet",
+      "page ouverte en local : Chrome l'interdit, je prends ma bibliothèque", false);
+    fin(); return;
+  }
+  let i = 0;
+  const suite = () => {
+    if (i >= objets.length){ fin(); return; }
+    const o = objets[i++];
+    if (o.type !== "mot" || o.src){ suite(); return; }
+    const e = etapeDebut("Je cherche un dessin de « " + o.mot + " »");
+    chercherDessin(o.mot, (o.graine || 0), (res, err) => {
+      if (res){
+        o.src = res.canvas; o.type = "image"; o.credit = res;
+        etapeFin(e, true, res.titre + " · " + res.licence +
+          (res.traduit ? " (cherché en anglais : « " + res.traduit + " »)" : "") +
+          " · " + res.nombre + " résultats");
+      } else {
+        etapeFin(e, false, (err || "rien trouvé") + " — je prends ma bibliothèque");
+      }
+      suite();
+    });
+  };
+  suite();
+}
+
+function decrireSujets(){
+  const cibles = {};
+  scene.objets.forEach(o => { if (o.relation) cibles[o.relation.cible] = true; });
+  const mots = { sur: "sur", sous: "sous", dans: "dans", devant: "devant",
+                 derriere: "derrière", tient: "tenu par" };
+  return scene.objets.map((o, i) => {
+    if (o.relation){
+      const cible = scene.objets[o.relation.cible];
+      return o.mot + " " + (mots[o.relation.type] || "avec") + " " + (cible ? cible.mot : "?");
+    }
+    return cibles[i] ? null : o.mot;      // déjà nommé par la relation
+  }).filter(Boolean).join(", ");
+}
+
+// Les images de Commons sont libres mais demandent qu'on cite leur auteur
+function citerSources(){
+  const sources = scene.objets.filter(o => o.credit)
+    .map(o => o.credit.titre + " (" + o.credit.auteur + ", " + o.credit.licence + ")");
+  if (sources.length)
+    journal("Dessins trouvés sur Wikimedia Commons : " + sources.join(" · ") + ".", "app");
+}
+
+function tracerDemande(txt, silencieux, fin){
+  const t0 = performance.now();
+  nouveauLoader("Ce que je fais");
+  const eLire = etapeDebut("Je lis ta demande");
+  const r = construireScene(txt);
+  if (!r.ok){
+    etapeFin(eLire, false, r.message);
+    etat("Rien à tracer.");
+    journal(r.message, "app", true);
+    if (fin) fin(false);
+    return false;
+  }
+  etapeFin(eLire, true, decrireSujets() + " · " + scene.cible + " fonctions visées");
+  etat("Je calcule les fonctions…");
+  preparerSources(scene.objets, () => {
+  enChaine(tachesCalcul(scene.objets, "Je calcule"), () => {
+  scene.objets = scene.objets.filter(o => o.base.length);
+  if (!scene.objets.length){
+    etat("Rien à tracer.");
+    journal("Je n'arrive pas à tracer ça. Essaie un autre mot, ou importe une image.", "app", true);
+    if (fin) fin(false);
+    return;
+  }
+  const eComp = etapeDebut("Je compose la scène");
+  placerScene();
+  majTout(true);
+  etapeFin(eComp, true, scene.objets.length > 1 ? decrireSujets() : "cadrée");
+  const eVerif = etapeDebut("Je relis les équations");
+  const ech = Math.max(1, Math.floor(COURBES.length/200));
+  let lues = 0, fausses = 0;
+  for (let i = 0; i < COURBES.length; i += ech){ lues++; if (!verifierCourbe(COURBES[i], "latex").ok) fausses++; }
+  etapeFin(eVerif, fausses === 0, fausses ? fausses + " douteuses sur " + lues : lues + " relues, toutes justes");
+  const ms = Math.round(performance.now() - t0);
+  etat(descriptionScene() + " — " + COURBES.length + " fonctions en " + ms + " ms");
+  fermerLoader(9000);
+  if (!silencieux){
+    journal("Voilà " + descriptionScene() + " : " + COURBES.length + " fonctions. Tu peux me faire des reproches en dessous.", "app");
+    prevenirSiPeu();
+    citerSources();
+    const ecrits = scene.objets.filter(o => o.info === "texte").map(o => o.mot);
+    if (ecrits.length)
+      journal("Je ne connais pas de dessin pour « " + ecrits.join(" », « ") +
+        " » : j'ai tracé le mot écrit. Importe une image ou dessine-le à la main pour le vrai dessin.", "app");
+  }
+  if (fin) fin(true);
+  });
+  });
+  return true;
+}
+
+// Le dessin de départ n'a parfois pas assez de matière pour la cible demandée
+function prevenirSiPeu(){
+  if (!scene.objets.length) return;
+  if (scene.mode === "formules"){
+    const part = cibleParObjet();
+    const courts = scene.objets.filter(o => o.maxModele && o.maxModele < part*0.6);
+    if (courts.length)
+      journal("Les modèles faits main de « " + courts.map(o => o.mot).join(" », « ") +
+        " » n'ont pas plus de " + courts.map(o => o.maxModele).join(" / ") +
+        " équations. Passe en Traçage si tu en veux davantage.", "app");
+    return;
+  }
+  const part = cibleParObjet();
+  const maigres = scene.objets.filter(o => o.base.length < part*0.7);
+  if (!maigres.length) return;
+  journal("Je vise " + scene.cible + " fonctions (" + part + " par objet), mais « " + maigres.map(o => o.mot).join(" », « ") +
+    " » n'en donne que " + maigres.map(o => o.base.length).join(" / ") +
+    " : le dessin de départ n'a pas plus de détails à offrir. Monte les couleurs pour en avoir davantage.", "app");
+}
+
+function regenererTout(fin){
+  if (!scene.objets.length){ if (fin) fin(); return; }
+  enChaine(tachesCalcul(scene.objets, "Je recalcule"), () => {
+    placerScene();
+    majTout(false);
+    etat(descriptionScene() + " — " + COURBES.length + " fonctions");
+    prevenirSiPeu();
+    if (fin) fin();
+  });
+}
+
+const EXEMPLES = ["une maison", "une maison avec un sapin et un soleil", "un chat", "une fusée",
+  "un coeur", "une fleur", "une voiture", "un dragon", "une pizza", "un papillon"];
+
+function construireExemples(){
+  const box = document.getElementById("exemples");
+  EXEMPLES.forEach(ex => {
+    const b = document.createElement("button");
+    b.className = "puce";
+    b.textContent = ex;
+    b.onclick = () => { document.getElementById("demande").value = ex; lancerTrace(); };
+    box.appendChild(b);
+  });
+}
+
+function lancerTrace(){
+  const txt = document.getElementById("demande").value.trim();
+  if (!txt) return;
+  journal(txt, "moi");
+  scene.historique = [];
+  setTimeout(() => tracerDemande(txt), 10);
+}
+
+/* --- souris et doigts sur le repère --- */
+(function interactionsGraphe(){
+  let attrape = false, dernier = null, pincee = null;
+  cvGraphe.addEventListener("pointerdown", e => {
+    attrape = true; dernier = [e.clientX, e.clientY];
+    cvGraphe.classList.add("attrape");
+    cvGraphe.setPointerCapture(e.pointerId);
+  });
+  cvGraphe.addEventListener("pointermove", e => {
+    if (!attrape || !dernier) return;
+    const dx = e.clientX - dernier[0], dy = e.clientY - dernier[1];
+    dernier = [e.clientX, e.clientY];
+    vue.cx -= dx/vue.ppu; vue.cy += dy/vue.ppu;
+    dessiner();
+  });
+  const fin = e => { attrape = false; dernier = null; cvGraphe.classList.remove("attrape"); };
+  cvGraphe.addEventListener("pointerup", fin);
+  cvGraphe.addEventListener("pointercancel", fin);
+  cvGraphe.addEventListener("wheel", e => {
+    e.preventDefault();
+    zoomer(Math.pow(0.999, e.deltaY), e.clientX, e.clientY);
+  }, { passive: false });
+  cvGraphe.addEventListener("touchmove", e => {
+    if (e.touches.length !== 2) return;
+    e.preventDefault();
+    const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    if (pincee) zoomer(d/pincee, (e.touches[0].clientX + e.touches[1].clientX)/2, (e.touches[0].clientY + e.touches[1].clientY)/2);
+    pincee = d;
+  }, { passive: false });
+  cvGraphe.addEventListener("touchend", () => { pincee = null; });
+})();
+
+function zoomer(facteur, clientX, clientY){
+  const r = cvGraphe.getBoundingClientRect();
+  const px = (clientX === undefined ? r.width/2 : clientX - r.left);
+  const py = (clientY === undefined ? r.height/2 : clientY - r.top);
+  const ax = versRepereX(px), ay = versRepereY(py);
+  vue.ppu = borne(vue.ppu*facteur, 1.5, 600);
+  vue.cx = ax - (px - largeurVue()/2)/vue.ppu;
+  vue.cy = ay + (py - hauteurVue()/2)/vue.ppu;
+  COURBES.forEach(c => { c._ech = null; });
+  dessiner();
+}
+
+/* --- boutons, curseurs, import, dessin --- */
+
+document.getElementById("btnTracer").onclick = lancerTrace;
+document.getElementById("btnRegen").onclick = () => {
+  const txt = scene.demande || document.getElementById("demande").value.trim();
+  if (!txt){ journal("Écris d'abord une demande.", "app", true); return; }
+  scene.graine = (scene.graine + 1) % 997;
+  journal("Une autre version (graine " + scene.graine + ")", "moi");
+  setTimeout(() => tracerDemande(txt, false), 10);
+};
+document.getElementById("demande").addEventListener("keydown", e => { if (e.key === "Enter") lancerTrace(); });
+document.getElementById("btnRecadrer").onclick = recadrer;
+document.getElementById("btnZoomP").onclick = () => zoomer(1.25);
+document.getElementById("btnZoomM").onclick = () => zoomer(0.8);
+document.getElementById("btnCopier").onclick = () => copierPourDesmos(false);
+document.getElementById("btnCopierTout").onclick = () => copierPourDesmos(true);
+document.getElementById("format").onchange = () => { lotCopie = 0; majBoutonCopie(); };
+
+document.querySelectorAll("#modeBascule button").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll("#modeBascule button").forEach(x => x.classList.remove("actif"));
+    b.classList.add("actif");
+    scene.mode = b.dataset.mode;
+    if (!scene.objets.length) return;
+    memoriser();
+    etat("Je recalcule…");
+    regenererTout(() => journal(scene.mode === "formules"
+      ? "Mode formules : des équations peu nombreuses et très lisibles."
+      : "Mode traçage : je redessine à partir des pixels, beaucoup plus de fonctions.", "app"));
+  };
+});
+
+/* Curseurs de 10 à 1000 : échelle logarithmique, pour régler finement
+   en bas (10, 12, 15…) comme en haut (700, 850, 1000). */
+function valeurCurseur(pos, min, max){
+  const v = min*Math.pow(max/min, borne(pos, 0, 100)/100);
+  if (v < 20) return Math.round(v);
+  const p = Math.pow(10, Math.floor(Math.log10(v)) - 1);
+  return Math.round(Math.round(v/p)*p);
+}
+function positionCurseur(val, min, max){
+  return borne(Math.round(100*Math.log(borne(val, min, max)/min)/Math.log(max/min)), 0, 100);
+}
+
+const elDetail = document.getElementById("detail"), elDetailVal = document.getElementById("detailVal");
+const elCoul = document.getElementById("couleurs"), elCoulVal = document.getElementById("couleursVal");
+
+function majCurseurs(){
+  elDetail.value = positionCurseur(scene.cible, CIBLE_MIN, CIBLE_MAX);
+  elDetailVal.textContent = scene.cible;
+  elCoul.value = positionCurseur(scene.couleurs, 1, COULEURS_MAX);
+  elCoulVal.textContent = scene.couleurs;
+}
+
+elDetail.oninput = () => { elDetailVal.textContent = valeurCurseur(+elDetail.value, CIBLE_MIN, CIBLE_MAX); };
+elDetail.onchange = () => {
+  scene.cible = valeurCurseur(+elDetail.value, CIBLE_MIN, CIBLE_MAX);
+  elDetailVal.textContent = scene.cible;
+  if (!scene.objets.length) return;
+  memoriser();
+  if (scene.mode === "formules"){
+    journal("Le curseur Détail ne sert qu'en mode Traçage : les modèles tout faits ont un nombre d'équations fixe.", "app", true);
+    return;
+  }
+  etat("Je recalcule…");
+  regenererTout();
+};
+
+elCoul.oninput = () => { elCoulVal.textContent = valeurCurseur(+elCoul.value, 1, COULEURS_MAX); };
+elCoul.onchange = () => {
+  scene.couleurs = valeurCurseur(+elCoul.value, 1, COULEURS_MAX);
+  elCoulVal.textContent = scene.couleurs;
+  if (!scene.objets.length) return;
+  memoriser();
+  scene.objets.forEach(o => { o.couleurForcee = null; o.palette = false; });
+  if (scene.mode === "formules"){
+    journal("Le curseur Couleurs ne sert qu'en mode Traçage.", "app", true);
+    return;
+  }
+  etat("Je recalcule…");
+  regenererTout(() => {
+    const vus = scene.objets.map(o => o.calques || 0).reduce((a, b) => Math.max(a, b), 0);
+    if (vus && vus < scene.couleurs*0.8)
+      journal(scene.couleurs + " calques demandés, " + vus + " seulement : le dessin de départ ne contient pas plus de couleurs.", "app");
+  });
+};
+
+document.getElementById("fichier").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const lect = new FileReader();
+  lect.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const cv = dessinerDansCanvas(img, TAILLE_MAX);
+      cv.original = img;
+      etat("Je transforme l'image en fonctions…");
+      journal("Image importée : " + f.name, "moi");
+      setTimeout(() => {
+        scene.historique = [];
+        const o = objetDepuisSource(f.name.replace(/\.[^.]+$/, "") || "image", "image", cv);
+        if (!o.base.length){ journal("Cette image est trop uniforme pour en tirer des contours.", "app", true); etat("Rien à tracer."); return; }
+        scene.objets = [o];
+        placerScene();
+        majTout(true);
+        etat("image — " + COURBES.length + " fonctions");
+        journal("Ton image est devenue " + COURBES.length + " fonctions. Règle « Détail » pour en avoir plus ou moins.", "app");
+      }, 10);
+    };
+    img.src = lect.result;
+  };
+  lect.readAsDataURL(f);
+  e.target.value = "";
+});
+
+/* --- dessin à la main --- */
+const modal = document.getElementById("modalDessin");
+const toile = document.getElementById("toile");
+const ctxToile = toile.getContext("2d", { willReadFrequently: true });
+function viderToile(){
+  ctxToile.fillStyle = "#ffffff";
+  ctxToile.fillRect(0, 0, toile.width, toile.height);
+  ctxToile.strokeStyle = "#111318";
+  ctxToile.lineWidth = 9;
+  ctxToile.lineJoin = "round"; ctxToile.lineCap = "round";
+}
+viderToile();
+(function dessinLibre(){
+  let trace = false, prec = null;
+  const pos = e => {
+    const r = toile.getBoundingClientRect();
+    return [(e.clientX - r.left)*toile.width/r.width, (e.clientY - r.top)*toile.height/r.height];
+  };
+  toile.addEventListener("pointerdown", e => {
+    trace = true; prec = pos(e); toile.setPointerCapture(e.pointerId);
+    ctxToile.beginPath(); ctxToile.moveTo(prec[0], prec[1]); ctxToile.lineTo(prec[0]+0.01, prec[1]); ctxToile.stroke();
+  });
+  toile.addEventListener("pointermove", e => {
+    if (!trace) return;
+    const p = pos(e);
+    ctxToile.beginPath(); ctxToile.moveTo(prec[0], prec[1]); ctxToile.lineTo(p[0], p[1]); ctxToile.stroke();
+    prec = p;
+  });
+  const fin = () => { trace = false; prec = null; };
+  toile.addEventListener("pointerup", fin);
+  toile.addEventListener("pointercancel", fin);
+})();
+document.getElementById("btnRejouer").onclick = rejouerTrace;
+document.getElementById("btnFichier").onclick = telechargerEquations;
+document.getElementById("btnStopMax").onclick = () => { ANNULER = true; };
+document.querySelectorAll(".palier").forEach(b => {
+  b.onclick = () => lancerMax(parseInt(b.dataset.max, 10));
+});
+document.getElementById("btnPng").onclick = exporterPNG;
+document.getElementById("btnDessiner").onclick = () => { modal.hidden = false; };
+document.getElementById("btnToileFermer").onclick = () => { modal.hidden = true; };
+document.getElementById("btnToileEffacer").onclick = viderToile;
+document.getElementById("btnToileValider").onclick = () => {
+  modal.hidden = true;
+  etat("Je transforme ton dessin en fonctions…");
+  journal("Mon dessin à la main", "moi");
+  setTimeout(() => {
+    const cv = creerCanvas(toile.width);
+    cv.getContext("2d").drawImage(toile, 0, 0);
+    scene.historique = [];
+    const o = objetDepuisSource("dessin", "dessin", cv);
+    if (!o.base.length){ journal("La feuille est vide : dessine quelque chose d'abord.", "app", true); etat("Rien à tracer."); return; }
+    scene.objets = [o];
+    placerScene();
+    majTout(true);
+    etat("dessin — " + COURBES.length + " fonctions");
+    journal("Ton dessin est devenu " + COURBES.length + " fonctions.", "app");
+  }, 10);
+};
+
+/* --- reproches --- */
+function envoyerReproche(){
+  const champ = document.getElementById("reproche");
+  const txt = champ.value.trim();
+  if (!txt) return;
+  journal(txt, "moi");
+  champ.value = "";
+  etat("Je corrige…");
+  setTimeout(() => {
+    const r = appliquerReproche(txt);
+    majTout(false);
+    journal(r.message, "app", !r.ok);
+    etat(descriptionScene() + " — " + COURBES.length + " fonctions");
+  }, 10);
+}
+document.getElementById("btnReproche").onclick = envoyerReproche;
+document.getElementById("reproche").addEventListener("keydown", e => { if (e.key === "Enter") envoyerReproche(); });
+
+window.addEventListener("resize", redimensionner);
+
+/* --- démarrage --- */
+construireExemples();
+majCurseurs();
+redimensionner();
+journal("Salut ! Demande-moi un dessin : « une maison », « un chat », « une fusée »… " +
+  "Je le trace avec des fonctions et je te donne toutes les équations.", "app");
+journal("Le bouton « Traçage » donne des dessins bien plus détaillés, et le curseur « Fonctions » " +
+  "fixe le nombre d'équations que tu veux (de 10 à 10 000).", "app");
+document.getElementById("demande").value = "une maison avec un sapin et un soleil";
+setTimeout(() => tracerDemande("une maison avec un sapin et un soleil", true), 30);
+
+// petit coup de main pour les tests automatiques
+window.FUNCORA = {
+  scene: scene, tracer: tracerDemande, reproche: appliquerReproche, courbes: () => COURBES,
+  export: texteExport, equations: equationsExport, verifier: verifierCourbe, relire: relireEquation,
+  vectoriserMot: vectoriserMot, vectoriserContexte: vectoriserContexte, vectoriserSource: vectoriserSource,
+  evaluer: evaluer, echantillons: echantillonsCourbe, texte: texteEquation, modeles: MODELES,
+  majTout: majTout, emojiDisponible: emojiDisponible, placer: placerScene, bbox: bboxListe,
+  canvasMot: canvasMot, contours: extraireContours, masque: masqueAvantPlan, regler: regenererTout,
+  tailleSource: tailleSource, curseurs: majCurseurs, nettoyer: nettoyerCourbes,
+  emoji: emojiPour, lexique: EMOJIS, modele: modelePour,
+  modeleCourbes: courbesModele, totalModele: totalModele,
+  survol: () => COURBE_SURVOL, limiteAnim: () => limiteAnim, png: exporterPNG, rejouer: rejouerTrace,
+  courbesObjet: courbesObjet, chercher: chercherDessin, analyser: analyserDemande,
+  max: lancerMax, etapes: () => ETAPES, reseau: RESEAU_POSSIBLE
+};
+</script>
+</body>
+</html>
